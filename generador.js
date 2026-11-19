@@ -904,6 +904,106 @@ function generarBorradorNegocio(datos, variante) {
   };
 }
 
+/* Intenta generar el borrador en el servidor (POST /api/generate).
+   Devuelve el borrador en el mismo esquema que generarBorrador, o null
+   si el servidor no responde, no está configurado o el texto no es válido.
+   En ese caso el llamador usa el generador local como respaldo.
+   La clave nunca sale del servidor y nunca llega a este archivo. */
+async function generarBorradorConServicio(datos, variante) {
+  try {
+    if (typeof fetch !== "function") {
+      return null;
+    }
+    const controlador = new AbortController();
+    const temporizador = setTimeout(() => controlador.abort(), 15000);
+    let respuesta;
+    try {
+      respuesta = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: datos.nombre || "",
+          giro: datos.giro || "",
+          ciudad: datos.ciudad || "",
+          oferta: datos.oferta || "",
+          tono: datos.tono || "cercano",
+          whatsapp: datos.whatsapp || "",
+          variante: variante || 0
+        }),
+        signal: controlador.signal
+      });
+    } finally {
+      clearTimeout(temporizador);
+    }
+    if (!respuesta || !respuesta.ok) {
+      return null;
+    }
+    const payload = await respuesta.json();
+    const b = payload && payload.borrador;
+    if (!b || typeof b.titulo !== "string" || !b.titulo.trim()) {
+      return null;
+    }
+    if (typeof b.presentacion !== "string" || !b.presentacion.trim()) {
+      return null;
+    }
+    if (!Array.isArray(b.servicios) || b.servicios.length === 0) {
+      return null;
+    }
+    if (!Array.isArray(b.beneficios) || b.beneficios.length === 0) {
+      return null;
+    }
+    if (!Array.isArray(b.preguntasFrecuentes) || b.preguntasFrecuentes.length === 0) {
+      return null;
+    }
+    const servicios = b.servicios
+      .slice(0, 6)
+      .map((s) => {
+        if (typeof s === "string") {
+          return { titulo: limpiarTextoGen(s), descripcion: "" };
+        }
+        if (s && typeof s === "object") {
+          return {
+            titulo: limpiarTextoGen(s.titulo),
+            descripcion: limpiarTextoGen(s.descripcion)
+          };
+        }
+        return null;
+      })
+      .filter((s) => s && s.titulo);
+    if (servicios.length === 0) {
+      return null;
+    }
+    return {
+      titulo: limpiarTextoGen(b.titulo),
+      presentacion: limpiarTextoGen(b.presentacion),
+      servicios,
+      beneficios: b.beneficios
+        .filter((x) => typeof x === "string" && x.trim())
+        .slice(0, 6)
+        .map((x) => limpiarTextoGen(x)),
+      preguntasFrecuentes: b.preguntasFrecuentes
+        .slice(0, 6)
+        .map((f) => {
+          if (!f || typeof f !== "object") {
+            return null;
+          }
+          const pregunta = limpiarTextoGen(f.pregunta);
+          const respuesta = limpiarTextoGen(f.respuesta);
+          return pregunta && respuesta ? { pregunta, respuesta } : null;
+        })
+        .filter(Boolean),
+      mensajeWhatsapp: construirMensajeWhatsappNegocioGen(
+        limpiarTextoGen(datos.nombre),
+        TONOS_ETIQUETAS[datos.tono] ? datos.tono : "cercano"
+      ),
+      whatsapp: limpiarDigitosGen(datos.whatsapp),
+      variante: Math.abs(Number(variante) || 0)
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
 function formatearBorradorTextoPlano(datos, borrador) {
   const lineas = [];
   lineas.push(borrador.titulo);
@@ -970,6 +1070,7 @@ window.dmdGenerador = {
   normalizarGiro,
   normalizarTono,
   generarBorrador: generarBorradorNegocio,
+  generarBorradorConServicio,
   formatearTextoPlano: formatearBorradorTextoPlano,
   construirUrlPublicada,
   crearSlugPublicacion,
