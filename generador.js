@@ -25,6 +25,621 @@ const TONOS_ETIQUETAS = {
   formal: "Formal"
 };
 
+/* Catálogo inicial extensible de fotos reales para portada (URLs directas
+   estables, sin clave de API). Es un punto de partida abierto: cuando el
+   usuario escribe cualquier otro giro, la selección analiza sinónimos y
+   palabras clave del giro escrito, el nombre y la oferta. */
+const PORTADAS_POR_GIRO = {
+  taqueria: {
+    etiqueta: "Taquería",
+    sinonimos: ["taqueria", "tacos", "taco", "taquitos", "antojitos", "birria", "birrieria", "barbacoa", "carnitas", "suadero", "pastor", "asada", "loncheria", "torteria", "tortas"],
+    palabras: ["taco", "taqueria", "pastor", "asada", "birria", "barbacoa", "carnitas", "suadero", "gringa", "salsa", "antojito", "torta", "gordita", "sope", "huarache", "quesabirria"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/8448339/pexels-photo-8448339.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Tacos tradicionales mexicanos"
+      },
+      {
+        url: "https://images.pexels.com/photos/5848714/pexels-photo-5848714.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Tacos con guacamole y acompañamientos"
+      },
+      {
+        url: "https://images.pexels.com/photos/19453402/pexels-photo-19453402.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Tacos recién preparados"
+      }
+    ]
+  },
+  panaderia: {
+    etiqueta: "Panadería y repostería",
+    sinonimos: ["panaderia", "pan", "pasteleria", "reposteria", "postres", "pasteles", "panificadora", "boulangerie"],
+    palabras: ["pan", "panaderia", "bolillo", "concha", "cuernito", "pastel", "pasteleria", "reposteria", "postre", "galleta", "dona", "cupcake", "horneado", "bizcocho", "rosca", "pay"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/29380150/pexels-photo-29380150.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Panadería con pan recién horneado"
+      },
+      {
+        url: "https://images.pexels.com/photos/14363849/pexels-photo-14363849.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Vitrina de pan dulce y repostería"
+      },
+      {
+        url: "https://images.pexels.com/photos/30826794/pexels-photo-30826794.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Surtido artesanal de pan"
+      }
+    ]
+  },
+  cafeteria: {
+    etiqueta: "Cafetería",
+    sinonimos: ["cafeteria", "cafe", "barra de cafe", "coffee shop", "expreso", "te", "teteria", "bebidas"],
+    palabras: ["cafe", "cafeteria", "espresso", "latte", "capuchino", "americano", "frappe", "matcha", "barista", "te", "infusion", "cold brew", "molido"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/36729739/pexels-photo-36729739.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Barra de cafetería local"
+      },
+      {
+        url: "https://images.pexels.com/photos/10497545/pexels-photo-10497545.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Preparación de café artesanal"
+      },
+      {
+        url: "https://images.pexels.com/photos/32258174/pexels-photo-32258174.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Estación de café de especialidad"
+      }
+    ]
+  },
+  dulceria: {
+    etiqueta: "Dulcería",
+    sinonimos: ["dulceria", "dulces", "chocolateria", "botanas", "golosinas", "pinateria", "confiteria", "heladeria", "paleteria", "neveria"],
+    palabras: ["dulce", "dulceria", "chocolate", "gomita", "paleta", "caramelo", "botana", "pinata", "chamoys", "tamarindo", "golosina", "nieve", "helado"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/39889186/pexels-photo-39889186.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Vitrina de chocolates y dulces"
+      },
+      {
+        url: "https://images.pexels.com/photos/35285845/pexels-photo-35285845.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Exhibición de dulcería tradicional"
+      },
+      {
+        url: "https://images.pexels.com/photos/35798654/pexels-photo-35798654.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Surtido de dulces y botanas"
+      }
+    ]
+  },
+  carniceria: {
+    etiqueta: "Carnicería",
+    sinonimos: ["carniceria", "carnes", "polleria", "obrador", "cortes de carne", "pescaderia", "cremeria"],
+    palabras: ["carne", "carniceria", "res", "cerdo", "puerco", "pollo", "polleria", "bistec", "arrachera", "chorizo", "costilla", "corte", "molida", "chicharron"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/35023463/pexels-photo-35023463.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Mostrador de carnicería fresca"
+      },
+      {
+        url: "https://images.pexels.com/photos/29834275/pexels-photo-29834275.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Cortes frescos en carnicería"
+      },
+      {
+        url: "https://images.pexels.com/photos/12884549/pexels-photo-12884549.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Exhibidor de cortes de carne"
+      }
+    ]
+  },
+  tortilleria: {
+    etiqueta: "Tortillería",
+    sinonimos: ["tortilleria", "tortillas", "molino", "masa", "nixtamal", "totopos", "tostadas"],
+    palabras: ["tortilla", "tortilleria", "masa", "maiz", "nixtamal", "totopo", "tostada", "quesadilla", "harina", "comal", "tamal"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/16821506/pexels-photo-16821506.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Tortillas recién hechas"
+      },
+      {
+        url: "https://images.pexels.com/photos/14930606/pexels-photo-14930606.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Tortillas y antojitos de maíz"
+      },
+      {
+        url: "https://images.pexels.com/photos/28443135/pexels-photo-28443135.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Platillos con tortillas calientes"
+      }
+    ]
+  },
+  comida: {
+    etiqueta: "Comida y restaurante",
+    sinonimos: ["comida", "restaurante", "fonda", "cocina", "cocina economica", "comedor", "marisqueria", "pizzeria", "hamburgueseria", "sushi", "catering"],
+    palabras: ["comida", "restaurante", "fonda", "cocina", "platillo", "menu", "desayuno", "almuerzo", "cena", "hamburguesa", "pizza", "marisco", "sushi", "alita", "guisado", "caldo", "banquete"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/6971733/pexels-photo-6971733.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Cocina preparando platillos al momento"
+      },
+      {
+        url: "https://images.pexels.com/photos/7624679/pexels-photo-7624679.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Mesa con platillos recién servidos"
+      },
+      {
+        url: "https://images.pexels.com/photos/13485216/pexels-photo-13485216.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Variedad de comida en restaurante"
+      }
+    ]
+  },
+  fruteria: {
+    etiqueta: "Frutería y verdulería",
+    sinonimos: ["fruteria", "verduleria", "frutas", "verduras", "abarrotes", "minisuper", "miscelanea", "mercado", "recauderia", "organico"],
+    palabras: ["fruta", "verdura", "fruteria", "verduleria", "abarrotes", "aguacate", "tomate", "naranja", "limon", "fresco", "semilla", "granel", "minisuper", "despensa"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/33975355/pexels-photo-33975355.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Frutas y verduras frescas"
+      },
+      {
+        url: "https://images.pexels.com/photos/36033532/pexels-photo-36033532.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Puesto de productos frescos del día"
+      },
+      {
+        url: "https://images.pexels.com/photos/11831458/pexels-photo-11831458.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Surtido de frutería local"
+      }
+    ]
+  },
+  ferreteria: {
+    etiqueta: "Ferretería",
+    sinonimos: ["ferreteria", "tlapaleria", "herramientas", "materiales", "tornilleria", "cerrajeria", "pinturas"],
+    palabras: ["ferreteria", "tlapaleria", "herramienta", "martillo", "taladro", "tornillo", "clavo", "llave", "pinza", "desarmador", "tubo", "cemento", "pintura", "candado", "cerradura", "cerrajeria"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/33000620/pexels-photo-33000620.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Herramientas organizadas en ferretería"
+      },
+      {
+        url: "https://images.pexels.com/photos/175039/pexels-photo-175039.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Surtido de herramientas manuales"
+      },
+      {
+        url: "https://images.pexels.com/photos/5194861/pexels-photo-5194861.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Llaves, pinzas y equipo de ferretería"
+      }
+    ]
+  },
+  farmacia: {
+    etiqueta: "Farmacia",
+    sinonimos: ["farmacia", "botica", "medicamentos", "drogueria", "herbolaria", "naturista"],
+    palabras: ["farmacia", "medicamento", "medicina", "vitamina", "receta", "suplemento", "curacion", "botica", "generico", "patente", "inyectable"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/13119976/pexels-photo-13119976.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Atención en mostrador de farmacia"
+      },
+      {
+        url: "https://images.pexels.com/photos/13119975/pexels-photo-13119975.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Anaqueles de medicamentos en farmacia"
+      },
+      {
+        url: "https://images.pexels.com/photos/3652750/pexels-photo-3652750.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Sección de farmacia y recetas"
+      }
+    ]
+  },
+  papeleria: {
+    etiqueta: "Papelería",
+    sinonimos: ["papeleria", "utiles", "libreria", "copias", "imprenta", "ciber", "merceria"],
+    palabras: ["papeleria", "cuaderno", "libreta", "lapiz", "pluma", "utiles", "copia", "impresion", "engargolado", "enmicado", "cartulina", "mochila", "libro", "oficina", "escolar"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/7054754/pexels-photo-7054754.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Útiles escolares y artículos de papelería"
+      },
+      {
+        url: "https://images.pexels.com/photos/28503361/pexels-photo-28503361.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Cuadernos, colores y material escolar"
+      },
+      {
+        url: "https://images.pexels.com/photos/5088017/pexels-photo-5088017.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Libretas y artículos de escritorio"
+      }
+    ]
+  },
+  estetica: {
+    etiqueta: "Salón y estética",
+    sinonimos: ["estetica", "salon", "salon de belleza", "belleza", "unas", "manicure", "pedicure", "maquillaje", "peluqueria", "estudio de belleza"],
+    palabras: ["estetica", "salon", "cabello", "tinte", "mecha", "alaciado", "peinado", "una", "gelish", "acrilico", "manicure", "pedicure", "maquillaje", "ceja", "pestana", "belleza"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/1654834/pexels-photo-1654834.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Interior de salón de belleza"
+      },
+      {
+        url: "https://images.pexels.com/photos/4783330/pexels-photo-4783330.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Estilismo y cuidado del cabello"
+      },
+      {
+        url: "https://images.pexels.com/photos/30866297/pexels-photo-30866297.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Estaciones de atención en estética"
+      }
+    ]
+  },
+  barberia: {
+    etiqueta: "Barbería",
+    sinonimos: ["barberia", "barber", "barber shop", "peluqueria caballeros", "barba"],
+    palabras: ["barber", "barberia", "barba", "fade", "desvanecido", "navaja", "afeitado", "caballero", "bigote", "corte"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/1813272/pexels-photo-1813272.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Cortes y atención en barbería"
+      },
+      {
+        url: "https://images.pexels.com/photos/4969838/pexels-photo-4969838.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Sillas y espacio de barbería"
+      },
+      {
+        url: "https://images.pexels.com/photos/8867163/pexels-photo-8867163.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Barbero en estación de corte"
+      }
+    ]
+  },
+  "taller mecanico": {
+    etiqueta: "Taller mecánico",
+    sinonimos: ["taller mecanico", "mecanico", "mecanica", "automotriz", "llantera", "vulcanizadora", "hojalateria", "autolavado", "refaccionaria", "motos"],
+    palabras: ["mecanico", "mecanica", "auto", "carro", "coche", "vehiculo", "motor", "freno", "afinacion", "aceite", "suspension", "llanta", "alineacion", "balanceo", "hojalateria", "transmision", "escaner", "moto"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/4489743/pexels-photo-4489743.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Servicio automotriz en taller mecánico"
+      },
+      {
+        url: "https://images.pexels.com/photos/33814734/pexels-photo-33814734.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Interior de taller de mantenimiento automotriz"
+      },
+      {
+        url: "https://images.pexels.com/photos/8986130/pexels-photo-8986130.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Revisión y diagnóstico de vehículo"
+      }
+    ]
+  },
+  lavanderia: {
+    etiqueta: "Lavandería y tintorería",
+    sinonimos: ["lavanderia", "tintoreria", "planchaduria", "lavado"],
+    palabras: ["lavanderia", "tintoreria", "lavado", "secado", "planchado", "edredon", "prenda", "traje", "vestido", "ropa limpia", "autoservicio"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/4700388/pexels-photo-4700388.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Lavadoras en lavandería moderna"
+      },
+      {
+        url: "https://images.pexels.com/photos/8774444/pexels-photo-8774444.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Servicio de lavado de prendas"
+      },
+      {
+        url: "https://images.pexels.com/photos/4700410/pexels-photo-4700410.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Equipos de lavado y secado"
+      }
+    ]
+  },
+  "tienda de ropa": {
+    etiqueta: "Tienda de ropa y boutique",
+    sinonimos: ["tienda de ropa", "boutique", "ropa", "moda", "vestidos", "sastreria", "bordados"],
+    palabras: ["ropa", "boutique", "moda", "blusa", "camisa", "pantalon", "vestido", "chamarra", "jeans", "prenda", "talla", "coleccion", "bolsa", "sastreria"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/5865196/pexels-photo-5865196.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Exhibición de prendas en boutique"
+      },
+      {
+        url: "https://images.pexels.com/photos/37080678/pexels-photo-37080678.jpeg?auto=compress&cs=tinysrgb&w=1200&h=750&fit=crop",
+        etiqueta: "Interior moderno de tienda de ropa"
+      },
+      {
+        url: "https://images.pexels.com/photos/18699669/pexels-photo-18699669.jpeg?auto=compress&cs=tinysrgb&w=1200&h=750&fit=crop",
+        etiqueta: "Selección de moda y accesorios"
+      }
+    ]
+  },
+  zapateria: {
+    etiqueta: "Zapatería",
+    sinonimos: ["zapateria", "calzado", "zapatos", "tenis", "botas"],
+    palabras: ["zapato", "zapateria", "calzado", "tenis", "bota", "sandalia", "tacon", "piel", "suela", "deportivo", "huarache"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/5863630/pexels-photo-5863630.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Exhibidor de calzado en zapatería"
+      },
+      {
+        url: "https://images.pexels.com/photos/5531542/pexels-photo-5531542.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Calzado y accesorios en boutique"
+      },
+      {
+        url: "https://images.pexels.com/photos/29090887/pexels-photo-29090887.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Botas y zapatos en exhibición"
+      }
+    ]
+  },
+  floreria: {
+    etiqueta: "Florería",
+    sinonimos: ["floreria", "flores", "vivero", "plantas", "jardineria", "arreglos florales"],
+    palabras: ["flor", "floreria", "ramo", "rosa", "girasol", "tulipan", "arreglo", "planta", "maceta", "vivero", "bouquet", "corona", "centro de mesa"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/5414337/pexels-photo-5414337.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Mostrador de florería con arreglos"
+      },
+      {
+        url: "https://images.pexels.com/photos/6912882/pexels-photo-6912882.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Ramo de rosas recién armado"
+      },
+      {
+        url: "https://images.pexels.com/photos/5414331/pexels-photo-5414331.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Preparación de arreglos florales"
+      }
+    ]
+  },
+  veterinaria: {
+    etiqueta: "Veterinaria y mascotas",
+    sinonimos: ["veterinaria", "clinica veterinaria", "mascotas", "estetica canina", "pet shop", "forrajera"],
+    palabras: ["veterinaria", "veterinario", "mascota", "perro", "gato", "vacuna", "desparasitacion", "estetica canina", "bano de perro", "croqueta", "alimento para mascota", "cachorro"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/6816859/pexels-photo-6816859.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Consulta veterinaria para mascotas"
+      },
+      {
+        url: "https://images.pexels.com/photos/6234622/pexels-photo-6234622.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Revisión de salud canina en veterinaria"
+      },
+      {
+        url: "https://images.pexels.com/photos/7470754/pexels-photo-7470754.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Atención profesional en clínica veterinaria"
+      }
+    ]
+  },
+  gimnasio: {
+    etiqueta: "Gimnasio y entrenamiento",
+    sinonimos: ["gimnasio", "gym", "fitness", "crossfit", "yoga", "pilates", "entrenamiento", "box", "artes marciales", "deportes"],
+    palabras: ["gimnasio", "gym", "pesa", "mancuerna", "entrenamiento", "entrenador", "cardio", "crossfit", "yoga", "pilates", "box", "funcional", "rutina", "musculacion", "fitness"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/31015145/pexels-photo-31015145.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Área de pesas y mancuernas en gimnasio"
+      },
+      {
+        url: "https://images.pexels.com/photos/32610333/pexels-photo-32610333.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Equipo de entrenamiento funcional"
+      },
+      {
+        url: "https://images.pexels.com/photos/3916766/pexels-photo-3916766.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Zona de fuerza y acondicionamiento"
+      }
+    ]
+  },
+  muebleria: {
+    etiqueta: "Mueblería",
+    sinonimos: ["muebleria", "muebles", "decoracion", "colchones", "hogar", "tapiceria"],
+    palabras: ["mueble", "muebleria", "sala", "sofa", "sillon", "comedor", "recamara", "colchon", "mesa", "silla", "ropero", "closet", "decoracion", "tapiceria"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/6969830/pexels-photo-6969830.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Exhibición de salas y muebles"
+      },
+      {
+        url: "https://images.pexels.com/photos/6758238/pexels-photo-6758238.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Muebles modernos para el hogar"
+      },
+      {
+        url: "https://images.pexels.com/photos/7535062/pexels-photo-7535062.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Showroom de recámaras y decoración"
+      }
+    ]
+  },
+  joyeria: {
+    etiqueta: "Joyería y relojería",
+    sinonimos: ["joyeria", "relojeria", "bisuteria", "plateria", "joyas"],
+    palabras: ["joya", "joyeria", "anillo", "collar", "pulsera", "arete", "oro", "plata", "diamante", "compromiso", "argolla", "reloj", "relojeria", "bisuteria"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/32610505/pexels-photo-32610505.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Colección de joyería fina"
+      },
+      {
+        url: "https://images.pexels.com/photos/35187488/pexels-photo-35187488.jpeg?auto=compress&cs=tinysrgb&w=1200&h=750&fit=crop",
+        etiqueta: "Anillos en vitrina de joyería"
+      },
+      {
+        url: "https://images.pexels.com/photos/33569933/pexels-photo-33569933.jpeg?auto=compress&cs=tinysrgb&w=1200&h=750&fit=crop",
+        etiqueta: "Collares y piezas de oro"
+      }
+    ]
+  },
+  optica: {
+    etiqueta: "Óptica",
+    sinonimos: ["optica", "lentes", "optometria", "oftalmologia"],
+    palabras: ["optica", "lente", "armazon", "anteojo", "graduacion", "examen de la vista", "vista", "miopia", "astigmatismo", "lentes de contacto", "solares"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/5752258/pexels-photo-5752258.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Selección de armazones en óptica"
+      },
+      {
+        url: "https://images.pexels.com/photos/5766162/pexels-photo-5766162.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Asesoría para elegir lentes"
+      },
+      {
+        url: "https://images.pexels.com/photos/32593246/pexels-photo-32593246.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Exhibición de lentes en tienda óptica"
+      }
+    ]
+  },
+  "salud y belleza": {
+    etiqueta: "Salud y bienestar",
+    sinonimos: ["salud y belleza", "salud", "clinica", "consultorio", "dental", "dentista", "odontologia", "spa", "masajes", "fisioterapia", "psicologia", "nutricion", "laboratorio"],
+    palabras: ["dental", "dentista", "odontologia", "ortodoncia", "clinica", "consultorio", "medico", "doctor", "salud", "spa", "masaje", "facial", "relajacion", "fisioterapia", "psicologia", "nutricion", "terapia", "laboratorio"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/18524125/pexels-photo-18524125.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Atención profesional en clínica y consultorio"
+      },
+      {
+        url: "https://images.pexels.com/photos/5659008/pexels-photo-5659008.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Sesión de spa y bienestar"
+      },
+      {
+        url: "https://images.pexels.com/photos/6187287/pexels-photo-6187287.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Cuidado facial y relajación"
+      }
+    ]
+  },
+  servicios: {
+    etiqueta: "Servicios",
+    sinonimos: ["servicios", "asesoria", "contabilidad", "despacho", "consultoria", "limpieza", "fotografia", "diseno", "clases", "cursos", "escuela", "academia", "eventos", "fletes", "mudanza", "inmobiliaria", "seguros"],
+    palabras: ["asesoria", "contabilidad", "contador", "abogado", "legal", "consultoria", "seguro", "finanza", "inmobiliaria", "limpieza", "fumigacion", "fotografia", "video", "diseno", "marketing", "clase", "curso", "academia", "evento", "flete", "mudanza", "envio"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/8301240/pexels-photo-8301240.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Atención y asesoría personalizada"
+      },
+      {
+        url: "https://images.pexels.com/photos/4506937/pexels-photo-4506937.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Estudio creativo y servicios profesionales"
+      },
+      {
+        url: "https://images.pexels.com/photos/3768914/pexels-photo-3768914.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Servicios para el hogar y mantenimiento"
+      },
+      {
+        url: "https://images.pexels.com/photos/8301225/pexels-photo-8301225.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Equipo de trabajo y consultoría"
+      }
+    ]
+  },
+  "taller u oficio": {
+    etiqueta: "Taller u oficio",
+    sinonimos: ["taller u oficio", "taller", "oficio", "carpinteria", "plomeria", "electricista", "herreria", "soldadura", "aluminio", "construccion", "remodelacion", "clima", "aire acondicionado", "reparacion", "electronica"],
+    palabras: ["carpinteria", "madera", "puerta", "closet", "plomero", "plomeria", "electricista", "electrico", "clima", "aire", "refrigeracion", "boiler", "herreria", "soldadura", "aluminio", "vidrio", "albanil", "construccion", "remodelacion", "reparacion", "celular", "computadora"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/10316634/pexels-photo-10316634.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Taller de carpintería y fabricación"
+      },
+      {
+        url: "https://images.pexels.com/photos/7859953/pexels-photo-7859953.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Instalación técnica y mantenimiento"
+      },
+      {
+        url: "https://images.pexels.com/photos/15419937/pexels-photo-15419937.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Trabajos de herrería y soldadura"
+      }
+    ]
+  },
+  tienda: {
+    etiqueta: "Tienda",
+    sinonimos: ["tienda", "comercio", "local", "regalos", "novedades", "artesanias", "jugueteria", "electronica", "celulares", "distribuidora"],
+    palabras: ["tienda", "local", "comercio", "mostrador", "regalo", "artesania", "juguete", "novedad", "accesorio", "producto", "mayoreo", "menudeo"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/3735183/pexels-photo-3735183.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Interior de tienda local con anaqueles"
+      },
+      {
+        url: "https://images.pexels.com/photos/19418844/pexels-photo-19418844.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Negocio local abierto al público"
+      },
+      {
+        url: "https://images.pexels.com/photos/29462804/pexels-photo-29462804.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Atención directa en mostrador"
+      }
+    ]
+  },
+  otro: {
+    etiqueta: "Negocio local",
+    sinonimos: ["otro", "otra", "negocio", "emprendimiento"],
+    palabras: ["negocio", "emprendimiento", "proyecto", "espacio", "estudio", "atencion"],
+    fotos: [
+      {
+        url: "https://images.pexels.com/photos/20390771/pexels-photo-20390771.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Espacio moderno de atención"
+      },
+      {
+        url: "https://images.pexels.com/photos/5444180/pexels-photo-5444180.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Espacio para proyectos y clientes"
+      },
+      {
+        url: "https://images.pexels.com/photos/7875953/pexels-photo-7875953.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        etiqueta: "Atención personalizada de negocio"
+      }
+    ]
+  }
+};
+
+/* Estructura adaptable por tipo de negocio (secciones, orden y títulos
+   contextualizados que se aplican con los datos reales del usuario, sin
+   copiar textos ajenos ni inventar precios). */
+const ESTRUCTURAS_POR_TIPO_NEGOCIO = {
+  comida: {
+    ordenSecciones: ["presentacion", "servicios", "contacto", "beneficios", "preguntas"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Menú y especialidades",
+      beneficios: "Por qué elegirnos",
+      preguntas: "Preguntas frecuentes",
+      contacto: "Pedidos y contacto"
+    },
+    ctaWhatsapp: "Hacer pedido a {nombre}"
+  },
+  tienda: {
+    ordenSecciones: ["presentacion", "servicios", "beneficios", "preguntas", "contacto"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Productos disponibles",
+      beneficios: "Ventajas en tienda",
+      preguntas: "Preguntas frecuentes",
+      contacto: "Consulta existencias"
+    },
+    ctaWhatsapp: "Preguntar disponibilidad a {nombre}"
+  },
+  "salud y belleza": {
+    ordenSecciones: ["presentacion", "servicios", "contacto", "beneficios", "preguntas"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Servicios y atención",
+      beneficios: "Atención y confianza",
+      preguntas: "Preguntas frecuentes",
+      contacto: "Agenda tu cita"
+    },
+    ctaWhatsapp: "Agendar cita en {nombre}"
+  },
+  "taller u oficio": {
+    ordenSecciones: ["presentacion", "servicios", "beneficios", "contacto", "preguntas"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Trabajos y servicios",
+      beneficios: "Cómo trabajamos",
+      preguntas: "Preguntas frecuentes",
+      contacto: "Solicita cotización"
+    },
+    ctaWhatsapp: "Cotizar por WhatsApp con {nombre}"
+  },
+  servicios: {
+    ordenSecciones: ["presentacion", "servicios", "beneficios", "preguntas", "contacto"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Servicios",
+      beneficios: "Cómo te ayudamos",
+      preguntas: "Preguntas frecuentes",
+      contacto: "Contacto y cotización"
+    },
+    ctaWhatsapp: "Pedir información a {nombre}"
+  },
+  otro: {
+    ordenSecciones: ["presentacion", "servicios", "beneficios", "preguntas", "contacto"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Lo que ofrecemos",
+      beneficios: "Beneficios",
+      preguntas: "Preguntas frecuentes",
+      contacto: "Contacto directo"
+    },
+    ctaWhatsapp: "Enviar WhatsApp a {nombre}"
+  }
+};
+
 const PERFILES_GIRO = {
   tienda: {
     introduccion: {
@@ -691,30 +1306,40 @@ function aplicarPlantillaGen(texto, variables) {
     .replace(/\{oferta\}/g, variables.oferta);
 }
 
+function normalizarTextoBusquedaGen(texto) {
+  return limpiarTextoGen(texto)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function normalizarGiro(texto) {
-  const limpio = limpiarTextoGen(texto).toLowerCase();
+  const limpio = normalizarTextoBusquedaGen(texto);
   if (!limpio) {
     return "";
   }
   if (GIROS_ETIQUETAS[limpio]) {
     return limpio;
   }
-  if (/comida|panad|restaur|taquer|caf[eé]|postre|pastel|cocina|fonda|antojit|alimento/.test(limpio)) {
+  if (/\b(comida|panad\w*|pastel\w*|reposter\w*|restaur\w*|taquer\w*|tacos?|cafet\w*|cafe|postres?|cocina|fonda|antojit\w*|alimento\w*|dulcer\w*|dulces?|chocolat\w*|carnicer\w*|poller\w*|pescader\w*|tortiller\w*|tortillas?|birria\w*|barbacoa|pizzer\w*|hamburgues\w*|marisc\w*|helader\w*|paleter\w*|never\w*|loncher\w*|torter\w*|sushi)\b/.test(limpio)) {
     return "comida";
   }
-  if (/tienda|ropa|abarrote|papel|regalo|boutique|venta|comercio|calzado|zapater/.test(limpio)) {
+  if (/\b(tienda|ropa|boutique|moda|abarrote\w*|fruter\w*|verduler\w*|minisuper|miscelan\w*|papel\w*|librer\w*|regalo\w*|venta|comercio|calzado|zapater\w*|ferreter\w*|tlapaler\w*|farmac\w*|botica|florer\w*|flores?|vivero|muebler\w*|muebles?|joyer\w*|relojer\w*|bisuter\w*|optic\w*|lentes?|jugueter\w*|artesan\w*|mercer\w*|forrajer\w*)\b/.test(limpio)) {
     return "tienda";
   }
-  if (/salud|belleza|est[eé]tica|barber|u[nñ]as|spa|dental|consult|cl[ií]nica|sal[oó]n|masaje/.test(limpio)) {
+  if (/\b(salud|belleza|estetic\w*|barber\w*|peluquer\w*|unas|manicur\w*|pedicur\w*|maquill\w*|spa|dental|dentist\w*|odontolog\w*|consult\w*|clinic\w*|salon|masaje\w*|veterinar\w*|mascotas?|gimnasio|gym|fitness|crossfit|yoga|pilates|fisioterap\w*|psicolog\w*|nutric\w*|medic\w*|doctor\w*|laboratorio)\b/.test(limpio)) {
     return "salud y belleza";
   }
-  if (/taller|oficio|mec[aá]n|plomer|electric|carpint|herrer|reparaci|t[eé]cnico/.test(limpio)) {
+  if (/\b(taller|oficio|mecan\w*|automotriz|llanter\w*|vulcaniz\w*|hojalater\w*|plomer\w*|electric\w*|carpint\w*|herrer\w*|soldadur\w*|reparaci\w*|tecnic\w*|cerrajer\w*|albanil\w*|construc\w*|remodel\w*|climat\w*|refriger\w*|tapicer\w*|aluminio|vidrier\w*|pintor\w*|impermeab\w*)\b/.test(limpio)) {
     return "taller u oficio";
   }
-  if (/servicio|asesor|contab|limpieza|flete|mudanza|fotograf|dise[nñ]|clase|curso|mantenimiento/.test(limpio)) {
+  if (/\b(servicio\w*|asesor\w*|contab\w*|contador\w*|abogad\w*|legal\w*|consultor\w*|limpieza|lavander\w*|tintorer\w*|planchad\w*|fumig\w*|flete\w*|mudanza\w*|envio\w*|paqueter\w*|fotograf\w*|video|diseno|marketing|clase\w*|curso\w*|escuela|academ\w*|mantenimiento|evento\w*|seguro\w*|inmobiliar\w*|imprenta)\b/.test(limpio)) {
     return "servicios";
   }
-  if (/otro|otra/.test(limpio)) {
+  if (limpio.length >= 2) {
     return "otro";
   }
   return "";
@@ -853,10 +1478,277 @@ function construirTituloGen(nombre, ciudad, ofertaLimpia, giro, tono, variante) 
   return `${nombre} en ${ciudad}, ${etiquetaGiro}`;
 }
 
+const CLAVES_GIRO_GENERALES = [
+  "comida",
+  "tienda",
+  "servicios",
+  "salud y belleza",
+  "taller u oficio",
+  "otro"
+];
+
+function coincideTerminoGen(textoNormalizado, termino) {
+  if (!textoNormalizado || !termino) {
+    return false;
+  }
+  if (textoNormalizado === termino) {
+    return true;
+  }
+  if (termino.includes(" ")) {
+    return textoNormalizado.includes(termino);
+  }
+  const tokens = textoNormalizado.split(" ");
+  return tokens.some((tok) => {
+    if (tok === termino) {
+      return true;
+    }
+    if (termino.length >= 4 && tok.startsWith(termino)) {
+      return true;
+    }
+    if (tok.length >= 4 && termino.startsWith(tok) && tok.length >= termino.length - 2) {
+      return true;
+    }
+    return false;
+  });
+}
+
+function calcularSemillaTextoGen(texto) {
+  let semilla = 0;
+  for (let i = 0; i < texto.length; i += 1) {
+    semilla = (semilla * 31 + texto.charCodeAt(i)) % 997;
+  }
+  return semilla;
+}
+
+function resolverTemaPortada(datosOGiro) {
+  const info =
+    typeof datosOGiro === "string"
+      ? { giro: datosOGiro, giroTexto: datosOGiro }
+      : datosOGiro && typeof datosOGiro === "object"
+        ? datosOGiro
+        : {};
+
+  const giroEscrito = normalizarTextoBusquedaGen(info.giroTexto || info.giro || "");
+  const giroBase = normalizarTextoBusquedaGen(info.giro || "");
+  const textoNegocio = normalizarTextoBusquedaGen(
+    `${info.nombre || ""} ${info.oferta || ""}`
+  );
+  const textoCompleto = [giroEscrito, giroBase, textoNegocio].filter(Boolean).join(" ");
+
+  const clavesEspecificas = Object.keys(PORTADAS_POR_GIRO).filter(
+    (k) => !CLAVES_GIRO_GENERALES.includes(k)
+  );
+
+  // 1) Coincidencia directa en el giro escrito (clave exacta o sinónimo)
+  if (giroEscrito && !CLAVES_GIRO_GENERALES.includes(giroEscrito)) {
+    if (PORTADAS_POR_GIRO[giroEscrito]) {
+      return giroEscrito;
+    }
+    for (const clave of clavesEspecificas) {
+      const entrada = PORTADAS_POR_GIRO[clave];
+      if ((entrada.sinonimos || []).includes(giroEscrito)) {
+        return clave;
+      }
+    }
+  }
+
+  // 2) Puntuación abierta por sinónimos y palabras clave en giro escrito, nombre y oferta
+  let mejorClave = "";
+  let mejorPuntos = 0;
+  for (const clave of clavesEspecificas) {
+    const entrada = PORTADAS_POR_GIRO[clave];
+    let puntos = 0;
+    (entrada.sinonimos || []).forEach((sin) => {
+      if (giroEscrito && coincideTerminoGen(giroEscrito, sin)) {
+        puntos += giroEscrito === sin ? 24 : 12;
+      } else if (textoNegocio && coincideTerminoGen(textoNegocio, sin)) {
+        puntos += 6;
+      }
+    });
+    (entrada.palabras || []).forEach((pal) => {
+      if (giroEscrito && coincideTerminoGen(giroEscrito, pal)) {
+        puntos += 5;
+      }
+      if (textoNegocio && coincideTerminoGen(textoNegocio, pal)) {
+        puntos += 3;
+      }
+    });
+    if (puntos > mejorPuntos) {
+      mejorPuntos = puntos;
+      mejorClave = clave;
+    }
+  }
+
+  if (mejorClave && mejorPuntos > 0) {
+    return mejorClave;
+  }
+
+  // 3) Si el giro no está en el mapa inicial ni hubo coincidencia específica,
+  //    inferir la familia general según lo que describió el negocio
+  const familiaDesdeTexto = normalizarGiro(textoCompleto);
+  if (familiaDesdeTexto && PORTADAS_POR_GIRO[familiaDesdeTexto]) {
+    return familiaDesdeTexto;
+  }
+  const familiaDesdeGiro = normalizarGiro(giroEscrito || giroBase);
+  if (familiaDesdeGiro && PORTADAS_POR_GIRO[familiaDesdeGiro]) {
+    return familiaDesdeGiro;
+  }
+  return "otro";
+}
+
+function obtenerOpcionesPortada(datosOGiro) {
+  const clave = resolverTemaPortada(datosOGiro);
+  const tema = PORTADAS_POR_GIRO[clave] || PORTADAS_POR_GIRO.otro;
+  return (tema.fotos || []).map((f, idx) => ({
+    url: f.url,
+    etiqueta: f.etiqueta,
+    giroClave: clave,
+    giroEtiqueta: tema.etiqueta,
+    indice: idx
+  }));
+}
+
+function seleccionarPortadaNegocio(datos, variante, indiceForzado) {
+  const info = datos && typeof datos === "object" ? datos : {};
+  const claveTema = resolverTemaPortada(info);
+  const tema = PORTADAS_POR_GIRO[claveTema] || PORTADAS_POR_GIRO.otro;
+  const opciones = tema.fotos || [];
+  const nombre = limpiarTextoGen(info.nombre);
+  const v = Math.abs(Number(variante) || 0);
+
+  let idx = 0;
+  if (Number.isInteger(indiceForzado)) {
+    idx = ((indiceForzado % opciones.length) + opciones.length) % opciones.length;
+  } else {
+    const semillaTexto = normalizarTextoBusquedaGen(
+      `${info.nombre || ""} ${info.giroTexto || info.giro || ""} ${info.oferta || ""}`
+    );
+    const baseIdx =
+      CLAVES_GIRO_GENERALES.includes(claveTema) && semillaTexto
+        ? calcularSemillaTextoGen(semillaTexto) % opciones.length
+        : 0;
+    idx = (baseIdx + v) % opciones.length;
+  }
+
+  const elegida = opciones[idx] || opciones[0];
+  return {
+    url: elegida.url,
+    alt: nombre ? `${elegida.etiqueta} de ${nombre}` : elegida.etiqueta,
+    giro: claveTema,
+    giroEtiqueta: tema.etiqueta,
+    indice: idx,
+    total: opciones.length,
+    etiqueta: elegida.etiqueta,
+    origen: "catalogo"
+  };
+}
+
+function obtenerSiguientePortada(datos, indiceActual, urlActual) {
+  const info = datos && typeof datos === "object" ? datos : {};
+  const claveTema = resolverTemaPortada(info);
+  const tema = PORTADAS_POR_GIRO[claveTema] || PORTADAS_POR_GIRO.otro;
+  const opciones = tema.fotos || [];
+  let actual = Number.isInteger(indiceActual) ? indiceActual : -1;
+  if (typeof urlActual === "string" && urlActual) {
+    const porUrl = opciones.findIndex((op) => op.url === urlActual);
+    if (porUrl !== -1) {
+      actual = porUrl;
+    }
+  }
+  const siguiente = actual >= 0 ? (actual + 1) % opciones.length : 0;
+  return seleccionarPortadaNegocio(info, 0, siguiente);
+}
+
+function obtenerEstructuraNegocio(datos) {
+  const info = datos && typeof datos === "object" ? datos : {};
+  const nombre = limpiarTextoGen(info.nombre) || "tu negocio";
+  let tipo = PERFILES_GIRO[info.giro] ? info.giro : "";
+  if (!tipo || tipo === "otro") {
+    const inferido = normalizarGiro(
+      `${info.giroTexto || ""} ${info.giro || ""} ${info.nombre || ""} ${info.oferta || ""}`
+    );
+    if (inferido && ESTRUCTURAS_POR_TIPO_NEGOCIO[inferido]) {
+      tipo = inferido;
+    }
+  }
+  const base = ESTRUCTURAS_POR_TIPO_NEGOCIO[tipo] || ESTRUCTURAS_POR_TIPO_NEGOCIO.otro;
+  return {
+    tipo: tipo || "otro",
+    ordenSecciones: base.ordenSecciones.slice(),
+    titulos: { ...base.titulos },
+    ctaWhatsapp: base.ctaWhatsapp.replace(/\{nombre\}/g, nombre)
+  };
+}
+
+function esArchivoImagenValido(archivo) {
+  if (!archivo || typeof archivo !== "object") {
+    return false;
+  }
+  const tipo = String(archivo.type || "").toLowerCase();
+  if (tipo.startsWith("image/")) {
+    return true;
+  }
+  const nombre = String(archivo.name || "").toLowerCase();
+  return !tipo && /\.(jpe?g|png|webp|gif|avif|bmp|svg)$/i.test(nombre);
+}
+
+function comprimirImagenArchivoLocal(archivo, maxAncho) {
+  return new Promise((resolve, reject) => {
+    if (!esArchivoImagenValido(archivo)) {
+      reject(new Error("Solo se permiten archivos de imagen."));
+      return;
+    }
+    const lector = new FileReader();
+    lector.onerror = () => reject(new Error("No se pudo leer la imagen."));
+    lector.onload = () => {
+      const dataUrl = String(lector.result || "");
+      if (!dataUrl.startsWith("data:image/")) {
+        reject(new Error("El archivo no es una imagen válida."));
+        return;
+      }
+      if (typeof Image !== "function" || typeof document === "undefined") {
+        resolve(dataUrl);
+        return;
+      }
+      const img = new Image();
+      img.onerror = () => resolve(dataUrl);
+      img.onload = () => {
+        try {
+          const limite = Number(maxAncho) > 0 ? Number(maxAncho) : 720;
+          const escala = img.width > limite ? limite / img.width : 1;
+          const w = Math.max(1, Math.round(img.width * escala));
+          const h = Math.max(1, Math.round(img.height * escala));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(dataUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          const tipoSalida = archivo.type === "image/png" ? "image/png" : "image/jpeg";
+          const resultado =
+            tipoSalida === "image/jpeg"
+              ? canvas.toDataURL("image/jpeg", 0.78)
+              : canvas.toDataURL("image/png");
+          resolve(resultado);
+        } catch (error) {
+          resolve(dataUrl);
+        }
+      };
+      img.src = dataUrl;
+    };
+    lector.readAsDataURL(archivo);
+  });
+}
+
 function generarBorradorNegocio(datos, variante) {
   const v = Math.abs(Number(variante) || 0);
   const nombre = limpiarTextoGen(datos.nombre);
-  const giro = PERFILES_GIRO[datos.giro] ? datos.giro : "otro";
+  const giroTexto = limpiarTextoGen(datos.giroTexto || "");
+  const giroBase = PERFILES_GIRO[datos.giro] ? datos.giro : normalizarGiro(giroTexto || datos.giro) || "otro";
+  const giro = PERFILES_GIRO[giroBase] ? giroBase : "otro";
   const ciudad = limpiarTextoGen(datos.ciudad);
   const oferta = limpiarTextoGen(datos.oferta);
   const tono = TONOS_ETIQUETAS[datos.tono] ? datos.tono : "cercano";
@@ -891,6 +1783,9 @@ function generarBorradorNegocio(datos, variante) {
   }));
 
   const mensajeWhatsapp = construirMensajeWhatsappNegocioGen(nombre, tono);
+  const datosPortada = { nombre, giro, giroTexto, oferta: ofertaLimpia };
+  const portada = seleccionarPortadaNegocio(datosPortada, v);
+  const estructura = obtenerEstructuraNegocio(datosPortada);
 
   return {
     titulo,
@@ -900,6 +1795,8 @@ function generarBorradorNegocio(datos, variante) {
     preguntasFrecuentes,
     mensajeWhatsapp,
     whatsapp,
+    portada,
+    estructura,
     variante: v
   };
 }
@@ -923,7 +1820,7 @@ async function generarBorradorConServicio(datos, variante) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: datos.nombre || "",
-          giro: datos.giro || "",
+          giro: datos.giroTexto || datos.giro || "",
           ciudad: datos.ciudad || "",
           oferta: datos.oferta || "",
           tono: datos.tono || "cercano",
@@ -973,6 +1870,7 @@ async function generarBorradorConServicio(datos, variante) {
     if (servicios.length === 0) {
       return null;
     }
+    const v = Math.abs(Number(variante) || 0);
     return {
       titulo: limpiarTextoGen(b.titulo),
       presentacion: limpiarTextoGen(b.presentacion),
@@ -997,7 +1895,9 @@ async function generarBorradorConServicio(datos, variante) {
         TONOS_ETIQUETAS[datos.tono] ? datos.tono : "cercano"
       ),
       whatsapp: limpiarDigitosGen(datos.whatsapp),
-      variante: Math.abs(Number(variante) || 0)
+      portada: seleccionarPortadaNegocio(datos, v),
+      estructura: obtenerEstructuraNegocio(datos),
+      variante: v
     };
   } catch (error) {
     return null;
@@ -1065,10 +1965,19 @@ window.dmdGenerador = {
   DOMINIO_PUBLICACION_DMD,
   GIROS_ETIQUETAS,
   TONOS_ETIQUETAS,
+  PORTADAS_POR_GIRO,
+  ESTRUCTURAS_POR_TIPO_NEGOCIO,
   limpiarTexto: limpiarTextoGen,
   limpiarDigitos: limpiarDigitosGen,
   normalizarGiro,
   normalizarTono,
+  resolverTemaPortada,
+  obtenerOpcionesPortada,
+  seleccionarPortada: seleccionarPortadaNegocio,
+  obtenerSiguientePortada,
+  obtenerEstructuraNegocio,
+  esArchivoImagenValido,
+  comprimirImagenArchivo: comprimirImagenArchivoLocal,
   generarBorrador: generarBorradorNegocio,
   generarBorradorConServicio,
   formatearTextoPlano: formatearBorradorTextoPlano,

@@ -240,10 +240,13 @@
               <div class="field">
                 <span class="field-label">Portada</span>
                 <div class="upload-row">
+                  <button id="ed-cambiar-portada" class="btn btn-secondary btn-sm" type="button">Cambiar foto</button>
                   <label class="btn btn-secondary btn-sm upload-label" for="ed-subir-portada">Subir imagen</label>
                   <input id="ed-subir-portada" type="file" accept="image/*" hidden>
                   <button id="ed-quitar-portada" class="btn btn-danger-ghost btn-sm" type="button" hidden>Quitar</button>
                 </div>
+                <p id="ed-portada-meta" class="field-hint"></p>
+                <div id="ed-portada-opciones" class="cover-options-grid" role="group" aria-label="Fotos sugeridas para tu giro"></div>
                 <input id="ed-portada-alt" class="input" type="text" maxlength="140" placeholder="Texto alternativo de la imagen">
               </div>
             </div>

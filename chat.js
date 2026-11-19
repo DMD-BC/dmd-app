@@ -266,7 +266,7 @@
         cuentaId: propietarioActual(),
         titulo: "Nueva conversación",
         pasoIndice: 0,
-        datos: { nombre: "", giro: "", ciudad: "", oferta: "", tono: "", whatsapp: "" },
+        datos: { nombre: "", giro: "", giroTexto: "", ciudad: "", oferta: "", tono: "", whatsapp: "" },
         borradorId: null,
         creadaEn: ahora,
         actualizadaEn: ahora,
@@ -428,11 +428,34 @@
       let registro = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
 
       if (registro) {
+        const esRegeneracion = etiquetaVersion === "Regenerado";
+        const portadaPrevia = registro.diseno && registro.diseno.portadaOrigen;
+        const giroPortadaPrevio = (registro.diseno && registro.diseno.portadaGiro) || "";
+        const giroPortadaNuevo = (borrador.portada && borrador.portada.giro) || "";
+        const cambioTema = Boolean(giroPortadaNuevo && giroPortadaPrevio !== giroPortadaNuevo);
+
         registro.datos = datos;
         registro.borrador = borrador;
         registro.actualizadoEn = new Date().toISOString();
         if (window.dmdEditor) {
           window.dmdEditor.asegurarEstructuraBorrador(registro);
+          if (
+            borrador.portada &&
+            portadaPrevia !== "propia" &&
+            (esRegeneracion || cambioTema || !registro.diseno.portadaDataUrl)
+          ) {
+            const nuevaPortada =
+              esRegeneracion && !cambioTema && typeof gen.obtenerSiguientePortada === "function"
+                ? gen.obtenerSiguientePortada(
+                    datos,
+                    registro.diseno.portadaIndice,
+                    registro.diseno.portadaDataUrl
+                  )
+                : borrador.portada;
+            if (typeof window.dmdEditor.aplicarPortadaEnRegistro === "function") {
+              window.dmdEditor.aplicarPortadaEnRegistro(registro, nuevaPortada);
+            }
+          }
           window.dmdEditor.registrarVersion(registro, etiquetaVersion || "Actualizado desde chat");
         }
         sincronizarPublicada(registro);
@@ -450,6 +473,9 @@
         };
         if (window.dmdEditor) {
           window.dmdEditor.asegurarEstructuraBorrador(registro);
+          if (borrador.portada && typeof window.dmdEditor.aplicarPortadaEnRegistro === "function") {
+            window.dmdEditor.aplicarPortadaEnRegistro(registro, borrador.portada);
+          }
           window.dmdEditor.registrarVersion(registro, "Versión inicial");
         }
         todosBorradores.unshift(registro);
@@ -535,14 +561,14 @@
         return { ok: true, valor: limpio };
       }
       if (campo === "giro") {
-        const g = gen.normalizarGiro(limpio);
-        if (!g) {
+        if (limpio.length < 2) {
           return {
             ok: false,
-            aviso: "Elige Tienda, Comida, Servicios, Salud y belleza, Taller u oficio u Otro."
+            aviso: "Escribe el giro de tu negocio."
           };
         }
-        return { ok: true, valor: g };
+        const g = gen.normalizarGiro(limpio) || "otro";
+        return { ok: true, valor: g, giroTexto: limpio };
       }
       if (campo === "ciudad") {
         if (limpio.length < 2) {
@@ -689,6 +715,9 @@
         }
 
         conv.datos[paso.campo] = validacion.valor;
+        if (paso.campo === "giro") {
+          conv.datos.giroTexto = validacion.giroTexto || texto;
+        }
         if (paso.campo === "nombre") {
           conv.titulo = validacion.valor;
         }
@@ -748,6 +777,9 @@
         }
         msg.texto = limpio;
         conv.datos[msg.campo] = val.valor;
+        if (msg.campo === "giro") {
+          conv.datos.giroTexto = val.giroTexto || limpio;
+        }
         if (msg.campo === "nombre") {
           conv.titulo = val.valor;
         }
@@ -768,7 +800,22 @@
     }
 
     function construirTarjetaBorradorEnChat(registro) {
+      if (window.dmdEditor && typeof window.dmdEditor.asegurarEstructuraBorrador === "function") {
+        window.dmdEditor.asegurarEstructuraBorrador(registro);
+      }
       const { datos, borrador } = registro;
+      const diseno = registro.diseno || {};
+      const estructura =
+        (borrador && borrador.estructura) ||
+        (typeof gen.obtenerEstructuraNegocio === "function"
+          ? gen.obtenerEstructuraNegocio(datos)
+          : null);
+      const titulosSec = (estructura && estructura.titulos) || {};
+      const ordenSec =
+        (Array.isArray(diseno.ordenSecciones) && diseno.ordenSecciones.length && diseno.ordenSecciones) ||
+        (estructura && Array.isArray(estructura.ordenSecciones) && estructura.ordenSecciones) ||
+        ["presentacion", "servicios", "beneficios", "preguntas", "contacto"];
+
       const card = document.createElement("div");
       card.className = "chat-draft-wrap";
 
@@ -790,112 +837,252 @@
       const body = document.createElement("div");
       body.className = "preview-body";
 
-      const hero = document.createElement("div");
-      hero.className = "preview-hero";
-      const h3 = document.createElement("h3");
-      h3.className = "preview-title";
-      h3.textContent = borrador.titulo;
-      const p = document.createElement("p");
-      p.className = "preview-intro";
-      p.textContent = borrador.presentacion;
-      hero.appendChild(h3);
-      hero.appendChild(p);
-      body.appendChild(hero);
+      const portadaUrl =
+        diseno.portadaOrigen === "ninguna"
+          ? ""
+          : diseno.portadaDataUrl || (borrador.portada && borrador.portada.url) || "";
+      const portadaAlt =
+        diseno.portadaAlt ||
+        (borrador.portada && borrador.portada.alt) ||
+        `Portada de ${datos.nombre}`;
 
-      const bServ = document.createElement("div");
-      bServ.className = "preview-block";
-      const hs = document.createElement("h4");
-      hs.className = "preview-block-title";
-      hs.textContent = "Servicios";
-      const ulS = document.createElement("ul");
-      ulS.className = "preview-services";
-      borrador.servicios.forEach((s) => {
-        const li = document.createElement("li");
-        li.className = "preview-service-item";
-        const st = document.createElement("p");
-        st.className = "preview-service-title";
-        st.textContent = s.titulo;
-        li.appendChild(st);
-        if (s.descripcion) {
-          const sd = document.createElement("p");
-          sd.className = "preview-service-desc";
-          sd.textContent = s.descripcion;
-          li.appendChild(sd);
+      const persistirPortadaChat = (nuevaPortada, etiquetaVer, mensajeEstado) => {
+        if (window.dmdEditor && typeof window.dmdEditor.aplicarPortadaEnRegistro === "function") {
+          window.dmdEditor.aplicarPortadaEnRegistro(registro, nuevaPortada);
+        } else {
+          registro.diseno = registro.diseno || {};
+          registro.diseno.portadaDataUrl = nuevaPortada ? nuevaPortada.url : "";
+          registro.diseno.portadaAlt = nuevaPortada ? nuevaPortada.alt : "";
+          registro.diseno.portadaOrigen = nuevaPortada ? nuevaPortada.origen : "ninguna";
+          if (nuevaPortada && Number.isInteger(nuevaPortada.indice)) {
+            registro.diseno.portadaIndice = nuevaPortada.indice;
+          }
         }
-        ulS.appendChild(li);
-      });
-      bServ.appendChild(hs);
-      bServ.appendChild(ulS);
-      body.appendChild(bServ);
-
-      const bBen = document.createElement("div");
-      bBen.className = "preview-block";
-      const hb = document.createElement("h4");
-      hb.className = "preview-block-title";
-      hb.textContent = "Beneficios";
-      const ulB = document.createElement("ul");
-      ulB.className = "preview-benefits";
-      borrador.beneficios.forEach((b) => {
-        const li = document.createElement("li");
-        li.className = "preview-benefit-item";
-        li.appendChild(crearIconoCheck());
-        const sp = document.createElement("span");
-        sp.textContent = b;
-        li.appendChild(sp);
-        ulB.appendChild(li);
-      });
-      bBen.appendChild(hb);
-      bBen.appendChild(ulB);
-      body.appendChild(bBen);
-
-      const bFaq = document.createElement("div");
-      bFaq.className = "preview-block";
-      const hf = document.createElement("h4");
-      hf.className = "preview-block-title";
-      hf.textContent = "Preguntas frecuentes";
-      const listF = document.createElement("div");
-      listF.className = "faq-list";
-      borrador.preguntasFrecuentes.forEach((f, idx) => {
-        const d = document.createElement("details");
-        d.className = "faq-item";
-        if (idx === 0) {
-          d.open = true;
+        registro.actualizadoEn = new Date().toISOString();
+        if (window.dmdEditor && typeof window.dmdEditor.registrarVersion === "function") {
+          window.dmdEditor.registrarVersion(registro, etiquetaVer);
         }
-        const sum = document.createElement("summary");
-        sum.className = "faq-question";
-        sum.textContent = f.pregunta;
-        const ans = document.createElement("p");
-        ans.className = "faq-answer";
-        ans.textContent = f.respuesta;
-        d.appendChild(sum);
-        d.appendChild(ans);
-        listF.appendChild(d);
-      });
-      bFaq.appendChild(hf);
-      bFaq.appendChild(listF);
-      body.appendChild(bFaq);
+        sincronizarPublicada(registro);
+        guardarColecciones();
+        if (window.dmdEditor && borradorActivoId === registro.id) {
+          window.dmdEditor.cargarBorrador(registro, false);
+        }
+        estadoChatEl.textContent = mensajeEstado;
+        renderizarHilo();
+      };
 
-      const bWa = document.createElement("div");
-      bWa.className = "preview-cta-box";
-      const waLimpio = gen.limpiarDigitos(datos.whatsapp);
-      if (waLimpio) {
-        const a = document.createElement("a");
-        a.className = "btn btn-primary btn-full";
-        a.href = gen.construirUrlWhatsapp(waLimpio, borrador.mensajeWhatsapp);
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.appendChild(crearIconoWhatsapp());
-        const sp = document.createElement("span");
-        sp.textContent = `Enviar WhatsApp a ${datos.nombre}`;
-        a.appendChild(sp);
-        bWa.appendChild(a);
-      } else {
-        const av = document.createElement("p");
-        av.className = "notice-box";
-        av.textContent = "Sin WhatsApp todavía.";
-        bWa.appendChild(av);
-      }
-      body.appendChild(bWa);
+      ordenSec.forEach((secId) => {
+        if (secId === "presentacion") {
+          const hero = document.createElement("div");
+          hero.className = "preview-hero";
+
+          if (portadaUrl) {
+            const fig = document.createElement("figure");
+            fig.className = "preview-cover-wrap";
+            const img = document.createElement("img");
+            img.className = "preview-cover-img";
+            img.src = portadaUrl;
+            img.alt = portadaAlt;
+            img.decoding = "async";
+            fig.appendChild(img);
+            hero.appendChild(fig);
+          }
+
+          const barraPortada = document.createElement("div");
+          barraPortada.className = "draft-cover-bar";
+
+          const btnCambiarFoto = document.createElement("button");
+          btnCambiarFoto.type = "button";
+          btnCambiarFoto.className = "btn btn-secondary btn-sm";
+          btnCambiarFoto.dataset.chatAction = "cambiar-portada";
+          btnCambiarFoto.textContent = portadaUrl ? "Cambiar foto" : "Elegir foto";
+          btnCambiarFoto.addEventListener("click", () => {
+            if (typeof gen.obtenerSiguientePortada !== "function") {
+              return;
+            }
+            const siguiente = gen.obtenerSiguientePortada(
+              registro.datos,
+              registro.diseno && registro.diseno.portadaIndice,
+              registro.diseno && registro.diseno.portadaDataUrl
+            );
+            if (!siguiente || !siguiente.url) {
+              return;
+            }
+            persistirPortadaChat(siguiente, "Foto de portada", "Portada cambiada.");
+          });
+
+          const idSubir = `chat-subir-portada-${registro.id}`;
+          const lblSubir = document.createElement("label");
+          lblSubir.className = "btn btn-secondary btn-sm upload-label";
+          lblSubir.htmlFor = idSubir;
+          lblSubir.textContent = "Subir imagen";
+
+          const inpSubir = document.createElement("input");
+          inpSubir.id = idSubir;
+          inpSubir.type = "file";
+          inpSubir.accept = "image/*";
+          inpSubir.hidden = true;
+          inpSubir.dataset.chatAction = "subir-portada";
+          inpSubir.addEventListener("change", async () => {
+            const archivo = inpSubir.files && inpSubir.files[0];
+            if (!archivo) {
+              return;
+            }
+            if (
+              typeof gen.esArchivoImagenValido === "function" &&
+              !gen.esArchivoImagenValido(archivo)
+            ) {
+              estadoChatEl.textContent = "Solo se permiten imágenes.";
+              inpSubir.value = "";
+              return;
+            }
+            try {
+              const dataUrl =
+                typeof gen.comprimirImagenArchivo === "function"
+                  ? await gen.comprimirImagenArchivo(archivo, 720)
+                  : "";
+              if (!dataUrl) {
+                estadoChatEl.textContent = "No se pudo leer la imagen.";
+                return;
+              }
+              persistirPortadaChat(
+                {
+                  url: dataUrl,
+                  alt: `Imagen principal de ${registro.datos.nombre}`,
+                  origen: "propia",
+                  giro: (registro.diseno && registro.diseno.portadaGiro) || registro.datos.giro,
+                  indice: (registro.diseno && registro.diseno.portadaIndice) || 0
+                },
+                "Imagen de portada",
+                "Imagen guardada en el borrador."
+              );
+            } catch (error) {
+              estadoChatEl.textContent = "Solo se permiten imágenes válidas.";
+            } finally {
+              inpSubir.value = "";
+            }
+          });
+
+          barraPortada.appendChild(btnCambiarFoto);
+          barraPortada.appendChild(lblSubir);
+          barraPortada.appendChild(inpSubir);
+          hero.appendChild(barraPortada);
+
+          const h3 = document.createElement("h3");
+          h3.className = "preview-title";
+          h3.textContent = borrador.titulo;
+          const p = document.createElement("p");
+          p.className = "preview-intro";
+          p.textContent = borrador.presentacion;
+          hero.appendChild(h3);
+          hero.appendChild(p);
+          body.appendChild(hero);
+        }
+
+        if (secId === "servicios") {
+          const bServ = document.createElement("div");
+          bServ.className = "preview-block";
+          const hs = document.createElement("h4");
+          hs.className = "preview-block-title";
+          hs.textContent = titulosSec.servicios || "Servicios";
+          const ulS = document.createElement("ul");
+          ulS.className = "preview-services";
+          borrador.servicios.forEach((s) => {
+            const li = document.createElement("li");
+            li.className = "preview-service-item";
+            const st = document.createElement("p");
+            st.className = "preview-service-title";
+            st.textContent = s.titulo;
+            li.appendChild(st);
+            if (s.descripcion) {
+              const sd = document.createElement("p");
+              sd.className = "preview-service-desc";
+              sd.textContent = s.descripcion;
+              li.appendChild(sd);
+            }
+            ulS.appendChild(li);
+          });
+          bServ.appendChild(hs);
+          bServ.appendChild(ulS);
+          body.appendChild(bServ);
+        }
+
+        if (secId === "beneficios") {
+          const bBen = document.createElement("div");
+          bBen.className = "preview-block";
+          const hb = document.createElement("h4");
+          hb.className = "preview-block-title";
+          hb.textContent = titulosSec.beneficios || "Beneficios";
+          const ulB = document.createElement("ul");
+          ulB.className = "preview-benefits";
+          borrador.beneficios.forEach((b) => {
+            const li = document.createElement("li");
+            li.className = "preview-benefit-item";
+            li.appendChild(crearIconoCheck());
+            const sp = document.createElement("span");
+            sp.textContent = b;
+            li.appendChild(sp);
+            ulB.appendChild(li);
+          });
+          bBen.appendChild(hb);
+          bBen.appendChild(ulB);
+          body.appendChild(bBen);
+        }
+
+        if (secId === "preguntas") {
+          const bFaq = document.createElement("div");
+          bFaq.className = "preview-block";
+          const hf = document.createElement("h4");
+          hf.className = "preview-block-title";
+          hf.textContent = titulosSec.preguntas || "Preguntas frecuentes";
+          const listF = document.createElement("div");
+          listF.className = "faq-list";
+          borrador.preguntasFrecuentes.forEach((f, idx) => {
+            const d = document.createElement("details");
+            d.className = "faq-item";
+            if (idx === 0) {
+              d.open = true;
+            }
+            const sum = document.createElement("summary");
+            sum.className = "faq-question";
+            sum.textContent = f.pregunta;
+            const ans = document.createElement("p");
+            ans.className = "faq-answer";
+            ans.textContent = f.respuesta;
+            d.appendChild(sum);
+            d.appendChild(ans);
+            listF.appendChild(d);
+          });
+          bFaq.appendChild(hf);
+          bFaq.appendChild(listF);
+          body.appendChild(bFaq);
+        }
+
+        if (secId === "contacto") {
+          const bWa = document.createElement("div");
+          bWa.className = "preview-cta-box";
+          const waLimpio = gen.limpiarDigitos(datos.whatsapp);
+          if (waLimpio) {
+            const a = document.createElement("a");
+            a.className = "btn btn-primary btn-full";
+            a.href = gen.construirUrlWhatsapp(waLimpio, borrador.mensajeWhatsapp);
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.appendChild(crearIconoWhatsapp());
+            const sp = document.createElement("span");
+            sp.textContent =
+              (estructura && estructura.ctaWhatsapp) || `Enviar WhatsApp a ${datos.nombre}`;
+            a.appendChild(sp);
+            bWa.appendChild(a);
+          } else {
+            const av = document.createElement("p");
+            av.className = "notice-box";
+            av.textContent = "Sin WhatsApp todavía.";
+            bWa.appendChild(av);
+          }
+          body.appendChild(bWa);
+        }
+      });
       frame.appendChild(body);
       card.appendChild(frame);
 
@@ -1213,7 +1400,8 @@
 
         const meta = document.createElement("p");
         meta.className = "draft-meta";
-        const gTxt = gen.GIROS_ETIQUETAS[reg.datos.giro] || reg.datos.giro;
+        const gTxt =
+          reg.datos.giroTexto || gen.GIROS_ETIQUETAS[reg.datos.giro] || reg.datos.giro;
         meta.textContent = `${gTxt} · ${reg.datos.ciudad}`;
 
         const acciones = document.createElement("div");
@@ -1358,6 +1546,12 @@
               if (b && b.id && b.datos && b.borrador) {
                 const copia = clonar(b);
                 copia.cuentaId = prop;
+                if (
+                  window.dmdEditor &&
+                  typeof window.dmdEditor.asegurarEstructuraBorrador === "function"
+                ) {
+                  window.dmdEditor.asegurarEstructuraBorrador(copia);
+                }
                 if (!todosBorradores.some((x) => x.id === copia.id)) {
                   todosBorradores.unshift(copia);
                   importados += 1;
