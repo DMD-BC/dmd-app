@@ -23,6 +23,22 @@ function esCadena(valor) {
   return typeof valor === "string" && valor.trim().length > 0;
 }
 
+function sanitizarMensajeError(valor, clave) {
+  if (typeof valor !== "string") {
+    return "";
+  }
+  let texto = valor;
+  if (typeof clave === "string" && clave.length > 0) {
+    texto = texto.split(clave).join("[redacted]");
+    const claveLimpia = clave.trim();
+    if (claveLimpia.length > 0 && claveLimpia !== clave) {
+      texto = texto.split(claveLimpia).join("[redacted]");
+    }
+  }
+  texto = texto.replace(/AIza[0-9A-Za-z_-]{10,}/g, "[redacted]");
+  return texto.trim().slice(0, 1000);
+}
+
 function normalizarBorrador(datos, crudo) {
   if (!crudo || typeof crudo !== "object") {
     return null;
@@ -158,25 +174,81 @@ module.exports = async function handler(req, res) {
       clearTimeout(temporizador);
     }
   } catch (e) {
-    return res.status(502).json({ error: "provider_unavailable" });
+    const detalleRed =
+      (e && e.name === "AbortError" ? "Timeout after 20000ms" : "") ||
+      (e && e.cause && e.cause.message) ||
+      (e && e.message) ||
+      "network_error";
+    return res.status(502).json({
+      error: "provider_unavailable",
+      provider_status: null,
+      provider_message: sanitizarMensajeError(detalleRed, clave)
+    });
   }
 
   if (!respuestaGemini.ok) {
-    return res.status(502).json({ error: "provider_error" });
+    let cuerpoError = "";
+    try {
+      cuerpoError = await respuestaGemini.text();
+    } catch (e) {
+      cuerpoError = "";
+    }
+    let errorGoogle = null;
+    if (cuerpoError) {
+      try {
+        const parsed = JSON.parse(cuerpoError);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.error && typeof parsed.error === "object") {
+            errorGoogle = parsed.error;
+          } else if (Array.isArray(parsed) && parsed[0] && parsed[0].error && typeof parsed[0].error === "object") {
+            errorGoogle = parsed[0].error;
+          }
+        }
+      } catch (e) {
+        errorGoogle = null;
+      }
+    }
+    const mensajeCrudo =
+      (errorGoogle && (errorGoogle.message || errorGoogle.status)) ||
+      cuerpoError ||
+      respuestaGemini.statusText ||
+      "provider_error";
+    const respuestaError = {
+      error: "provider_error",
+      provider_status: respuestaGemini.status,
+      provider_message: sanitizarMensajeError(mensajeCrudo, clave)
+    };
+    if (errorGoogle && typeof errorGoogle.status === "string" && errorGoogle.status.trim()) {
+      respuestaError.provider_error_status = sanitizarMensajeError(errorGoogle.status, clave);
+    }
+    return res.status(502).json(respuestaError);
   }
 
   let payload;
   try {
     payload = await respuestaGemini.json();
   } catch (e) {
-    return res.status(502).json({ error: "provider_error" });
+    return res.status(502).json({
+      error: "provider_error",
+      provider_status: respuestaGemini.status,
+      provider_message: sanitizarMensajeError(e && e.message, clave) || "invalid_provider_json"
+    });
   }
 
   let texto = "";
   try {
     texto = payload.candidates[0].content.parts.map((p) => p.text || "").join("");
   } catch (e) {
-    return res.status(502).json({ error: "provider_error" });
+    const detallePayload =
+      (payload && payload.error && (payload.error.message || payload.error.status)) ||
+      (payload && payload.promptFeedback && payload.promptFeedback.blockReason) ||
+      (e && e.message) ||
+      "missing_candidates";
+    return res.status(502).json({
+      error: "provider_error",
+      provider_status: respuestaGemini.status,
+      provider_message: sanitizarMensajeError(detallePayload, clave)
+    });
   }
   texto = texto.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
 
