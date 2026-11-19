@@ -419,9 +419,12 @@
       return gen.construirUrlPublicada(registro.publicadaSlug);
     }
 
-    function guardarOActualizarBorradorDesdeConv(conv, variante, etiquetaVersion) {
+    async function guardarOActualizarBorradorDesdeConv(conv, variante, etiquetaVersion) {
       const datos = clonar(conv.datos);
-      const borrador = gen.generarBorrador(datos, variante);
+      const borrador =
+        (gen.generarBorradorConServicio
+          ? await gen.generarBorradorConServicio(datos, variante)
+          : null) || gen.generarBorrador(datos, variante);
       let registro = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
 
       if (registro) {
@@ -576,7 +579,7 @@
       return { ok: true, valor: limpio };
     }
 
-    function aplicarCambioSeguimiento(conv, texto) {
+    async function aplicarCambioSeguimiento(conv, texto) {
       const limpio = gen.limpiarTexto(texto);
       const bajo = limpio.toLowerCase();
       let cambio = "";
@@ -631,7 +634,7 @@
 
       const registroActual = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
       const varianteActual = registroActual && registroActual.borrador ? registroActual.borrador.variante || 0 : 0;
-      const actualizado = guardarOActualizarBorradorDesdeConv(conv, varianteActual, "Ajuste por chat");
+      const actualizado = await guardarOActualizarBorradorDesdeConv(conv, varianteActual, "Ajuste por chat");
 
       conv.mensajes.push({
         id: crearId("msg"),
@@ -642,7 +645,7 @@
       });
     }
 
-    function enviarMensajeUsuario(textoCrudo) {
+    async function enviarMensajeUsuario(textoCrudo) {
       const conv = obtenerConvActiva() || asegurarConversacionActiva();
       const texto = gen.limpiarTexto(textoCrudo);
       if (!texto) {
@@ -705,7 +708,7 @@
         }
 
         // Completó las preguntas: armar el borrador
-        const registro = guardarOActualizarBorradorDesdeConv(conv, 0, "Versión inicial");
+        const registro = await guardarOActualizarBorradorDesdeConv(conv, 0, "Versión inicial");
         conv.mensajes.push({
           id: crearId("msg"),
           rol: "asistente",
@@ -725,12 +728,14 @@
         tipo: "texto",
         texto
       });
-      aplicarCambioSeguimiento(conv, texto);
-      guardar(KEY_CONVERSACIONES, todasConversaciones);
-      renderizarTodo();
+      aplicarCambioSeguimiento(conv, texto).then(() => {
+        guardar(KEY_CONVERSACIONES, todasConversaciones);
+        renderizarTodo();
+      });
+      return;
     }
 
-    function guardarEdicionMensajeUsuario(conv, msg, nuevoTexto) {
+    async function guardarEdicionMensajeUsuario(conv, msg, nuevoTexto) {
       const limpio = gen.limpiarTexto(nuevoTexto);
       if (!limpio) {
         return;
@@ -749,7 +754,7 @@
         if (conv.borradorId) {
           const existente = obtenerBorradorPorId(conv.borradorId);
           const v = existente && existente.borrador ? existente.borrador.variante || 0 : 0;
-          guardarOActualizarBorradorDesdeConv(conv, v, `Editó ${msg.campo} en chat`);
+          await guardarOActualizarBorradorDesdeConv(conv, v, `Editó ${msg.campo} en chat`);
         }
       } else {
         msg.texto = limpio;
@@ -913,14 +918,14 @@
       btnRegenerar.className = "btn btn-secondary btn-sm";
       btnRegenerar.dataset.chatAction = "regenerar";
       btnRegenerar.textContent = "Regenerar";
-      btnRegenerar.addEventListener("click", () => {
+      btnRegenerar.addEventListener("click", async () => {
         const conv = obtenerConvActiva();
         if (!conv) {
           return;
         }
         const sigVar = ((registro.borrador && registro.borrador.variante) || 0) + 1;
         conv.datos = clonar(registro.datos);
-        guardarOActualizarBorradorDesdeConv(conv, sigVar, "Regenerado");
+        await guardarOActualizarBorradorDesdeConv(conv, sigVar, "Regenerado");
         estadoChatEl.textContent = "Borrador regenerado.";
         renderizarTodo();
       });
