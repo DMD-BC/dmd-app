@@ -2,14 +2,14 @@
 
 /* ==========================================================================
    dmd - api/generate.js (función serverless de Vercel)
-   Genera el borrador de la página de un negocio con Gemini 2.5 Flash.
+   Genera el borrador de la página de un negocio con Gemini 3.8 Flash.
    La clave vive SOLO en la variable de entorno GEMINI_API_KEY del servidor.
    Nunca se envía al navegador, nunca se guarda en ningún archivo ni en
    ningún registro. Sin clave configurada, responde 503 y el cliente usa
    el generador local como respaldo.
    ========================================================================== */
 
-const MODELO = "gemini-2.5-flash";
+const MODELO = "gemini-3.8-flash";
 const URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/" + MODELO + ":generateContent";
 
 function textoLimpio(valor, maximo) {
