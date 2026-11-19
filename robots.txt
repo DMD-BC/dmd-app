@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /login.html
+Disallow: /pago.html
+
+Sitemap: https://dmd.dmdmx.dev/sitemap.xml

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Planes y suscripción | dmd</title>
+  <meta name="description" content="Consulta tu suscripción real de dmd y activa un plan con pago seguro en Mercado Pago.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="dmd, ir al inicio">
+        <span>dmd</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a class="nav-link" href="index.html">Inicio</a>
+        <a class="nav-link" href="app.html">Crear páginas web</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+    <div class="container">
+      <section class="page-intro" aria-labelledby="titulo-pago">
+        <h1 id="titulo-pago">Planes y suscripción</h1>
+      </section>
+
+      <section id="pago-resumen-borrador" class="card payment-context-card" aria-labelledby="titulo-resumen-pagina" hidden>
+        <div class="session-header">
+          <div>
+            <p class="field-hint">Página</p>
+            <h2 id="titulo-resumen-pagina" class="payment-biz-name"></h2>
+            <p id="pago-meta-borrador" class="session-email"></p>
+          </div>
+          <span id="pago-estado-borrador" class="status-pill">Borrador</span>
+        </div>
+      </section>
+
+      <section id="pago-cargando-sesion" class="card payment-context-card" aria-live="polite">
+        <p class="field-hint">Verificando sesión...</p>
+      </section>
+
+      <section id="pago-requiere-sesion" class="card payment-context-card" aria-labelledby="titulo-requiere-sesion" hidden>
+        <h2 id="titulo-requiere-sesion">Inicia sesión primero</h2>
+        <p id="pago-requiere-sesion-msg" class="payment-security-note">
+          Necesitas iniciar sesión con tu cuenta de DMD para consultar tu suscripción o activar un plan.
+        </p>
+        <div class="payment-auth-actions">
+          <a id="btn-pago-ir-login" class="btn btn-primary btn-full" href="login.html">
+            Iniciar sesión
+          </a>
+          <a
+            id="btn-pago-google-sso"
+            class="btn btn-secondary btn-full"
+            href="https://login.dmdmx.dev/"
+          >
+            Continuar con Google en login.dmdmx.dev
+          </a>
+        </div>
+      </section>
+
+      <section id="pago-suscripcion-card" class="card payment-context-card" aria-labelledby="titulo-suscripcion" hidden>
+        <div class="payment-secure-head">
+          <div>
+            <p class="field-hint">Tu suscripción</p>
+            <h2 id="titulo-suscripcion" class="payment-biz-name">Consultando...</h2>
+          </div>
+          <span id="pago-suscripcion-badge" class="status-pill" hidden></span>
+        </div>
+
+        <p id="pago-suscripcion-detalle" class="payment-security-note"></p>
+        <p id="pago-suscripcion-fecha" class="field-hint" hidden></p>
+
+        <div id="pago-suscripcion-acciones" class="session-actions" hidden>
+          <button id="btn-cancelar-suscripcion" class="btn btn-danger-ghost btn-sm" type="button">
+            Cancelar suscripción
+          </button>
+        </div>
+
+        <div id="confirmar-cancelar-suscripcion" class="confirm-box" role="alert" hidden>
+          <p>¿Confirmas que deseas cancelar tu suscripción actual?</p>
+          <div class="confirm-actions">
+            <button id="btn-confirmar-cancelar-sub" class="btn btn-danger-ghost btn-sm" type="button">
+              Sí, cancelar
+            </button>
+            <button id="btn-mantener-sub" class="btn btn-secondary btn-sm" type="button">
+              No, volver
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card payment-secure-card" aria-labelledby="titulo-planes">
+        <div class="payment-secure-head">
+          <h2 id="titulo-planes">Planes mensuales</h2>
+          <span class="status-pill">Mercado Pago</span>
+        </div>
+
+        <div id="pago-error-general" class="form-error-summary" role="alert" hidden></div>
+
+        <div id="lista-planes-pago" class="plans-grid" aria-label="Lista de planes disponibles"></div>
+
+        <p id="estado-pago" class="status-banner" role="status" aria-live="polite"></p>
+
+        <p class="notice-box" role="note">
+          El cobro se autoriza directamente en la página segura de Mercado Pago. dmd nunca pide ni guarda datos de tu tarjeta.
+        </p>
+      </section>
+
+      <div class="subpage-back-row">
+        <a class="btn btn-secondary btn-full" href="app.html">Volver al chat</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-top">
+        <span class="footer-brand">
+          <span>dmd</span>
+        </span>
+        <nav class="footer-nav" aria-label="Navegación del pie de página">
+          <a class="footer-link" href="index.html">Inicio</a>
+          <a class="footer-link" href="app.html">Crear páginas web</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="almacen.js"></script>
+  <script src="cuenta.js"></script>
+  <script src="pago.js"></script>
+</body>
+</html>

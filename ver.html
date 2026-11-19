@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Página publicada | dmd</title>
+  <meta id="meta-descripcion-pagina" name="description" content="Página web creada con dmd.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="published-body">
+  <a class="skip-link" href="#contenido-publicado">Saltar al contenido principal</a>
+
+  <main id="contenido-publicado" class="published-main" tabindex="-1">
+    <div id="pagina-publicada-raiz" class="published-shell">
+      <div class="card published-loading">
+        <p>Cargando página...</p>
+      </div>
+    </div>
+
+    <div id="pagina-no-encontrada" class="container published-missing" hidden>
+      <section class="card">
+        <h1>Página no disponible</h1>
+        <p class="lead">No encontramos este enlace.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-full" href="app.html">Ir al chat</a>
+          <a class="btn btn-secondary btn-full" href="index.html">Inicio</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <aside id="barra-publicada" class="published-bar" aria-label="Acciones de la página publicada" hidden>
+    <div class="container published-bar-inner">
+      <div class="published-bar-actions">
+        <button id="btn-pub-copiar" class="btn btn-secondary btn-sm" type="button">
+          Copiar enlace
+        </button>
+        <a id="btn-pub-compartir" class="btn btn-primary btn-sm" href="https://wa.me/" target="_blank" rel="noopener noreferrer">
+          WhatsApp
+        </a>
+        <a class="btn btn-secondary btn-sm" href="app.html">
+          Volver al chat
+        </a>
+      </div>
+      <p id="estado-barra-publicada" class="status-banner" role="status" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <script src="almacen.js"></script>
+  <script src="generador.js"></script>
+  <script src="ver.js"></script>
+</body>
+</html>
