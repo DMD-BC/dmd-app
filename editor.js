@@ -85,7 +85,18 @@
   }
 
   function comprimirImagenArchivo(archivo, maxAncho) {
+    if (
+      window.dmdGenerador &&
+      typeof window.dmdGenerador.comprimirImagenArchivo === "function"
+    ) {
+      return window.dmdGenerador.comprimirImagenArchivo(archivo, maxAncho);
+    }
     return new Promise((resolve, reject) => {
+      const tipo = String((archivo && archivo.type) || "").toLowerCase();
+      if (!tipo.startsWith("image/")) {
+        reject(new Error("Solo se permiten archivos de imagen."));
+        return;
+      }
       const lector = new FileReader();
       lector.onerror = () => reject(new Error("No se pudo leer la imagen."));
       lector.onload = () => {
@@ -120,6 +131,54 @@
       };
       lector.readAsDataURL(archivo);
     });
+  }
+
+  function aplicarPortadaEnRegistro(registro, portada) {
+    if (!registro) {
+      return;
+    }
+    if (!registro.diseno || typeof registro.diseno !== "object") {
+      registro.diseno = {};
+    }
+    const giroActual = (registro.datos && registro.datos.giro) || "otro";
+    const nombreActual = (registro.datos && registro.datos.nombre) || "Mi negocio";
+
+    if (!portada || !portada.url) {
+      registro.diseno.portadaDataUrl = "";
+      registro.diseno.portadaOrigen = "ninguna";
+      if (registro.borrador && typeof registro.borrador === "object") {
+        registro.borrador.portada = null;
+      }
+      return;
+    }
+
+    const origen =
+      portada.origen === "propia" || String(portada.url).startsWith("data:image/")
+        ? "propia"
+        : "catalogo";
+    const alt =
+      typeof portada.alt === "string" && portada.alt.trim()
+        ? portada.alt.trim()
+        : `Imagen principal de ${nombreActual}`;
+
+    registro.diseno.portadaDataUrl = String(portada.url);
+    registro.diseno.portadaAlt = alt;
+    registro.diseno.portadaOrigen = origen;
+    registro.diseno.portadaGiro = portada.giro || giroActual;
+    if (Number.isInteger(portada.indice)) {
+      registro.diseno.portadaIndice = portada.indice;
+    }
+    if (registro.borrador && typeof registro.borrador === "object") {
+      registro.borrador.portada = {
+        url: registro.diseno.portadaDataUrl,
+        alt: registro.diseno.portadaAlt,
+        giro: registro.diseno.portadaGiro,
+        indice: Number.isInteger(registro.diseno.portadaIndice)
+          ? registro.diseno.portadaIndice
+          : 0,
+        origen
+      };
+    }
   }
 
   function crearIconoWhatsapp() {
@@ -180,7 +239,17 @@
       registro.diseno.fuente = "sistema";
     }
     if (!Array.isArray(registro.diseno.ordenSecciones) || registro.diseno.ordenSecciones.length !== SECCIONES_DEFECTO.length) {
-      registro.diseno.ordenSecciones = SECCIONES_DEFECTO.slice();
+      const ordenSugerido =
+        (registro.borrador &&
+          registro.borrador.estructura &&
+          Array.isArray(registro.borrador.estructura.ordenSecciones) &&
+          registro.borrador.estructura.ordenSecciones.length === SECCIONES_DEFECTO.length &&
+          registro.borrador.estructura.ordenSecciones) ||
+        (window.dmdGenerador &&
+          typeof window.dmdGenerador.obtenerEstructuraNegocio === "function" &&
+          window.dmdGenerador.obtenerEstructuraNegocio(registro.datos).ordenSecciones) ||
+        SECCIONES_DEFECTO;
+      registro.diseno.ordenSecciones = ordenSugerido.slice();
     }
     if (typeof registro.diseno.logoDataUrl !== "string") {
       registro.diseno.logoDataUrl = "";
@@ -193,6 +262,47 @@
     }
     if (typeof registro.diseno.portadaAlt !== "string") {
       registro.diseno.portadaAlt = "";
+    }
+    if (!["catalogo", "propia", "ninguna"].includes(registro.diseno.portadaOrigen)) {
+      if (registro.diseno.portadaDataUrl) {
+        registro.diseno.portadaOrigen = registro.diseno.portadaDataUrl.startsWith("data:image/")
+          ? "propia"
+          : "catalogo";
+      } else {
+        registro.diseno.portadaOrigen = "";
+      }
+    }
+    if (!Number.isInteger(registro.diseno.portadaIndice)) {
+      registro.diseno.portadaIndice = 0;
+    }
+    if (typeof registro.diseno.portadaGiro !== "string" || !registro.diseno.portadaGiro) {
+      registro.diseno.portadaGiro = (registro.datos && registro.datos.giro) || "otro";
+    }
+
+    if (!registro.diseno.portadaDataUrl && registro.diseno.portadaOrigen !== "ninguna") {
+      const portadaBorrador =
+        registro.borrador &&
+        registro.borrador.portada &&
+        typeof registro.borrador.portada.url === "string" &&
+        registro.borrador.portada.url
+          ? registro.borrador.portada
+          : window.dmdGenerador && typeof window.dmdGenerador.seleccionarPortada === "function"
+            ? window.dmdGenerador.seleccionarPortada(
+                registro.datos,
+                registro.borrador && registro.borrador.variante
+              )
+            : null;
+      if (portadaBorrador) {
+        aplicarPortadaEnRegistro(registro, portadaBorrador);
+      }
+    } else if (registro.diseno.portadaDataUrl && registro.borrador && !registro.borrador.portada) {
+      registro.borrador.portada = {
+        url: registro.diseno.portadaDataUrl,
+        alt: registro.diseno.portadaAlt || `Imagen principal de ${nombre}`,
+        giro: registro.diseno.portadaGiro,
+        indice: registro.diseno.portadaIndice,
+        origen: registro.diseno.portadaOrigen || "catalogo"
+      };
     }
 
     if (!registro.seo || typeof registro.seo !== "object") {
@@ -310,8 +420,11 @@
       inputLogoFile: document.getElementById("ed-subir-logo"),
       btnQuitarLogo: document.getElementById("ed-quitar-logo"),
       inputLogoAlt: document.getElementById("ed-logo-alt"),
+      btnCambiarPortada: document.getElementById("ed-cambiar-portada"),
       inputPortadaFile: document.getElementById("ed-subir-portada"),
       btnQuitarPortada: document.getElementById("ed-quitar-portada"),
+      portadaMeta: document.getElementById("ed-portada-meta"),
+      portadaOpciones: document.getElementById("ed-portada-opciones"),
       inputPortadaAlt: document.getElementById("ed-portada-alt"),
 
       inputSeoTitulo: document.getElementById("ed-seo-titulo"),
@@ -422,6 +535,72 @@
     ui.inputLogoAlt.value = diseno.logoAlt || "";
     ui.btnQuitarPortada.hidden = !diseno.portadaDataUrl;
     ui.inputPortadaAlt.value = diseno.portadaAlt || "";
+
+    const gen = window.dmdGenerador;
+    const opciones =
+      gen && typeof gen.obtenerOpcionesPortada === "function"
+        ? gen.obtenerOpcionesPortada(datos)
+        : [];
+
+    if (ui.btnCambiarPortada) {
+      ui.btnCambiarPortada.hidden = opciones.length === 0;
+      ui.btnCambiarPortada.textContent = diseno.portadaDataUrl
+        ? "Cambiar foto"
+        : "Elegir foto del giro";
+    }
+
+    if (ui.portadaMeta) {
+      if (!diseno.portadaDataUrl) {
+        ui.portadaMeta.textContent = "Sin imagen de portada.";
+      } else if (diseno.portadaOrigen === "propia") {
+        ui.portadaMeta.textContent = "Imagen propia guardada en tu borrador local.";
+      } else {
+        const idxActivo = opciones.findIndex((o) => o.url === diseno.portadaDataUrl);
+        const giroLbl =
+          (opciones[0] && opciones[0].giroEtiqueta) ||
+          datos.giroTexto ||
+          (gen && gen.GIROS_ETIQUETAS && gen.GIROS_ETIQUETAS[datos.giro]) ||
+          "Negocio";
+        ui.portadaMeta.textContent =
+          idxActivo >= 0
+            ? `Foto sugerida · ${giroLbl} (${idxActivo + 1} de ${opciones.length})`
+            : `Foto sugerida · ${giroLbl}`;
+      }
+    }
+
+    if (ui.portadaOpciones) {
+      ui.portadaOpciones.textContent = "";
+      ui.portadaOpciones.hidden = opciones.length === 0;
+      opciones.forEach((op, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        const activa = diseno.portadaDataUrl === op.url;
+        btn.className = activa ? "cover-option-btn is-active" : "cover-option-btn";
+        btn.dataset.coverIndex = String(idx);
+        btn.setAttribute("aria-pressed", activa ? "true" : "false");
+        btn.setAttribute("aria-label", `Usar portada: ${op.etiqueta}`);
+        const img = document.createElement("img");
+        img.src = op.url;
+        img.alt = op.etiqueta;
+        img.loading = "lazy";
+        btn.appendChild(img);
+        btn.addEventListener("click", () => {
+          if (!registroActual || !gen || typeof gen.seleccionarPortada !== "function") {
+            return;
+          }
+          const elegida = gen.seleccionarPortada(registroActual.datos, 0, idx);
+          if (registroActual.diseno.portadaDataUrl === elegida.url) {
+            return;
+          }
+          empujarEstadoDeshacer();
+          aplicarPortadaEnRegistro(registroActual, elegida);
+          renderizarControlesDiseno();
+          renderizarLienzoEditable();
+          guardarCambio("Foto de portada", true, "Portada cambiada");
+        });
+        ui.portadaOpciones.appendChild(btn);
+      });
+    }
   }
 
   function renderizarPanelSeo() {
@@ -713,12 +892,20 @@
         }
       });
 
+      const estructura =
+        (borrador && borrador.estructura) ||
+        (window.dmdGenerador &&
+          typeof window.dmdGenerador.obtenerEstructuraNegocio === "function" &&
+          window.dmdGenerador.obtenerEstructuraNegocio(datos)) ||
+        null;
+      const titulosSec = (estructura && estructura.titulos) || {};
+
       const barraSec = document.createElement("div");
       barraSec.className = "section-reorder-bar";
 
       const lblSec = document.createElement("span");
       lblSec.className = "section-reorder-label";
-      lblSec.textContent = ETIQUETAS_SECCION[secId] || secId;
+      lblSec.textContent = titulosSec[secId] || ETIQUETAS_SECCION[secId] || secId;
 
       const btnsSec = document.createElement("div");
       btnsSec.className = "section-reorder-btns";
@@ -756,6 +943,7 @@
           img.className = "biz-cover-img";
           img.src = diseno.portadaDataUrl;
           img.alt = diseno.portadaAlt || `Imagen de ${datos.nombre}`;
+          img.decoding = "async";
           fig.appendChild(img);
           hero.appendChild(fig);
         }
@@ -785,7 +973,7 @@
         bloque.className = "biz-section";
         const h4 = document.createElement("h4");
         h4.className = "biz-section-title";
-        h4.textContent = "Servicios";
+        h4.textContent = titulosSec.servicios || "Servicios";
         bloque.appendChild(h4);
 
         const ul = document.createElement("ul");
@@ -821,7 +1009,7 @@
         bloque.className = "biz-section";
         const h4 = document.createElement("h4");
         h4.className = "biz-section-title";
-        h4.textContent = "Beneficios";
+        h4.textContent = titulosSec.beneficios || "Beneficios";
         bloque.appendChild(h4);
 
         const ul = document.createElement("ul");
@@ -847,7 +1035,7 @@
         bloque.className = "biz-section";
         const h4 = document.createElement("h4");
         h4.className = "biz-section-title";
-        h4.textContent = "Preguntas frecuentes";
+        h4.textContent = titulosSec.preguntas || "Preguntas frecuentes";
         bloque.appendChild(h4);
 
         const lista = document.createElement("div");
@@ -883,7 +1071,7 @@
         bloque.className = "biz-section biz-contact-section";
         const h4 = document.createElement("h4");
         h4.className = "biz-section-title";
-        h4.textContent = "Contacto directo";
+        h4.textContent = titulosSec.contacto || "Contacto directo";
         bloque.appendChild(h4);
 
         if (numeroWa) {
@@ -897,7 +1085,7 @@
           enlace.rel = "noopener noreferrer";
           enlace.appendChild(crearIconoWhatsapp());
           const sp = document.createElement("span");
-          sp.textContent = `Enviar WhatsApp a ${datos.nombre}`;
+          sp.textContent = (estructura && estructura.ctaWhatsapp) || `Enviar WhatsApp a ${datos.nombre}`;
           enlace.appendChild(sp);
           bloque.appendChild(enlace);
         } else {
@@ -1194,24 +1382,64 @@
       guardarCambio("", false, "Texto alternativo del logo guardado");
     });
 
-    // Subida de portada
+    // Cambio de foto sugerida de portada por giro
+    if (ui.btnCambiarPortada) {
+      ui.btnCambiarPortada.addEventListener("click", () => {
+        if (
+          !registroActual ||
+          !window.dmdGenerador ||
+          typeof window.dmdGenerador.obtenerSiguientePortada !== "function"
+        ) {
+          return;
+        }
+        const siguiente = window.dmdGenerador.obtenerSiguientePortada(
+          registroActual.datos,
+          registroActual.diseno.portadaIndice,
+          registroActual.diseno.portadaDataUrl
+        );
+        if (!siguiente || !siguiente.url) {
+          return;
+        }
+        empujarEstadoDeshacer();
+        aplicarPortadaEnRegistro(registroActual, siguiente);
+        renderizarControlesDiseno();
+        renderizarLienzoEditable();
+        guardarCambio("Foto de portada", true, "Portada cambiada");
+      });
+    }
+
+    // Subida de portada propia (solo imagen, guardada localmente)
     ui.inputPortadaFile.addEventListener("change", async () => {
       const archivo = ui.inputPortadaFile.files && ui.inputPortadaFile.files[0];
       if (!archivo || !registroActual) {
         return;
       }
+      if (
+        window.dmdGenerador &&
+        typeof window.dmdGenerador.esArchivoImagenValido === "function" &&
+        !window.dmdGenerador.esArchivoImagenValido(archivo)
+      ) {
+        anunciarGuardado("Solo se permiten imágenes");
+        ui.inputPortadaFile.value = "";
+        return;
+      }
       try {
         const dataUrl = await comprimirImagenArchivo(archivo, 720);
         empujarEstadoDeshacer();
-        registroActual.diseno.portadaDataUrl = dataUrl;
-        if (!registroActual.diseno.portadaAlt) {
-          registroActual.diseno.portadaAlt = `Imagen principal de ${registroActual.datos.nombre}`;
-        }
+        aplicarPortadaEnRegistro(registroActual, {
+          url: dataUrl,
+          alt:
+            registroActual.diseno.portadaAlt ||
+            `Imagen principal de ${registroActual.datos.nombre}`,
+          origen: "propia",
+          giro: registroActual.diseno.portadaGiro || registroActual.datos.giro,
+          indice: registroActual.diseno.portadaIndice
+        });
         renderizarControlesDiseno();
         renderizarLienzoEditable();
-        guardarCambio("Imagen de portada", true, "Imagen de portada cargada");
+        guardarCambio("Imagen de portada", true, "Imagen de portada guardada");
       } catch (error) {
-        anunciarGuardado("No se pudo cargar la imagen");
+        anunciarGuardado("Solo se permiten imágenes válidas");
       } finally {
         ui.inputPortadaFile.value = "";
       }
@@ -1222,10 +1450,10 @@
         return;
       }
       empujarEstadoDeshacer();
-      registroActual.diseno.portadaDataUrl = "";
+      aplicarPortadaEnRegistro(registroActual, null);
       renderizarControlesDiseno();
       renderizarLienzoEditable();
-      guardarCambio("Portada quitada", true, "Imagen de portada eliminada");
+      guardarCambio("Portada quitada", true, "Portada eliminada");
     });
 
     ui.inputPortadaAlt.addEventListener("input", () => {
@@ -1233,8 +1461,11 @@
         return;
       }
       registroActual.diseno.portadaAlt = ui.inputPortadaAlt.value.trim();
+      if (registroActual.borrador && registroActual.borrador.portada) {
+        registroActual.borrador.portada.alt = registroActual.diseno.portadaAlt;
+      }
       renderizarLienzoEditable();
-      guardarCambio("", false, "Texto alternativo de imagen guardado");
+      guardarCambio("", false, "Texto alternativo guardado");
     });
 
     // SEO
@@ -1328,6 +1559,7 @@
 
   window.dmdEditor = {
     asegurarEstructuraBorrador,
+    aplicarPortadaEnRegistro,
     registrarVersion,
 
     configurar(opciones) {

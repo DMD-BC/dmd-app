@@ -335,10 +335,40 @@
     const plantilla = diseno.plantilla || "clasica";
     const colorMarca = diseno.colorMarca || "#0f5c4d";
     const fuente = FUENTES_MAPA[diseno.fuente] || FUENTES_MAPA.sistema;
+    const estructura =
+      (borrador && borrador.estructura) ||
+      (window.dmdGenerador &&
+        typeof window.dmdGenerador.obtenerEstructuraNegocio === "function" &&
+        window.dmdGenerador.obtenerEstructuraNegocio(datos)) ||
+      null;
+    const titulosSec = (estructura && estructura.titulos) || {};
     const ordenSecciones =
       Array.isArray(diseno.ordenSecciones) && diseno.ordenSecciones.length
         ? diseno.ordenSecciones
-        : SECCIONES_DEFECTO;
+        : estructura && Array.isArray(estructura.ordenSecciones) && estructura.ordenSecciones.length
+          ? estructura.ordenSecciones
+          : SECCIONES_DEFECTO;
+
+    let portadaSrc = "";
+    let portadaAlt = "";
+    if (diseno.portadaOrigen !== "ninguna") {
+      if (diseno.portadaDataUrl) {
+        portadaSrc = diseno.portadaDataUrl;
+        portadaAlt = diseno.portadaAlt || `Imagen de ${datos.nombre}`;
+      } else if (borrador.portada && borrador.portada.url) {
+        portadaSrc = borrador.portada.url;
+        portadaAlt = borrador.portada.alt || `Imagen de ${datos.nombre}`;
+      } else if (
+        window.dmdGenerador &&
+        typeof window.dmdGenerador.seleccionarPortada === "function"
+      ) {
+        const autoPortada = window.dmdGenerador.seleccionarPortada(datos, borrador.variante || 0);
+        if (autoPortada && autoPortada.url) {
+          portadaSrc = autoPortada.url;
+          portadaAlt = autoPortada.alt || `Imagen de ${datos.nombre}`;
+        }
+      }
+    }
 
     // SEO dinámico en el documento
     document.title = seo.titulo || borrador.titulo || `${datos.nombre} | dmd`;
@@ -398,13 +428,14 @@
         const hero = document.createElement("section");
         hero.className = "biz-section biz-hero";
 
-        if (diseno.portadaDataUrl) {
+        if (portadaSrc) {
           const fig = document.createElement("figure");
           fig.className = "biz-cover-wrap";
           const img = document.createElement("img");
           img.className = "biz-cover-img";
-          img.src = diseno.portadaDataUrl;
-          img.alt = diseno.portadaAlt || `Imagen de ${datos.nombre}`;
+          img.src = portadaSrc;
+          img.alt = portadaAlt || `Imagen de ${datos.nombre}`;
+          img.decoding = "async";
           fig.appendChild(img);
           hero.appendChild(fig);
         }
@@ -426,7 +457,7 @@
         bloque.className = "biz-section";
         const h2 = document.createElement("h2");
         h2.className = "biz-section-title";
-        h2.textContent = "Servicios";
+        h2.textContent = titulosSec.servicios || "Servicios";
         bloque.appendChild(h2);
 
         const ul = document.createElement("ul");
@@ -455,7 +486,7 @@
         bloque.className = "biz-section";
         const h2 = document.createElement("h2");
         h2.className = "biz-section-title";
-        h2.textContent = "Beneficios";
+        h2.textContent = titulosSec.beneficios || "Beneficios";
         bloque.appendChild(h2);
 
         const ul = document.createElement("ul");
@@ -478,7 +509,7 @@
         bloque.className = "biz-section";
         const h2 = document.createElement("h2");
         h2.className = "biz-section-title";
-        h2.textContent = "Preguntas frecuentes";
+        h2.textContent = titulosSec.preguntas || "Preguntas frecuentes";
         bloque.appendChild(h2);
 
         const lista = document.createElement("div");
@@ -508,7 +539,7 @@
         bloque.className = "biz-section biz-contact-section";
         const h2 = document.createElement("h2");
         h2.className = "biz-section-title";
-        h2.textContent = "Contacto directo";
+        h2.textContent = titulosSec.contacto || "Contacto directo";
         bloque.appendChild(h2);
 
         if (numeroWa) {
@@ -523,7 +554,8 @@
           enlace.rel = "noopener noreferrer";
           enlace.appendChild(crearIconoWhatsapp());
           const sp = document.createElement("span");
-          sp.textContent = `Enviar WhatsApp a ${datos.nombre}`;
+          sp.textContent =
+            (estructura && estructura.ctaWhatsapp) || `Enviar WhatsApp a ${datos.nombre}`;
           enlace.appendChild(sp);
           enlace.addEventListener("click", () => {
             registrarEventoAnalitica(pagina.slug, pagina.borradorId, "clicsWhatsapp");
