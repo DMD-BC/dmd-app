@@ -751,10 +751,18 @@
     articulo.appendChild(footerBiz);
     raiz.appendChild(articulo);
 
-    // Barra inferior de compartir
+    // Barra inferior de compartir (sin mostrar WhatsApp si el negocio no dio teléfono)
     const urlActual = construirEnlaceCompartible(pagina.slug);
-    const textoCompartir = `Te comparto la página de ${datos.nombre}: ${urlActual}`;
-    btnCompartir.href = `https://wa.me/?text=${encodeURIComponent(textoCompartir)}`;
+    if (btnCompartir) {
+      if (numeroWa) {
+        const textoCompartir = `Te comparto la página de ${datos.nombre}: ${urlActual}`;
+        btnCompartir.href = `https://wa.me/?text=${encodeURIComponent(textoCompartir)}`;
+        btnCompartir.hidden = false;
+      } else {
+        btnCompartir.hidden = true;
+        btnCompartir.removeAttribute("href");
+      }
+    }
 
     btnCopiar.onclick = () => {
       copiarTextoSeguro(urlActual).then((ok) => {

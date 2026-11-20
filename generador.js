@@ -1654,50 +1654,80 @@ function normalizarTono(texto) {
   return "";
 }
 
-function extraerDetallesRealesUsuario(datos) {
-  const fuente = limpiarTextoGen(
-    [datos && datos.oferta, datos && datos.giroTexto].filter(Boolean).join(". ")
+function esOmisionCampoOpcional(texto) {
+  const bajo = limpiarTextoGen(texto)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.!?¡¿,:;]+$/g, "")
+    .trim();
+  if (!bajo) {
+    return true;
+  }
+  return /^(omitir|saltar|ninguno|ninguna|no|sin\s+(?:direccion|calle|ubicacion|horario|telefono|whatsapp)|continuar\s+sin\s+(?:direccion|calle|horario|telefono|whatsapp)|despues|pendiente|no\s+tengo)$/i.test(
+    bajo
   );
+}
+
+function extraerDetallesRealesUsuario(datos) {
   const detalles = { horario: "", ubicacion: "", precios: "" };
+  if (!datos || typeof datos !== "object") {
+    return detalles;
+  }
+
+  // 1) Priorizar dirección y horario capturados en sus pasos dedicados
+  if (datos.horario && !esOmisionCampoOpcional(datos.horario)) {
+    detalles.horario = limpiarTextoGen(datos.horario).replace(/[,;.\s]+$/, "");
+  }
+  if (datos.direccion && !esOmisionCampoOpcional(datos.direccion)) {
+    detalles.ubicacion = limpiarTextoGen(datos.direccion).replace(/[,;.\s]+$/, "");
+  }
+
+  const fuente = limpiarTextoGen(
+    [datos.oferta, datos.giroTexto].filter(Boolean).join(". ")
+  );
   if (!fuente) {
     return detalles;
   }
 
-  // Capturar horarios compuestos completos, ej. "lunes a viernes de 9 a 6 y sábado de 9 a 2"
-  const dia = "(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)";
-  const hora = "\\d{1,2}(?::\\d{2})?(?:\\s*(?:a\\.?\\s*m\\.?|p\\.?\\s*m\\.?|am|pm|hrs?))?";
-  const rangoHora = `${hora}\\s*(?:a|-)\\s*${hora}(?:\\s*de\\s+la\\s+(?:ma[ñn]ana|tarde|noche))?`;
-  const tramoDia = `(?:de\\s+)?${dia}(?:\\s*(?:a|y|,)\\s*${dia})*(?:\\s+de\\s+${rangoHora})?`;
-  const regexHorario = new RegExp(
-    `\\b(${tramoDia}(?:(?:\\s*,\\s*|\\s+y\\s+)${tramoDia})+|${tramoDia}|(?:todos\\s+los\\s+d[ií]as\\s+)?de\\s+${rangoHora}|24\\s*horas)\\b`,
-    "i"
-  );
-  const mHorario = fuente.match(regexHorario);
-  if (mHorario) {
-    detalles.horario = limpiarTextoGen(mHorario[0]).replace(/[,;.\s]+$/, "");
+  // 2) Si no se dieron en pasos dedicados, extraer de la oferta cuando el usuario los incluyó ahí
+  if (!detalles.horario) {
+    const dia = "(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)";
+    const hora = "\\d{1,2}(?::\\d{2})?(?:\\s*(?:a\\.?\\s*m\\.?|p\\.?\\s*m\\.?|am|pm|hrs?))?";
+    const rangoHora = `${hora}\\s*(?:a|-)\\s*${hora}(?:\\s*de\\s+la\\s+(?:ma[ñn]ana|tarde|noche))?`;
+    const tramoDia = `(?:de\\s+)?${dia}(?:\\s*(?:a|y|,)\\s*${dia})*(?:\\s+de\\s+${rangoHora})?`;
+    const regexHorario = new RegExp(
+      `\\b(${tramoDia}(?:(?:\\s*,\\s*|\\s+y\\s+)${tramoDia})+|${tramoDia}|(?:todos\\s+los\\s+d[ií]as\\s+)?de\\s+${rangoHora}|24\\s*horas)\\b`,
+      "i"
+    );
+    const mHorario = fuente.match(regexHorario);
+    if (mHorario) {
+      detalles.horario = limpiarTextoGen(mHorario[0]).replace(/[,;.\s]+$/, "");
+    }
   }
 
-  // Capturar dirección completa incluyendo calle + número + colonia (sin cortar en la primera coma)
-  const prefUbic = "(?:av\\.|avenida|calle|blvd\\.|boulevard|calz\\.|calzada|col\\.|colonia|plaza|mercado|zona|frente\\s+a|cerca\\s+de)";
-  const segUbic = "[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+(?:\\s+[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+){0,4}";
-  const regexUbic = new RegExp(
-    `\\b(${prefUbic}\\s+${segUbic}(?:\\s*,\\s*(?:col\\.|colonia|fracc\\.|fraccionamiento|esq\\.|esquina|centro|zona|no\\.|n[uú]m\\.|#)?\\s*${segUbic})*)`,
-    "i"
-  );
-  const mUbic = fuente.match(regexUbic);
-  if (mUbic) {
-    let ub = limpiarTextoGen(mUbic[0]);
-    if (detalles.horario) {
-      const idxH = ub.toLowerCase().indexOf(detalles.horario.toLowerCase());
-      if (idxH > 0) {
-        ub = ub.slice(0, idxH);
+  if (!detalles.ubicacion) {
+    const prefUbic = "(?:av\\.|avenida|calle|blvd\\.|boulevard|calz\\.|calzada|col\\.|colonia|plaza|mercado|zona|frente\\s+a|cerca\\s+de)";
+    const segUbic = "[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+(?:\\s+[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+){0,4}";
+    const regexUbic = new RegExp(
+      `\\b(${prefUbic}\\s+${segUbic}(?:\\s*,\\s*(?:col\\.|colonia|fracc\\.|fraccionamiento|esq\\.|esquina|centro|zona|no\\.|n[uú]m\\.|#)?\\s*${segUbic})*)`,
+      "i"
+    );
+    const mUbic = fuente.match(regexUbic);
+    if (mUbic) {
+      let ub = limpiarTextoGen(mUbic[0]);
+      if (detalles.horario) {
+        const idxH = ub.toLowerCase().indexOf(detalles.horario.toLowerCase());
+        if (idxH > 0) {
+          ub = ub.slice(0, idxH);
+        }
       }
+      ub = ub
+        .replace(/,?\s*(?:abrimos|atendemos|horario|de\s+\d|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b[\s\S]*$/i, "")
+        .replace(/[,;.\s]+$/, "")
+        .trim();
+      detalles.ubicacion = ub;
     }
-    ub = ub
-      .replace(/,?\s*(?:abrimos|atendemos|horario|de\s+\d|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b[\s\S]*$/i, "")
-      .replace(/[,;.\s]+$/, "")
-      .trim();
-    detalles.ubicacion = ub;
   }
 
   const mPrecio = fuente.match(
@@ -1726,7 +1756,6 @@ function limpiarOfertaSoloProductos(ofertaLimpia, detalles) {
       ""
     );
   }
-  // Quitar restos de frases de ubicación/horario que hayan quedado sueltos (ej. ". Estamos", ", y sábado...")
   texto = texto
     .replace(/[.;,]?\s*\b(?:estamos|nos\s+ubicamos|nos\s+encontramos|ubicados?|abrimos|atendemos|horario)\b(?:\s+en)?\s*(?=[.,;]|$)/gi, "")
     .replace(/(?:^|[.;,]\s*)(?:estamos|ubicados?|abrimos|atendemos)\s*(?:en)?\s*(?:[.,;]|$)/gi, " ")
@@ -1757,7 +1786,7 @@ const ESTRUCTURAS_ESPECIFICAS_GIRO = {
       presentacion: "Presentación",
       servicios: "Lo que horneamos",
       beneficios: "Por qué nos eligen",
-      preguntas: "Dudas sobre pedidos y horarios",
+      preguntas: "Dudas sobre pedidos",
       contacto: "Encargos y mostrador"
     },
     ctaWhatsapp: "Apartar pan en {nombre}",
@@ -1801,37 +1830,148 @@ const ESTRUCTURAS_ESPECIFICAS_GIRO = {
   }
 };
 
+function describirProductoReal(titulo, temaEspecifico, giro, tono, tieneWa, indice) {
+  const norm = normalizarTextoBusquedaGen(titulo);
+  const reglas = [
+    {
+      rx: /\b(pintur|esmalte|vinilic|barniz|sellador|impermeabiliz|brocha|rodillo)/,
+      texto: "Pintura vinílica, esmalte y selladores en varios tonos y presentaciones, por litro o cubeta."
+    },
+    {
+      rx: /\b(taladr|rotomartill|esmeril|sierr|lijador|calador|atornillador|compresor)/,
+      texto: "Equipos para trabajos en casa y uso continuo, junto con brocas y accesorios compatibles."
+    },
+    {
+      rx: /\b(tornill|pija|clavo|taquet|tuerca|arandela|birlo|fijacion)/,
+      texto: "Medidas estándar y milimétricas, disponibles desde una pieza suelta hasta por caja."
+    },
+    {
+      rx: /\b(plomer|tuberi|pvc|cobre|llave\s+de\s+paso|conexion|empaque|tinaco|valvula)/,
+      texto: "Conexiones, codos, empaques y selladores para fugas o instalaciones nuevas."
+    },
+    {
+      rx: /\b(electric|cable|apagador|contacto|foco|pastilla|centro\s+de\s+carga|iluminacion)/,
+      texto: "Cableado, contactos, apagadores y accesorios para instalaciones residenciales o de obra."
+    },
+    {
+      rx: /\b(herramient|llave|pinza|desarmador|martillo|dado|broca|flexometro|nivel)/,
+      texto: "Herramienta manual por pieza o en juego para reparaciones del hogar y trabajo diario."
+    },
+    {
+      rx: /\b(material|cemento|yeso|arena|grava|pegazulejo|mortero|construccion|obra)/,
+      texto: "Insumos básicos para resanes, acabados y listas de obra chica."
+    },
+    {
+      rx: /\b(concha)/,
+      texto: "De vainilla y chocolate con costra crujiente, salidas del horno temprano."
+    },
+    {
+      rx: /\b(pan\s+dulce|cuerno|oreja|mantecad|dona|rol|churro|empanad|polvoron|garibaldi|bisquet)/,
+      texto: "Piezas variadas de vitrina elaboradas cada jornada para acompañar el café."
+    },
+    {
+      rx: /\b(bolillo|telera|birote|baguette|pan\s+salado|hogaza|ciabatta)/,
+      texto: "Corteza dorada y miga suave para tortas o para llevar a la mesa."
+    },
+    {
+      rx: /\b(pastel|tres\s+leches|reposteri|pay|tarta|galleta|rosca|gelatina)/,
+      texto: "Enteros o en rebanada, con opción de apartado anticipado para reuniones."
+    },
+    {
+      rx: /\b(taco|pastor|asada|suadero|birria|carnita|barbacoa|cabeza|tripa|chorizo|bistec)/,
+      texto: "Servidos en tortilla caliente con cebolla, cilantro y salsas preparadas el mismo día."
+    },
+    {
+      rx: /\b(gringa|quesadilla|volcan|mulita|torta|alambre|burrito|huarache|sope)/,
+      texto: "Con queso fundido al comal y la carne de tu preferencia, para comer aquí o llevar."
+    },
+    {
+      rx: /\b(cafe|espresso|americano|capuchino|latte|filtrado|frappe|matcha|te\b|tisana)/,
+      texto: "Preparado al momento con grano recién molido, disponible caliente o frío."
+    },
+    {
+      rx: /\b(panini|sandwich|chapata|mollete|desayuno|chilaquil|bagel|crepa|waffle)/,
+      texto: "Preparado al momento en plancha para comer en barra o pedir para llevar."
+    },
+    {
+      rx: /\b(asesori|mostrador|cotizacion)/,
+      texto: tieneWa
+        ? "Trae tu muestra o manda foto por WhatsApp para ubicar lo que necesitas."
+        : "Trae tu muestra o lista al mostrador y revisamos opciones compatibles."
+    }
+  ];
+
+  for (const regla of reglas) {
+    if (regla.rx.test(norm)) {
+      return regla.texto;
+    }
+  }
+
+  // Respaldo sobrio que nunca pega el nombre del producto al final de una frase ajena
+  const porGiro = {
+    panaderia: [
+      "Elaborado con receta de casa y disponible en vitrina según existencia del día.",
+      "Puedes llevar por pieza suelta o apartar charola con anticipación en mostrador.",
+      "Horneado en tandas cortas durante la jornada."
+    ],
+    ferreteria: [
+      "Disponible en mostrador; pregunta por marcas, presentaciones y existencias.",
+      "Opciones para reparaciones domésticas y trabajo de uso rudo.",
+      "Si traes tu muestra, revisamos compatibilidad en el momento."
+    ],
+    taqueria: [
+      "Preparado al momento con salsas y guarniciones frescas del día.",
+      "Disponible para comer en el local o empacado caliente para llevar."
+    ],
+    cafeteria: [
+      "Hecho al momento en barra para tomar aquí o pedir para llevar.",
+      "Opciones de tamaño y tipo de leche al gusto."
+    ],
+    tienda: [
+      "Surtido actualizado directo en mostrador.",
+      "Distintas presentaciones disponibles según lo que busques."
+    ],
+    comida: [
+      "Preparado al día con ingredientes frescos, para comer aquí o llevar.",
+      "Porción individual o para compartir según tu pedido."
+    ],
+    servicios: [
+      "Revisamos tu caso y definimos alcance y tiempos antes de iniciar.",
+      "Seguimiento puntual y presupuesto claro desde el primer contacto."
+    ],
+    "salud y belleza": [
+      "Atención dedicada y material higienizado en cada sesión.",
+      "Valoración breve al inicio para adaptar el servicio a tu gusto."
+    ],
+    "taller u oficio": [
+      "Revisión directa antes de cotizar, con mano de obra cuidada y prueba final.",
+      "Explicamos tiempos de entrega y refacciones con claridad."
+    ]
+  };
+  const lista = porGiro[temaEspecifico] || porGiro[giro] || [
+    "Disponible con trato directo; pregunta por opciones y presentaciones.",
+    "Atención local con información clara desde el inicio."
+  ];
+  return lista[indice % lista.length];
+}
+
 const COPIA_ESPECIFICA_GIRO = {
   panaderia: {
     minTarjetas: 2,
     construirIntro: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
-      const yaTieneHorno = /hornead|cada\s+ma[ñn]ana|reci[eé]n\s+salid/i.test(v.oferta);
       const p1 = d.ubicacion
-        ? yaTieneHorno
-          ? `En ${v.nombre} preparamos ${v.oferta}. Estamos en ${lugar}.`
-          : `Horneamos ${v.oferta} cada mañana. Estamos en ${lugar}.`
-        : yaTieneHorno
-          ? `En ${v.nombre} preparamos ${v.oferta} en ${v.ciudad}.`
-          : `En ${v.nombre} horneamos ${v.oferta} todos los días en ${v.ciudad}.`;
+        ? `En ${v.nombre} preparamos ${v.oferta}. Estamos en ${lugar}.`
+        : `En ${v.nombre} preparamos ${v.oferta} en ${v.ciudad}.`;
       const p2 = d.horario
-        ? `Abrimos ${d.horario} para compras de mostrador y encargos.`
+        ? `Abrimos ${d.horario} para compras en mostrador y encargos.`
         : tieneWa
-          ? "Puedes pasar directo al local o apartar charolas por WhatsApp."
-          : "Puedes pasar directo al mostrador o apartar charolas con anticipación en el local.";
+          ? "Venta en mostrador y apartado de charolas o pasteles por WhatsApp."
+          : "Venta directa en mostrador y encargos con anticipación en el local.";
       return `${p1} ${p2}`;
     },
-    descServicios: (tieneWa) => [
-      (t) => `Horneado en tandas frescas para llevar por pieza o por charola en ${t}.`,
-      (t) =>
-        tieneWa
-          ? `Apartamos ${t} por WhatsApp si nos escribes un día antes.`
-          : `Puedes apartar ${t} directamente en mostrador con un día de anticipación.`,
-      (t) => `Receta de casa en ${t}, pensada para desayuno o reunión familiar.`,
-      (t) => `Surtido del día en ${t} hasta agotar existencias.`
-    ],
     beneficios: (v, d, tieneWa) => [
-      `Pan del día horneado en ${v.ciudad}, nunca guardado de jornadas anteriores.`,
+      `Horneado por jornada en ${v.ciudad}, sin piezas guardadas de días anteriores.`,
       tieneWa
         ? "Charolas y pasteles sobre pedido confirmados directo por WhatsApp."
         : "Encargos de charolas y pasteles tomados directamente en mostrador.",
@@ -1839,22 +1979,31 @@ const COPIA_ESPECIFICA_GIRO = {
     ],
     faqs: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
-      return [
+      const lista = [
         {
           q: "¿Con cuánta anticipación aparto un pedido grande o pastel?",
           a: tieneWa
             ? "Para charolas o pasteles conviene escribirnos al menos 24 horas antes para tenerlos listos a tu hora."
             : "Para charolas o pasteles conviene pasar al mostrador al menos 24 horas antes para agendar tu entrega."
-        },
-        {
-          q: d.horario ? "¿Qué horario manejan?" : `¿Dónde está ${v.nombre}?`,
-          a: d.horario
-            ? `Abrimos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
-            : d.ubicacion
-              ? `Estamos en ${lugar}.`
-              : `Atendemos en ${v.ciudad}. Pasa por el mostrador para ver el pan recién salido.`
         }
       ];
+      if (d.horario) {
+        lista.push({
+          q: "¿Qué horario manejan?",
+          a: `Abrimos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+        });
+      } else if (d.ubicacion) {
+        lista.push({
+          q: `¿Dónde está ${v.nombre}?`,
+          a: `Estamos en ${lugar}.`
+        });
+      } else {
+        lista.push({
+          q: "¿Venden por pieza suelta o solo por charola?",
+          a: "Puedes llevar desde una pieza suelta en mostrador hasta charolas completas sobre pedido."
+        });
+      }
+      return lista;
     }
   },
 
@@ -1872,15 +2021,6 @@ const COPIA_ESPECIFICA_GIRO = {
           : "Atendemos reparaciones de casa y obra directamente en mostrador.";
       return `${p1} ${p2}`;
     },
-    descServicios: (tieneWa) => [
-      (t) => `Venta por pieza suelta, juego completo o lista de material en ${t}.`,
-      (t) => `Distintas medidas y calibres en ${t} para reparaciones de casa y obra.`,
-      (t) =>
-        tieneWa
-          ? `Confirmamos existencias de ${t} por WhatsApp o en mostrador.`
-          : `Existencia en mostrador para ${t}; te ayudamos a ubicar el repuesto exacto.`,
-      (t) => `Opciones económicas y de uso rudo en ${t}.`
-    ],
     beneficios: (v, d, tieneWa) => [
       tieneWa
         ? "Confirmamos medida y existencia por WhatsApp antes de que vengas."
@@ -1901,20 +2041,20 @@ const COPIA_ESPECIFICA_GIRO = {
         {
           q: "¿Venden por pieza suelta o solo por caja?",
           a: "Vendemos desde una pieza suelta hasta paquetes completos, según lo que ocupe tu trabajo."
-        },
-        {
-          q: "¿Cuál es su horario de atención?",
-          a: d.horario
-            ? `Abrimos ${d.horario}.`
-            : `Atendemos de manera local en ${v.ciudad}; pregunta en mostrador por días festivos.`
-        },
-        {
-          q: `¿Dónde está ${v.nombre}?`,
-          a: d.ubicacion
-            ? `Estamos en ${lugar}.`
-            : `Atendemos en ${v.ciudad}.`
         }
       ];
+      if (d.horario) {
+        lista.push({
+          q: "¿Cuál es su horario de atención?",
+          a: `Abrimos ${d.horario}.`
+        });
+      }
+      if (d.ubicacion) {
+        lista.push({
+          q: `¿Dónde está ${v.nombre}?`,
+          a: `Estamos en ${lugar}.`
+        });
+      }
       return lista;
     },
     complementos: (tieneWa) => [
@@ -1947,12 +2087,6 @@ const COPIA_ESPECIFICA_GIRO = {
           : "Servicio en comedor y órdenes para llevar preparadas al momento.";
       return `${p1} ${p2}`;
     },
-    descServicios: () => [
-      (t) => `Preparados al momento con cebolla, cilantro y salsas hechas cada día en ${t}.`,
-      (t) => `Por orden o por pieza, para comer en el local o para llevar en ${t}.`,
-      (t) => `Recién salidos de la parrilla en ${t}.`,
-      (t) => `Paquetes para compartir o reuniones chicas con ${t}.`
-    ],
     beneficios: (v) => [
       "Todo sale caliente de la plancha o al carbón en el momento.",
       "Salsas del día y verdura fresca en cada orden.",
@@ -1960,18 +2094,12 @@ const COPIA_ESPECIFICA_GIRO = {
     ],
     faqs: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
-      return [
+      const lista = [
         {
           q: "¿Tienen servicio para llevar?",
           a: tieneWa
             ? `Sí, puedes pedir tu orden de ${v.oferta} por WhatsApp y pasar solo a recogerla.`
             : `Sí, empacamos tu orden de ${v.oferta} bien caliente para llevar con salsas y limones aparte.`
-        },
-        {
-          q: "¿Qué días y horarios abren?",
-          a: d.horario
-            ? `Atendemos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
-            : `Atendemos en ${lugar}.`
         },
         {
           q: d.precios ? "¿Qué precios manejan?" : "¿Arman charolas para reuniones?",
@@ -1982,6 +2110,18 @@ const COPIA_ESPECIFICA_GIRO = {
               : `Sí, preparamos charolas de ${v.oferta} si las apartas en el local con un día de anticipación.`
         }
       ];
+      if (d.horario) {
+        lista.push({
+          q: "¿Qué días y horarios abren?",
+          a: `Atendemos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+        });
+      } else if (d.ubicacion) {
+        lista.push({
+          q: `¿Dónde está ${v.nombre}?`,
+          a: `Estamos en ${lugar}.`
+        });
+      }
+      return lista;
     }
   },
 
@@ -1997,86 +2137,39 @@ const COPIA_ESPECIFICA_GIRO = {
           : "Bebidas calientes y frías para consumir en barra o llevar.";
       return `${p1} ${p2}`;
     },
-    descServicios: () => [
-      (t) => `Grano recién molido y preparación al momento en ${t}.`,
-      (t) => `Disponible caliente o en las rocas según tu preferencia en ${t}.`,
-      (t) => `Vaso para llevar o consumo en barra con ${t}.`,
-      (t) => `Opciones de tamaño y tipo de leche en ${t}.`
-    ],
     beneficios: (v) => [
       "Grano molido al momento para cada taza.",
-      "Opciones calientes y frías todo el día.",
+      "Opciones calientes y frías en barra.",
       `Barra local en ${v.ciudad} para trabajar o pasar por tu vaso.`
     ],
     faqs: (v, d) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
-      return [
+      const lista = [
         {
           q: "¿Tienen opciones frías y leches vegetales?",
-          a: `Sí, la mayoría de nuestras bebidas en ${v.oferta} se preparan calientes o frías.`
-        },
-        {
-          q: d.horario ? "¿En qué horario abren?" : `¿Dónde está ${v.nombre}?`,
-          a: d.horario
-            ? `La barra abre ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
-            : `Estamos en ${lugar}.`
+          a: "Sí, la mayoría de las bebidas se preparan calientes o frías y con leche de tu preferencia."
         }
       ];
+      if (d.horario) {
+        lista.push({
+          q: "¿En qué horario abren?",
+          a: `La barra abre ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+        });
+      } else if (d.ubicacion) {
+        lista.push({
+          q: `¿Dónde está ${v.nombre}?`,
+          a: `Estamos en ${lugar}.`
+        });
+      }
+      return lista;
     }
   },
 
-  tienda: {
-    minTarjetas: 3,
-    descServicios: (tieneWa) => [
-      (t) => `Distintas presentaciones y modelos en ${t}, directo en mostrador.`,
-      (t) => `Surtido continuo de ${t} con atención en tienda.`,
-      (t) =>
-        tieneWa
-          ? `Compra en tienda o aparta ${t} por WhatsApp para recoger el mismo día.`
-          : `Compra directa en tienda con surtido actualizado en ${t}.`,
-      (t) => `Opciones variadas en ${t} según lo que busques.`
-    ]
-  },
-
-  comida: {
-    minTarjetas: 3,
-    descServicios: () => [
-      (t) => `Cocinado al día con sazón casero en ${t}.`,
-      (t) => `Porción individual o para compartir de ${t}, para comer aquí o llevar.`,
-      (t) => `Recién preparado al momento para que ${t} llegue caliente.`,
-      (t) => `Acompañamientos frescos incluidos con ${t}.`
-    ]
-  },
-
-  servicios: {
-    minTarjetas: 3,
-    descServicios: () => [
-      (t) => `Evaluamos tu caso y definimos alcance claro para ${t}.`,
-      (t) => `Seguimiento puntual de principio a fin en ${t}.`,
-      (t) => `Atención organizada y tiempos acordados en ${t}.`,
-      (t) => `Presupuesto claro antes de iniciar ${t}.`
-    ]
-  },
-
-  "salud y belleza": {
-    minTarjetas: 3,
-    descServicios: () => [
-      (t) => `Sesión programada sin prisas para ${t}.`,
-      (t) => `Valoración breve al inicio para adaptar ${t} a tu gusto.`,
-      (t) => `Material higienizado y cuidado posterior incluido en ${t}.`,
-      (t) => `Atención dedicada en cada sesión de ${t}.`
-    ]
-  },
-
-  "taller u oficio": {
-    minTarjetas: 3,
-    descServicios: () => [
-      (t) => `Revisión directa de la falla antes de cotizar ${t}.`,
-      (t) => `Mano de obra cuidada y prueba final en ${t}.`,
-      (t) => `Tiempo de entrega y refacciones explicados desde el inicio en ${t}.`,
-      (t) => `Atención en taller o visita programada para ${t}.`
-    ]
-  }
+  tienda: { minTarjetas: 3 },
+  comida: { minTarjetas: 3 },
+  servicios: { minTarjetas: 3 },
+  "salud y belleza": { minTarjetas: 3 },
+  "taller u oficio": { minTarjetas: 3 }
 };
 
 function esFragmentoNoServicio(texto) {
@@ -2095,7 +2188,6 @@ function esFragmentoNoServicio(texto) {
 
 function extraerServiciosGen(ofertaProductos, giro, tono, variante, temaEspecifico, tieneWhatsapp) {
   const perfil = PERFILES_GIRO[giro] || PERFILES_GIRO.otro;
-  // Proteger abreviaturas con punto antes de dividir por punto de fin de oración
   const protegido = limpiarOfertaDeRelleno(ofertaProductos)
     .replace(/\b(av|col|blvd|calz|no|n[uú]m|esq|fracc)\./gi, "$1__DOT__")
     .replace(/[.]+$/, "")
@@ -2142,44 +2234,19 @@ function extraerServiciosGen(ofertaProductos, giro, tono, variante, temaEspecifi
   }
 
   const especifico = COPIA_ESPECIFICA_GIRO[temaEspecifico] || COPIA_ESPECIFICA_GIRO[giro] || null;
-  const descripcionesFallback = {
-    cercano: [
-      (t) => `Trabajamos ${t} con trato directo y atención local.`,
-      (t) => `Opciones disponibles en ${t} según lo que busques.`,
-      (t) => `Atención directa para ${t} sin dar vueltas.`,
-      (t) => `Detalles y disponibilidad clara para ${t}.`
-    ],
-    profesional: [
-      (t) => `Disponibilidad y especificaciones claras para ${t}.`,
-      (t) => `Atención organizada en ${t}, con tiempos definidos desde el inicio.`,
-      (t) => `Opciones en ${t} ajustadas a cada requerimiento.`,
-      (t) => `Información clara sobre ${t} antes de decidir.`
-    ],
-    formal: [
-      (t) => `Ponemos a su disposición ${t}, con información clara sobre disponibilidad.`,
-      (t) => `Atendemos su solicitud de ${t} con puntualidad y trato directo.`,
-      (t) => `Con gusto le brindamos detalles sobre ${t}.`,
-      (t) => `Servicio dedicado en ${t}, conforme a sus requerimientos.`
-    ]
-  };
-
-  let listaPlantillas = descripcionesFallback[tono] || descripcionesFallback.profesional;
-  if (especifico && especifico.descServicios) {
-    listaPlantillas =
-      typeof especifico.descServicios === "function"
-        ? especifico.descServicios(Boolean(tieneWhatsapp))
-        : especifico.descServicios;
-  }
   const desplazamiento = Math.abs(Number(variante) || 0);
 
-  const servicios = unicos.map((item, indice) => {
-    const itemMinuscula = item.charAt(0).toLowerCase() + item.slice(1);
-    const generarDesc = listaPlantillas[(indice + desplazamiento) % listaPlantillas.length];
-    return {
-      titulo: item,
-      descripcion: generarDesc(itemMinuscula)
-    };
-  });
+  const servicios = unicos.map((item, indice) => ({
+    titulo: item,
+    descripcion: describirProductoReal(
+      item,
+      temaEspecifico,
+      giro,
+      tono,
+      Boolean(tieneWhatsapp),
+      indice + desplazamiento
+    )
+  }));
 
   const minTarjetas =
     especifico && Number.isInteger(especifico.minTarjetas) ? especifico.minTarjetas : 3;
@@ -2638,10 +2705,30 @@ function comprimirImagenArchivoLocal(archivo, maxAncho) {
   });
 }
 
+function inferirEtiquetaGiroEspecifico(datos) {
+  if (!datos || typeof datos !== "object") {
+    return "";
+  }
+  const actual = limpiarTextoGen(datos.giroTexto || "");
+  const actualNorm = normalizarTextoBusquedaGen(actual);
+  const esGenerico = !actualNorm || CLAVES_GIRO_GENERALES.includes(actualNorm);
+  if (!esGenerico) {
+    return capitalizarGen(actual);
+  }
+  const tema = resolverTemaPortada(datos);
+  if (tema && !CLAVES_GIRO_GENERALES.includes(tema) && PORTADAS_POR_GIRO[tema]) {
+    return PORTADAS_POR_GIRO[tema].etiqueta || capitalizarGen(tema);
+  }
+  if (actual) {
+    return capitalizarGen(actual);
+  }
+  return GIROS_ETIQUETAS[datos.giro] || "";
+}
+
 function generarBorradorNegocio(datos, variante) {
   const v = Math.abs(Number(variante) || 0);
   const nombre = formatearNombrePropio(datos.nombre, "nombre") || "Mi negocio";
-  const giroTexto = quitarGuionesLargosGen(datos.giroTexto || "");
+  const giroTexto = quitarGuionesLargosGen(inferirEtiquetaGiroEspecifico(datos) || datos.giroTexto || "");
   const giroBase = PERFILES_GIRO[datos.giro] ? datos.giro : normalizarGiro(giroTexto || datos.giro) || "otro";
   const giro = PERFILES_GIRO[giroBase] ? giroBase : "otro";
   const ciudad = formatearNombrePropio(datos.ciudad, "ciudad") || "tu ciudad";
@@ -2652,7 +2739,15 @@ function generarBorradorNegocio(datos, variante) {
 
   const perfil = PERFILES_GIRO[giro];
   const ofertaLimpia = oferta.replace(/[.]+$/, "");
-  const datosPortada = { nombre, ciudad, giro, giroTexto, oferta: ofertaLimpia };
+  const datosPortada = {
+    nombre,
+    ciudad,
+    giro,
+    giroTexto,
+    oferta: ofertaLimpia,
+    direccion: datos.direccion || "",
+    horario: datos.horario || ""
+  };
   const temaEspecifico = resolverTemaPortada(datosPortada);
   const copiaEsp = COPIA_ESPECIFICA_GIRO[temaEspecifico] || null;
   const detallesReales = extraerDetallesRealesUsuario(datos);
@@ -2718,24 +2813,34 @@ function generarBorradorNegocio(datos, variante) {
     }));
   } else {
     const lugar = fraseUbicacionCompleta(detallesReales.ubicacion, ciudad);
-    preguntasFrecuentes = perfil.faqs[tono].map((item) => {
-      let preg = limpiarMencionesWhatsappSiVacio(
-        quitarGuionesLargosGen(aplicarPlantillaGen(item.q, variables)),
-        tieneWhatsapp
-      );
-      let resp = limpiarMencionesWhatsappSiVacio(
-        quitarGuionesLargosGen(aplicarPlantillaGen(item.a, variables)),
-        tieneWhatsapp
-      );
-      if (detallesReales.horario && /horario|hora|abren|d[ií]as/i.test(preg + " " + resp)) {
-        resp = `Atendemos ${detallesReales.horario}${detallesReales.ubicacion ? ` en ${lugar}` : ` en ${ciudad}`}.`;
-      } else if (detallesReales.ubicacion && /ubicaci[oó]n|d[oó]nde|direcci[oó]n|zona/i.test(preg + " " + resp)) {
-        resp = `Estamos en ${lugar}.`;
-      } else if (detallesReales.precios && /precio|costo|cotiz/i.test(preg + " " + resp)) {
-        resp = `Manejamos opciones ${detallesReales.precios} en ${variables.oferta}.`;
-      }
-      return { pregunta: preg, respuesta: resp };
-    });
+    preguntasFrecuentes = perfil.faqs[tono]
+      .map((item) => {
+        const preg = limpiarMencionesWhatsappSiVacio(
+          quitarGuionesLargosGen(aplicarPlantillaGen(item.q, variables)),
+          tieneWhatsapp
+        );
+        let resp = limpiarMencionesWhatsappSiVacio(
+          quitarGuionesLargosGen(aplicarPlantillaGen(item.a, variables)),
+          tieneWhatsapp
+        );
+        const esFaqHorario = /horario|hora|abren|d[ií]as/i.test(preg);
+        const esFaqUbic = /ubicaci[oó]n|d[oó]nde|direcci[oó]n|zona/i.test(preg);
+        if (esFaqHorario) {
+          if (!detallesReales.horario) {
+            return null;
+          }
+          resp = `Atendemos ${detallesReales.horario}${detallesReales.ubicacion ? ` en ${lugar}` : ` en ${ciudad}`}.`;
+        } else if (esFaqUbic) {
+          if (!detallesReales.ubicacion) {
+            return null;
+          }
+          resp = `Estamos en ${lugar}.`;
+        } else if (detallesReales.precios && /precio|costo|cotiz/i.test(preg + " " + resp)) {
+          resp = `Manejamos opciones ${detallesReales.precios} en ${variables.oferta}.`;
+        }
+        return { pregunta: preg, respuesta: resp };
+      })
+      .filter(Boolean);
   }
 
   const mensajeWhatsapp = construirMensajeWhatsappNegocioGen(nombre, tono);
@@ -2771,14 +2876,30 @@ async function generarBorradorConServicio(datos, variante) {
     const ofertaLimpia = limpiarOfertaDeRelleno(datos.oferta);
     const whatsappLimpio = limpiarDigitosGen(datos.whatsapp);
     const tieneWhatsapp = Boolean(whatsappLimpio);
+    const giroEspecifico = inferirEtiquetaGiroEspecifico(datos);
     const datosLimpios = {
       ...datos,
       nombre: nombreFormateado || limpiarTextoGen(datos.nombre),
+      giroTexto: giroEspecifico || datos.giroTexto || "",
       ciudad: ciudadFormateada || limpiarTextoGen(datos.ciudad),
       oferta: ofertaLimpia || limpiarTextoGen(datos.oferta),
+      direccion: esOmisionCampoOpcional(datos.direccion) ? "" : limpiarTextoGen(datos.direccion),
+      horario: esOmisionCampoOpcional(datos.horario) ? "" : limpiarTextoGen(datos.horario),
       whatsapp: whatsappLimpio
     };
     const detallesReales = extraerDetallesRealesUsuario(datosLimpios);
+
+    const ofertaConContexto = [
+      datosLimpios.oferta,
+      detallesReales.ubicacion && !datosLimpios.oferta.toLowerCase().includes(detallesReales.ubicacion.toLowerCase())
+        ? `Ubicación: ${detallesReales.ubicacion}`
+        : "",
+      detallesReales.horario && !datosLimpios.oferta.toLowerCase().includes(detallesReales.horario.toLowerCase())
+        ? `Horario: ${detallesReales.horario}`
+        : ""
+    ]
+      .filter(Boolean)
+      .join(". ");
 
     const controlador = new AbortController();
     const temporizador = setTimeout(() => controlador.abort(), 15000);
@@ -2791,7 +2912,7 @@ async function generarBorradorConServicio(datos, variante) {
           nombre: datosLimpios.nombre || "",
           giro: datosLimpios.giroTexto || datosLimpios.giro || "",
           ciudad: datosLimpios.ciudad || "",
-          oferta: datosLimpios.oferta || "",
+          oferta: ofertaConContexto || "",
           tono: datosLimpios.tono || "cercano",
           whatsapp: datosLimpios.whatsapp || "",
           variante: variante || 0
@@ -2919,7 +3040,13 @@ function contienePlantillaLegadaBorrador(registro) {
     /m[aá]ndanos mensaje y te pasamos la ubicaci[oó]n exacta/i,
     /pr[oó]ximamente enlace de whatsapp/i,
     /estamos,\s*col\./i,
-    /horario:\s*[^.]+\.\s*ubicaci[oó]n:/i
+    /horario:\s*[^.]+\.\s*ubicaci[oó]n:/i,
+    /distintas medidas y calibres en\s+(?!tornill|clavo|pija|taquet|fijaci)/i,
+    /horneado en tandas frescas para llevar por pieza o por charola en/i,
+    /venta por pieza suelta, juego completo o lista de material en\s+(?!tornill|clavo|pija|taquet)/i,
+    /horneamos\b.*\btodos los d[ií]as/i,
+    /pregunta en mostrador por d[ií]as festivos/i,
+    /atendemos de manera local en/i
   ];
   if (patronesLegados.some((rx) => rx.test(textoPlan))) {
     return true;
@@ -2949,6 +3076,18 @@ function sanearBorradorLegado(registro) {
     return false;
   }
   let cambio = false;
+
+  // Actualizar etiquetas genéricas viejas ("Comida", "Tienda") al giro real detectado ("Panadería", "Ferretería")
+  const giroEspecifico = inferirEtiquetaGiroEspecifico(registro.datos);
+  const giroActualNorm = normalizarTextoBusquedaGen(registro.datos.giroTexto || "");
+  if (
+    giroEspecifico &&
+    (!giroActualNorm || CLAVES_GIRO_GENERALES.includes(giroActualNorm)) &&
+    giroEspecifico !== registro.datos.giroTexto
+  ) {
+    registro.datos.giroTexto = giroEspecifico;
+    cambio = true;
+  }
 
   const detallesReales = extraerDetallesRealesUsuario(registro.datos);
   if (contienePlantillaLegadaBorrador(registro)) {
@@ -3024,8 +3163,6 @@ function formatearBorradorTextoPlano(datos, borrador) {
   const wa = limpiarDigitosGen(datos.whatsapp);
   if (wa) {
     lineas.push(`WhatsApp: https://wa.me/${wa}?text=${encodeURIComponent(borrador.mensajeWhatsapp)}`);
-  } else {
-    lineas.push("WhatsApp: aún sin configurar.");
   }
   return lineas.join("\n").trim();
 }
@@ -3056,6 +3193,379 @@ function crearSlugPublicacion(nombre) {
   return `${base}-${sufijo}`;
 }
 
+function distanciaDamerauGen(a, b) {
+  const s1 = String(a || "");
+  const s2 = String(b || "");
+  const m = s1.length;
+  const n = s2.length;
+  if (!m) return n;
+  if (!n) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i += 1) dp[i][0] = i;
+  for (let j = 0; j <= n; j += 1) dp[0][j] = j;
+  for (let i = 1; i <= m; i += 1) {
+    for (let j = 1; j <= n; j += 1) {
+      const costo = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      let val = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + costo);
+      if (i > 1 && j > 1 && s1[i - 1] === s2[j - 2] && s1[i - 2] === s2[j - 1]) {
+        val = Math.min(val, dp[i - 2][j - 2] + costo);
+      }
+      dp[i][j] = val;
+    }
+  }
+  return dp[m][n];
+}
+
+const ALIAS_FALTAS_CHAT = {
+  sintryccuines: "instrucciones",
+  sintrucciones: "instrucciones",
+  istrucciones: "instrucciones",
+  istruciones: "instrucciones",
+  instrucsiones: "instrucciones",
+  intrucciones: "instrucciones",
+  log: "logo",
+  loog: "logo",
+  logoo: "logo",
+  logotipo: "logo",
+  canvia: "cambia",
+  canbia: "cambia",
+  camvia: "cambia",
+  canviar: "cambiar",
+  canbiar: "cambiar",
+  kita: "quita",
+  kitha: "quita",
+  qita: "quita",
+  kitar: "quitar",
+  borar: "borrar",
+  borra: "borra",
+  wats: "whatsapp",
+  watsap: "whatsapp",
+  wasap: "whatsapp",
+  wasapp: "whatsapp",
+  whats: "whatsapp",
+  whatsap: "whatsapp",
+  wsp: "whatsapp",
+  guats: "whatsapp",
+  guatsap: "whatsapp",
+  agrga: "agrega",
+  agerga: "agrega",
+  agregaa: "agrega",
+  agreg: "agrega",
+  añad: "agrega",
+  anade: "agrega",
+  sumale: "agrega",
+  ponle: "pon",
+  ponl: "pon",
+  presios: "precios",
+  presio: "precio",
+  prezios: "precios",
+  prezio: "precio",
+  as: "haz",
+  has: "haz",
+  aser: "hacer",
+  orario: "horario",
+  horaro: "horario",
+  orarios: "horarios",
+  direcsion: "direccion",
+  direcion: "direccion",
+  direccon: "direccion",
+  caye: "calle",
+  uvicacion: "ubicacion",
+  ubicason: "ubicacion",
+  fot: "foto",
+  fotos: "foto",
+  imajen: "imagen",
+  portda: "portada",
+  plantiy: "plantilla",
+  plantila: "plantilla",
+  diseno: "diseno",
+  diseo: "diseno",
+  numro: "numero",
+  telefon: "telefono",
+  tel: "telefono",
+  cel: "telefono",
+  grnde: "grande",
+  grand: "grande",
+  visble: "visible",
+  tno: "tono",
+  profezional: "profesional",
+  profecional: "profesional",
+  sercano: "cercano",
+  fomal: "formal",
+  siudad: "ciudad",
+  nonbre: "nombre",
+  nombr: "nombre",
+  ayud: "ayuda",
+  ayudame: "ayuda",
+  publicr: "publicar",
+  publika: "publicar",
+  grasias: "gracias",
+  gracia: "gracias",
+  ola: "hola"
+};
+
+const VOCABULARIO_CLAVE_CHAT = [
+  "instrucciones",
+  "ayuda",
+  "logo",
+  "whatsapp",
+  "telefono",
+  "numero",
+  "cambia",
+  "cambiar",
+  "quita",
+  "quitar",
+  "borra",
+  "borrar",
+  "elimina",
+  "eliminar",
+  "agrega",
+  "agregar",
+  "incluye",
+  "pon",
+  "haz",
+  "tono",
+  "cercano",
+  "profesional",
+  "formal",
+  "horario",
+  "direccion",
+  "calle",
+  "ubicacion",
+  "ciudad",
+  "nombre",
+  "foto",
+  "portada",
+  "imagen",
+  "plantilla",
+  "clasica",
+  "editorial",
+  "directa",
+  "precios",
+  "precio",
+  "grande",
+  "visible",
+  "publicar",
+  "enlace",
+  "hola",
+  "gracias"
+];
+
+function corregirTokenChatFuzzy(token) {
+  const t = String(token || "").replace(/(.)\1{2,}/g, "$1$1");
+  if (!t) return "";
+  if (ALIAS_FALTAS_CHAT[t]) {
+    return ALIAS_FALTAS_CHAT[t];
+  }
+  if (VOCABULARIO_CLAVE_CHAT.includes(t)) {
+    return t;
+  }
+  const tSimple = t.replace(/(.)\1+/g, "$1");
+  if (ALIAS_FALTAS_CHAT[tSimple]) {
+    return ALIAS_FALTAS_CHAT[tSimple];
+  }
+  if (t.length < 4) {
+    return t;
+  }
+  let mejor = "";
+  let mejorDist = 99;
+  const maxDist = t.length >= 8 ? 3 : t.length >= 5 ? 2 : 1;
+  for (const cand of VOCABULARIO_CLAVE_CHAT) {
+    if (Math.abs(cand.length - t.length) > maxDist) {
+      continue;
+    }
+    const d = distanciaDamerauGen(t, cand);
+    if (d <= maxDist && d < mejorDist) {
+      mejorDist = d;
+      mejor = cand;
+    }
+  }
+  return mejor || t;
+}
+
+function normalizarMensajeChatFuzzy(texto) {
+  const original = limpiarTextoGen(texto);
+  const sinAcentos = original
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const tieneSignoPregunta = /[¿?]/.test(original);
+  const limpioPuntuacion = sinAcentos
+    .replace(/[¿?¡!.,;:()"]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const tokensRaw = limpioPuntuacion ? limpioPuntuacion.split(" ") : [];
+  const tokens = tokensRaw.map((tok) => corregirTokenChatFuzzy(tok));
+  return {
+    original,
+    tieneSignoPregunta,
+    tokensRaw,
+    tokens,
+    normalizado: tokens.join(" ")
+  };
+}
+
+function clasificarIntencionChat(texto, contexto) {
+  const norm = normalizarMensajeChatFuzzy(texto);
+  const frase = norm.normalizado;
+  const tokens = norm.tokens;
+  const has = (pal) => tokens.includes(pal);
+  const any = (lista) => lista.some((p) => tokens.includes(p));
+
+  if (!frase) {
+    return { intencion: "vacio", norm };
+  }
+
+  // 1) Saludos o cierres breves (nunca tocan el borrador)
+  if (
+    tokens.length <= 4 &&
+    any(["hola", "buenas", "buenos", "gracias", "ok", "listo", "perfecto", "genial", "va", "sale"]) &&
+    !any(["cambia", "cambiar", "quita", "quitar", "borra", "elimina", "agrega", "agregar", "pon", "haz", "logo", "whatsapp", "horario", "direccion", "tono", "precios"])
+  ) {
+    return { intencion: "saludo", norm };
+  }
+
+  // 2) Solicitud de instrucciones o ayuda
+  if (any(["instrucciones", "ayuda"]) || /\b(como\s+(?:funciona|edito|cambio|subo|publico|uso|hago)|que\s+hago)\b/.test(frase)) {
+    return { intencion: "pregunta", tema: "instrucciones", norm };
+  }
+
+  // 3) Preguntas sobre el estado del borrador (logo, foto, horario, direccion, whatsapp, publicar)
+  const parecePregunta =
+    norm.tieneSignoPregunta ||
+    /^(?:y\s+mi|donde|como|cuando|cual|cuanto|por\s+que|porque|tiene|puedo|se\s+puede|falta|falta\s+mi)\b/.test(frase);
+
+  if (parecePregunta && !any(["agrega", "agregar", "quita", "quitar", "borra", "borrar", "elimina", "cambia", "cambiar"])) {
+    if (has("logo")) return { intencion: "pregunta", tema: "logo", norm };
+    if (any(["foto", "portada", "imagen"])) return { intencion: "pregunta", tema: "portada", norm };
+    if (any(["whatsapp", "telefono", "numero"])) return { intencion: "pregunta", tema: "whatsapp", norm };
+    if (has("horario")) return { intencion: "pregunta", tema: "horario", norm };
+    if (any(["direccion", "calle", "ubicacion"])) return { intencion: "pregunta", tema: "direccion", norm };
+    if (any(["publicar", "enlace"])) return { intencion: "pregunta", tema: "publicar", norm };
+    if (any(["precio", "precios"])) return { intencion: "pregunta", tema: "precios", norm };
+    if (has("tono")) return { intencion: "pregunta", tema: "tono", norm };
+    if (has("plantilla")) return { intencion: "pregunta", tema: "plantilla", norm };
+    return { intencion: "pregunta", tema: "general", norm };
+  }
+
+  // 4) Quitar / borrar elementos específicos
+  if (any(["quita", "quitar", "borra", "borrar", "elimina", "eliminar", "saca"]) || /^sin\s+/.test(frase)) {
+    if (any(["whatsapp", "telefono", "numero"])) {
+      return { intencion: "quitar", objetivo: "whatsapp", norm };
+    }
+    if (has("logo")) {
+      return { intencion: "quitar", objetivo: "logo", norm };
+    }
+    if (any(["foto", "portada", "imagen"])) {
+      return { intencion: "quitar", objetivo: "portada", norm };
+    }
+    if (has("horario")) {
+      return { intencion: "quitar", objetivo: "horario", norm };
+    }
+    if (any(["direccion", "calle", "ubicacion"])) {
+      return { intencion: "quitar", objetivo: "direccion", norm };
+    }
+    const restoQuitar = norm.original
+      .replace(/^(?:quita|quitar|kita|kitar|borra|borrar|elimina|eliminar|saca|sin)\s+(?:el|la|los|las|mi|de)?\s*/i, "")
+      .trim();
+    if (restoQuitar.length >= 2) {
+      return { intencion: "quitar", objetivo: "servicio", valor: restoQuitar, norm };
+    }
+    return { intencion: "ambiguo", sugerencia: "quitar el WhatsApp, la portada o un producto", norm };
+  }
+
+  // 5) Cambiar tono, plantilla, horario, dirección, precios, ciudad, nombre, WhatsApp
+  const tonoDetectado = any(["cercano"]) ? "cercano" : any(["profesional"]) ? "profesional" : any(["formal"]) ? "formal" : "";
+  if (has("tono") || (tonoDetectado && (any(["cambia", "cambiar", "pon", "haz"]) || tokens.length <= 3))) {
+    return { intencion: "cambiar", objetivo: "tono", valor: tonoDetectado, norm };
+  }
+
+  const plantillaDetectada = has("clasica") ? "clasica" : has("editorial") ? "editorial" : has("directa") ? "directa" : "";
+  if (has("plantilla") || (plantillaDetectada && (any(["cambia", "cambiar", "pon", "usa"]) || tokens.length <= 3))) {
+    return { intencion: "cambiar", objetivo: "plantilla", valor: plantillaDetectada, norm };
+  }
+
+  if (any(["precio", "precios"]) && !/\$\s*\d|\b\d+\s*(?:pesos|mxn)\b/i.test(norm.original)) {
+    return { intencion: "cambiar", objetivo: "precios_sin_monto", norm };
+  }
+
+  if (has("horario")) {
+    if (any(["grande", "visible", "arriba", "destaca", "mas"]) && !/\d/.test(norm.original)) {
+      return { intencion: "cambiar", objetivo: "horario_destacado", norm };
+    }
+    const mHor = norm.original.match(/(?:horario(?:\s+a|\s+es|\s*:)?|abrimos|atendemos)\s+(.+)$/i);
+    const valHor = mHor ? limpiarTextoGen(mHor[1]) : "";
+    if (valHor && /\d/.test(valHor)) {
+      return { intencion: "cambiar", objetivo: "horario", valor: valHor, norm };
+    }
+    return { intencion: "cambiar", objetivo: "horario_pedir", norm };
+  }
+
+  if (any(["direccion", "calle", "ubicacion"])) {
+    const mDir = norm.original.match(/(?:direcci[oó]n|calle|ubicaci[oó]n|estamos\s+en)(?:\s+a|\s+es|\s*:)?\s+(.+)$/i);
+    const valDir = mDir ? limpiarTextoGen(mDir[1]) : "";
+    if (valDir.length >= 4 && !/^(?:mas|grande|visible)$/i.test(valDir)) {
+      return { intencion: "cambiar", objetivo: "direccion", valor: valDir, norm };
+    }
+    return { intencion: "cambiar", objetivo: "direccion_pedir", norm };
+  }
+
+  if (any(["whatsapp", "telefono", "numero"])) {
+    const digitos = limpiarDigitosGen(norm.original);
+    if (digitos.length >= 10 && digitos.length <= 15) {
+      return { intencion: "cambiar", objetivo: "whatsapp", valor: digitos, norm };
+    }
+    return { intencion: "pregunta", tema: "whatsapp", norm };
+  }
+
+  if (has("logo")) {
+    return { intencion: "pregunta", tema: "logo", norm };
+  }
+
+  if (any(["foto", "portada", "imagen"]) && any(["cambia", "cambiar", "otra", "pon", "nueva", "sube", "subir"])) {
+    return { intencion: "cambiar", objetivo: "portada", norm };
+  }
+
+  if (has("ciudad")) {
+    const mCiu = norm.original.match(/ciudad(?:\s+a|\s+es|\s*:)?\s+(.+)$/i);
+    if (mCiu && limpiarTextoGen(mCiu[1]).length >= 2) {
+      return { intencion: "cambiar", objetivo: "ciudad", valor: formatearNombrePropio(mCiu[1], "ciudad"), norm };
+    }
+  }
+
+  if (has("nombre")) {
+    const mNom = norm.original.match(/nombre(?:\s+a|\s+es|\s*:)?\s+(.+)$/i);
+    if (mNom && limpiarTextoGen(mNom[1]).length >= 2) {
+      return { intencion: "cambiar", objetivo: "nombre", valor: formatearNombrePropio(mNom[1], "nombre"), norm };
+    }
+  }
+
+  // 6) Agregar producto, servicio o precio concreto
+  if (any(["agrega", "agregar", "incluye", "pon"])) {
+    const rawDespues = norm.original
+      .replace(/^(?:agrega|agrga|agerga|agregar|añade|anade|incluye|ponle|pon|suma|sumale)\s+(?:tambien|también|mas|más|un|una|unos|unas|el|la|los|las)?\s*/i, "")
+      .trim();
+    if (rawDespues.length >= 2 && !esOmisionCampoOpcional(rawDespues)) {
+      const itemLimpio = capitalizarGen(rawDespues.replace(/[.!?]+$/, "").trim());
+      return { intencion: "agregar", objetivo: "servicio", valor: itemLimpio, norm };
+    }
+    return { intencion: "ambiguo", sugerencia: "agregar un producto o servicio a tu lista", norm };
+  }
+
+  // 7) Si no coincide con ninguna intención clara, NUNCA pegar el texto al borrador
+  let sugerencia = "cambiar el tono, agregar un producto o ajustar el horario";
+  if (tokens.some((t) => distanciaDamerauGen(t, "tono") <= 2)) {
+    sugerencia = "cambiar el tono de tu página";
+  } else if (tokens.some((t) => distanciaDamerauGen(t, "horario") <= 2)) {
+    sugerencia = "actualizar tu horario";
+  } else if (tokens.some((t) => distanciaDamerauGen(t, "logo") <= 1)) {
+    sugerencia = "subir o cambiar tu logo";
+  } else if (tokens.some((t) => distanciaDamerauGen(t, "whatsapp") <= 3)) {
+    sugerencia = "cambiar o quitar tu WhatsApp";
+  }
+  return { intencion: "ambiguo", sugerencia, norm };
+}
+
 window.dmdGenerador = {
   DOMINIO_PUBLICACION_DMD,
   GIROS_ETIQUETAS,
@@ -3067,11 +3577,13 @@ window.dmdGenerador = {
   quitarGuionesLargos: quitarGuionesLargosGen,
   esTextoRelleno: esTextoRellenoGen,
   esOmisionWhatsapp,
+  esOmisionCampoOpcional,
   limpiarOfertaDeRelleno,
   formatearNombrePropio,
   normalizarSubdominio: normalizarSubdominioGen,
   validarSubdominio,
   normalizarGiro,
+  inferirEtiquetaGiroEspecifico,
   normalizarTono,
   resolverTemaPortada,
   obtenerOpcionesPortada,
@@ -3080,6 +3592,8 @@ window.dmdGenerador = {
   obtenerEstructuraNegocio,
   crearStickerElemento,
   sanearBorradorLegado,
+  normalizarMensajeChatFuzzy,
+  clasificarIntencionChat,
   esArchivoImagenValido,
   comprimirImagenArchivo: comprimirImagenArchivoLocal,
   generarBorrador: generarBorradorNegocio,

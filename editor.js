@@ -584,6 +584,8 @@
 
       tplBtns: Array.from(document.querySelectorAll(".tpl-btn")),
       selectFuente: document.getElementById("ed-fuente"),
+      inputDireccion: document.getElementById("ed-direccion"),
+      inputHorario: document.getElementById("ed-horario"),
       inputWhatsapp: document.getElementById("ed-whatsapp"),
       whatsappHint: document.getElementById("ed-whatsapp-hint"),
       inputLogoFile: document.getElementById("ed-subir-logo"),
@@ -763,6 +765,12 @@
       b.setAttribute("aria-pressed", activo ? "true" : "false");
     });
     ui.selectFuente.value = diseno.fuente || "sistema";
+    if (ui.inputDireccion && document.activeElement !== ui.inputDireccion) {
+      ui.inputDireccion.value = datos.direccion || "";
+    }
+    if (ui.inputHorario && document.activeElement !== ui.inputHorario) {
+      ui.inputHorario.value = datos.horario || "";
+    }
     if (document.activeElement !== ui.inputWhatsapp) {
       ui.inputWhatsapp.value = datos.whatsapp || "";
     }
@@ -1761,7 +1769,7 @@
     ui.btnEscritorio.classList.toggle("vp-btn-active", esEsc);
     ui.btnMovil.setAttribute("aria-pressed", !esEsc ? "true" : "false");
     ui.btnEscritorio.setAttribute("aria-pressed", esEsc ? "true" : "false");
-    ui.etiquetaViewport.textContent = esEsc ? "Escritorio" : "Celular 360 px";
+    ui.etiquetaViewport.textContent = esEsc ? "Escritorio" : "Celular";
     ui.stage.classList.toggle("mode-desktop", esEsc);
     ui.stage.classList.toggle("mode-mobile", !esEsc);
     renderizarLienzoEditable();
@@ -1921,6 +1929,56 @@
       );
     });
 
+    // Calle o colonia del negocio
+    if (ui.inputDireccion) {
+      ui.inputDireccion.addEventListener("change", () => {
+        if (!registroActual || !window.dmdGenerador) {
+          return;
+        }
+        const limpia = window.dmdGenerador.limpiarTexto(ui.inputDireccion.value);
+        ui.inputDireccion.value = limpia;
+        empujarEstadoDeshacer();
+        registroActual.datos.direccion = limpia;
+        const nuevo = window.dmdGenerador.generarBorrador(registroActual.datos, registroActual.borrador.variante || 0);
+        registroActual.borrador.presentacion = nuevo.presentacion;
+        registroActual.borrador.preguntasFrecuentes = nuevo.preguntasFrecuentes;
+        registroActual.borrador.estructura = nuevo.estructura;
+        renderizarControlesDiseno();
+        renderizarLienzoEditable();
+        guardarCambio(
+          limpia ? "Dirección actualizada" : "Dirección quitada",
+          true,
+          "Dirección actualizada",
+          limpia || "Se dejó sin dirección"
+        );
+      });
+    }
+
+    // Horario del negocio
+    if (ui.inputHorario) {
+      ui.inputHorario.addEventListener("change", () => {
+        if (!registroActual || !window.dmdGenerador) {
+          return;
+        }
+        const limpio = window.dmdGenerador.limpiarTexto(ui.inputHorario.value);
+        ui.inputHorario.value = limpio;
+        empujarEstadoDeshacer();
+        registroActual.datos.horario = limpio;
+        const nuevo = window.dmdGenerador.generarBorrador(registroActual.datos, registroActual.borrador.variante || 0);
+        registroActual.borrador.presentacion = nuevo.presentacion;
+        registroActual.borrador.preguntasFrecuentes = nuevo.preguntasFrecuentes;
+        registroActual.borrador.estructura = nuevo.estructura;
+        renderizarControlesDiseno();
+        renderizarLienzoEditable();
+        guardarCambio(
+          limpio ? "Horario actualizado" : "Horario quitado",
+          true,
+          "Horario actualizado",
+          limpio || "Se dejó sin horario"
+        );
+      });
+    }
+
     // WhatsApp del negocio
     ui.inputWhatsapp.addEventListener("change", () => {
       if (!registroActual) {
@@ -1931,6 +1989,13 @@
       empujarEstadoDeshacer();
       registroActual.datos.whatsapp = limpio;
       registroActual.borrador.whatsapp = limpio;
+      if (window.dmdGenerador && typeof window.dmdGenerador.generarBorrador === "function") {
+        const nuevo = window.dmdGenerador.generarBorrador(registroActual.datos, registroActual.borrador.variante || 0);
+        registroActual.borrador.presentacion = nuevo.presentacion;
+        registroActual.borrador.beneficios = nuevo.beneficios;
+        registroActual.borrador.preguntasFrecuentes = nuevo.preguntasFrecuentes;
+        registroActual.borrador.estructura = nuevo.estructura;
+      }
       renderizarControlesDiseno();
       renderizarLienzoEditable();
       guardarCambio(

@@ -29,7 +29,7 @@ const PLANES_DMD = [
       "Acceso a Clásica, Editorial y Directa",
       "Foto de portada por giro o imagen propia desde tu celular",
       "Botón y formulario directo a tu WhatsApp",
-      "Enlace público adaptado a pantalla de 360 px y escritorio"
+      "Enlace público adaptado a celular y escritorio"
     ]
   },
   {
@@ -58,7 +58,7 @@ const PLANES_DMD = [
       "Todo lo del plan Emprendedor",
       "Múltiples borradores, copias duplicadas y conversaciones aparte",
       "Subdominio en dmd y preparación para dominio propio",
-      "Vista previa real a 360 px y escritorio en cualquier cambio",
+      "Vista previa real en celular y escritorio en cualquier cambio",
       "Respaldo completo y control de cambios desde un solo panel"
     ]
   }

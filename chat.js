@@ -24,14 +24,26 @@
     {
       campo: "giro",
       etiqueta: "Giro del negocio",
-      pregunta: "¿Cuál es el giro?",
-      chips: ["Tienda", "Comida", "Servicios", "Salud y belleza", "Taller u oficio", "Otro"]
+      pregunta: "¿Cuál es el giro de tu negocio?",
+      chips: ["Panadería", "Ferretería", "Cafetería", "Taquería", "Estética", "Servicios"]
     },
     {
       campo: "ciudad",
       etiqueta: "Ciudad",
       pregunta: "¿En qué ciudad estás?",
       chips: []
+    },
+    {
+      campo: "direccion",
+      etiqueta: "Calle o colonia (opcional)",
+      pregunta: "¿En qué calle o colonia estás? (opcional, o toca Continuar sin dirección)",
+      chips: ["Continuar sin dirección"]
+    },
+    {
+      campo: "horario",
+      etiqueta: "Horario (opcional)",
+      pregunta: "¿Cuál es tu horario de atención? (ej. Lunes a viernes de 9 a 6 y sábado de 9 a 2, o toca Continuar sin horario)",
+      chips: ["Continuar sin horario"]
     },
     {
       campo: "oferta",
@@ -76,7 +88,10 @@
     "no tengo whatsapp",
     "seguir sin whatsapp",
     "continuar sin telefono",
-    "continuar sin teléfono"
+    "continuar sin teléfono",
+    "continuar sin direccion",
+    "continuar sin dirección",
+    "continuar sin horario"
   ]);
 
   function leer(clave, defecto) {
@@ -225,11 +240,13 @@
     }
 
     const gen = window.dmdGenerador;
+    const appShell = document.querySelector(".app-shell");
     const sidebar = document.getElementById("app-sidebar");
     const backdrop = document.getElementById("sidebar-backdrop");
     const btnAbrirSidebar = document.getElementById("btn-abrir-sidebar");
     const btnCerrarSidebar = document.getElementById("btn-cerrar-sidebar");
     const btnNuevaSidebar = document.getElementById("btn-nueva-conv-sidebar");
+    const sidebarBuscar = document.getElementById("sidebar-buscar");
     const badgeBorradoresMobile = document.getElementById("badge-borradores-mobile");
     const sidebarStorageLabel = document.getElementById("sidebar-storage-label");
 
@@ -237,6 +254,46 @@
     const tabModoEditor = document.getElementById("tab-modo-editor");
     const vistaChat = document.getElementById("vista-chat");
     const vistaEditor = document.getElementById("vista-editor");
+    const vistaFeed = document.getElementById("vista-feed");
+    const vistaArchivos = document.getElementById("vista-archivos");
+    const vistaIdeas = document.getElementById("vista-ideas");
+    const vistaSuscripcion = document.getElementById("vista-suscripcion");
+    const vistaBiblioteca = document.getElementById("vista-biblioteca");
+
+    const gridFeedPropias = document.getElementById("grid-feed-propias");
+    const feedPropiasVacio = document.getElementById("feed-propias-vacio");
+    const contadorFeedPropias = document.getElementById("contador-feed-propias");
+    const gridFeedCatalogo = document.getElementById("grid-feed-catalogo");
+    const btnFeedNuevo = document.getElementById("btn-feed-nuevo");
+
+    const panelArchivosPaginas = document.getElementById("panel-archivos-paginas");
+    const panelArchivosMedia = document.getElementById("panel-archivos-media");
+    const archivosPaginasVacio = document.getElementById("archivos-paginas-vacio");
+    const gridArchivosPaginas = document.getElementById("grid-archivos-paginas");
+    const archivosMediaVacio = document.getElementById("archivos-media-vacio");
+    const gridArchivosMedia = document.getElementById("grid-archivos-media");
+    const btnArchivosCrear = document.getElementById("btn-archivos-crear");
+    const btnArchivosSubirIr = document.getElementById("btn-archivos-subir-ir");
+
+    const ideasSubtitulo = document.getElementById("ideas-subtitulo");
+    const ideasVacio = document.getElementById("ideas-vacio");
+    const listaIdeas = document.getElementById("lista-ideas");
+    const btnIdeasCrear = document.getElementById("btn-ideas-crear");
+
+    const btnConfigDescargar = document.getElementById("btn-config-descargar");
+    const btnConfigImportar = document.getElementById("btn-config-importar");
+    const btnBiblioDescargar = document.getElementById("btn-biblio-descargar");
+
+    const modalMediaVisor = document.getElementById("modal-media-visor");
+    const mediaModalImg = document.getElementById("media-modal-img");
+    const mediaModalTitulo = document.getElementById("media-modal-titulo");
+    const mediaModalMeta = document.getElementById("media-modal-meta");
+    const btnCerrarMediaModal = document.getElementById("btn-cerrar-media-modal");
+    const btnMediaUsarPortada = document.getElementById("btn-media-usar-portada");
+    const btnMediaUsarLogo = document.getElementById("btn-media-usar-logo");
+
+    const botonesVistaApp = Array.from(document.querySelectorAll("[data-app-vista]"));
+    const botonesTabArchivos = Array.from(document.querySelectorAll("[data-archivos-tab]"));
 
     const contadorConv = document.getElementById("contador-conversaciones");
     const convVacio = document.getElementById("conversaciones-vacio");
@@ -284,6 +341,11 @@
     let borradorActivoId = null;
     let editandoMsgId = null;
     let modoActual = "chat";
+    let vistaActual = "chat";
+    let tabArchivosActual = "paginas";
+    let terminoBusquedaSidebar = "";
+    let chipsSeguimiento = [];
+    let mediaModalActual = null;
     let generandoAhora = false;
     let ultimaAccionFallida = null;
 
@@ -386,13 +448,29 @@
     }
 
     function esTextoOmision(texto) {
-      if (typeof gen.esOmisionWhatsapp === "function") {
-        return gen.esOmisionWhatsapp(texto);
+      if (typeof gen.esOmisionCampoOpcional === "function" && gen.esOmisionCampoOpcional(texto)) {
+        return true;
       }
-      if (typeof gen.esTextoRelleno === "function") {
-        return gen.esTextoRelleno(texto);
+      if (typeof gen.esOmisionWhatsapp === "function" && gen.esOmisionWhatsapp(texto)) {
+        return true;
       }
-      return /^(omitir|saltar|sin\s+whats?app|no\s+tengo)/i.test(String(texto || "").trim());
+      if (typeof gen.esTextoRelleno === "function" && gen.esTextoRelleno(texto)) {
+        return true;
+      }
+      return /^(omitir|saltar|sin\s+whats?app|no\s+tengo|continuar\s+sin)/i.test(String(texto || "").trim());
+    }
+
+    function obtenerEtiquetaGiroLimpia(datos) {
+      if (!datos) {
+        return "";
+      }
+      if (typeof gen.inferirEtiquetaGiroEspecifico === "function") {
+        const esp = gen.inferirEtiquetaGiroEspecifico(datos);
+        if (esp) {
+          return esp;
+        }
+      }
+      return datos.giroTexto || (gen.GIROS_ETIQUETAS && gen.GIROS_ETIQUETAS[datos.giro]) || datos.giro || "";
     }
 
     function limpiarDigitosWhatsappValidos(valor) {
@@ -445,6 +523,21 @@
         if (ciuNueva && ciuNueva !== b.datos.ciudad) {
           b.datos.ciudad = ciuNueva;
           necesitaRegenerar = true;
+          huboAjuste = true;
+        }
+        if (typeof b.datos.direccion !== "string") {
+          b.datos.direccion = "";
+        }
+        if (typeof b.datos.horario !== "string") {
+          b.datos.horario = "";
+        }
+        const giroEsp = obtenerEtiquetaGiroLimpia(b.datos);
+        if (
+          giroEsp &&
+          giroEsp !== b.datos.giroTexto &&
+          (!b.datos.giroTexto || /^(comida|tienda|otro|negocio|comercio)$/i.test(String(b.datos.giroTexto).trim()))
+        ) {
+          b.datos.giroTexto = giroEsp;
           huboAjuste = true;
         }
         if (waLimpio !== (b.datos.whatsapp || "")) {
@@ -505,6 +598,15 @@
         if (!p || !p.datos || !p.borrador) {
           return;
         }
+        const giroPubEsp = obtenerEtiquetaGiroLimpia(p.datos);
+        if (
+          giroPubEsp &&
+          giroPubEsp !== p.datos.giroTexto &&
+          (!p.datos.giroTexto || /^(comida|tienda|otro|negocio|comercio)$/i.test(String(p.datos.giroTexto).trim()))
+        ) {
+          p.datos.giroTexto = giroPubEsp;
+          huboAjuste = true;
+        }
         const waPub = limpiarDigitosWhatsappValidos(p.datos.whatsapp);
         if (waPub !== (p.datos.whatsapp || "")) {
           p.datos.whatsapp = waPub;
@@ -564,6 +666,29 @@
             c.datos.ciudad = ci;
             huboAjuste = true;
           }
+        }
+        if (typeof c.datos.direccion !== "string") {
+          c.datos.direccion = "";
+        }
+        if (typeof c.datos.horario !== "string") {
+          c.datos.horario = "";
+        }
+        const giroConvEsp = obtenerEtiquetaGiroLimpia(c.datos);
+        if (
+          giroConvEsp &&
+          giroConvEsp !== c.datos.giroTexto &&
+          (!c.datos.giroTexto || /^(comida|tienda|otro|negocio|comercio)$/i.test(String(c.datos.giroTexto).trim()))
+        ) {
+          c.datos.giroTexto = giroConvEsp;
+          huboAjuste = true;
+        }
+        // Migrar conversaciones completadas con el flujo anterior de 6 pasos al flujo actual de 8 pasos
+        if (
+          (c.borradorId || (c.pasoIndice >= 6 && c.datos.oferta && c.datos.tono)) &&
+          c.pasoIndice < PASOS.length
+        ) {
+          c.pasoIndice = PASOS.length;
+          huboAjuste = true;
         }
         const waConv = limpiarDigitosWhatsappValidos(c.datos.whatsapp);
         if (waConv !== (c.datos.whatsapp || "")) {
@@ -747,7 +872,17 @@
         cuentaId: propietarioActual(),
         titulo: "Nueva conversación",
         pasoIndice: 0,
-        datos: { nombre: "", giro: "", giroTexto: "", ciudad: "", oferta: "", tono: "", whatsapp: "" },
+        datos: {
+          nombre: "",
+          giro: "",
+          giroTexto: "",
+          ciudad: "",
+          direccion: "",
+          horario: "",
+          oferta: "",
+          tono: "",
+          whatsapp: ""
+        },
         borradorId: null,
         creadaEn: ahora,
         actualizadaEn: ahora,
@@ -793,22 +928,78 @@
       }
     }
 
+    function esEscritorioApp() {
+      return window.matchMedia && window.matchMedia("(min-width: 960px)").matches;
+    }
+
     function abrirSidebar(abrir) {
       const estado = Boolean(abrir);
+      if (esEscritorioApp()) {
+        if (appShell) {
+          appShell.classList.toggle("sidebar-collapsed", !estado);
+        }
+        sidebar.classList.remove("is-open");
+        backdrop.hidden = true;
+        btnAbrirSidebar.setAttribute("aria-expanded", estado ? "true" : "false");
+        return;
+      }
       sidebar.classList.toggle("is-open", estado);
       backdrop.hidden = !estado;
       btnAbrirSidebar.setAttribute("aria-expanded", estado ? "true" : "false");
     }
 
-    function cambiarModo(nuevoModo) {
-      modoActual = nuevoModo === "editor" ? "editor" : "chat";
-      const esEditor = modoActual === "editor";
-      tabModoChat.classList.toggle("mode-tab-active", !esEditor);
+    function alternarSidebar() {
+      if (esEscritorioApp()) {
+        const colapsado = appShell && appShell.classList.contains("sidebar-collapsed");
+        abrirSidebar(colapsado);
+      } else {
+        const abierto = sidebar.classList.contains("is-open");
+        abrirSidebar(!abierto);
+      }
+    }
+
+    function cambiarVistaApp(nuevaVista) {
+      const permitidas = ["chat", "editor", "feed", "archivos", "ideas", "suscripcion", "biblioteca"];
+      const destino = permitidas.includes(nuevaVista) ? nuevaVista : "chat";
+      vistaActual = destino;
+      modoActual = destino === "editor" ? "editor" : "chat";
+
+      const mapaVistas = {
+        chat: vistaChat,
+        editor: vistaEditor,
+        feed: vistaFeed,
+        archivos: vistaArchivos,
+        ideas: vistaIdeas,
+        suscripcion: vistaSuscripcion,
+        biblioteca: vistaBiblioteca
+      };
+
+      Object.keys(mapaVistas).forEach((clave) => {
+        const el = mapaVistas[clave];
+        if (el) {
+          el.hidden = clave !== destino;
+        }
+      });
+
+      const esChat = destino === "chat";
+      const esEditor = destino === "editor";
+      tabModoChat.classList.toggle("mode-tab-active", esChat);
       tabModoEditor.classList.toggle("mode-tab-active", esEditor);
-      tabModoChat.setAttribute("aria-selected", !esEditor ? "true" : "false");
+      tabModoChat.setAttribute("aria-selected", esChat ? "true" : "false");
       tabModoEditor.setAttribute("aria-selected", esEditor ? "true" : "false");
-      vistaChat.hidden = esEditor;
-      vistaEditor.hidden = !esEditor;
+
+      const vistaNav = destino === "editor" ? "chat" : destino;
+      botonesVistaApp.forEach((btn) => {
+        const v = btn.dataset.appVista;
+        const activo = v === vistaNav;
+        btn.classList.toggle("is-active", activo);
+        if (activo) {
+          btn.setAttribute("aria-current", "page");
+        } else {
+          btn.removeAttribute("aria-current");
+        }
+      });
+
       if (esEditor && window.dmdEditor) {
         const reg = obtenerBorradorPorId(borradorActivoId) || borradoresDelPropietario()[0] || null;
         if (reg && reg.id !== borradorActivoId) {
@@ -816,18 +1007,35 @@
         } else {
           window.dmdEditor.cargarBorrador(reg, false);
         }
+      } else if (destino === "feed") {
+        renderizarFeed();
+      } else if (destino === "archivos") {
+        renderizarArchivos();
+      } else if (destino === "ideas") {
+        renderizarIdeas();
       }
+
+      if (!esEscritorioApp()) {
+        abrirSidebar(false);
+      }
+    }
+
+    function cambiarModo(nuevoModo) {
+      cambiarVistaApp(nuevoModo === "editor" ? "editor" : "chat");
     }
 
     function crearNuevaConversacion() {
       convActivaId = null;
       convBorradorMemoria = crearObjetoConversacionVacia();
       editandoMsgId = null;
+      chipsSeguimiento = [];
       mostrarErrorChat("");
       estadoChatEl.textContent = "";
       renderizarTodo();
-      cambiarModo("chat");
-      abrirSidebar(false);
+      cambiarVistaApp("chat");
+      if (!esEscritorioApp()) {
+        abrirSidebar(false);
+      }
     }
 
     function asegurarConversacionActiva() {
@@ -1171,6 +1379,30 @@
             : limpio;
         return { ok: true, valor: ciudadFormateada };
       }
+      if (campo === "direccion") {
+        if (esTextoOmision(limpio)) {
+          return { ok: true, valor: "", omitido: true };
+        }
+        if (limpio.length < 3) {
+          return {
+            ok: false,
+            aviso: "Escribe la calle o colonia de tu negocio, o toca Continuar sin dirección."
+          };
+        }
+        return { ok: true, valor: limpio, omitido: false };
+      }
+      if (campo === "horario") {
+        if (esTextoOmision(limpio)) {
+          return { ok: true, valor: "", omitido: true };
+        }
+        if (limpio.length < 3) {
+          return {
+            ok: false,
+            aviso: "Escribe tu horario (ej. Lunes a viernes de 9 a 6), o toca Continuar sin horario."
+          };
+        }
+        return { ok: true, valor: limpio, omitido: false };
+      }
       if (campo === "oferta") {
         const ofertaLimpia =
           typeof gen.limpiarOfertaDeRelleno === "function"
@@ -1213,116 +1445,439 @@
       });
     }
 
+    function responderEnHiloSinEditarBorrador(conv, respuestaTexto, chipsOpcionales) {
+      chipsSeguimiento = Array.isArray(chipsOpcionales) ? chipsOpcionales : [];
+      conv.mensajes.push({
+        id: crearId("msg"),
+        rol: "asistente",
+        tipo: "texto",
+        texto: respuestaTexto
+      });
+      conv.actualizadaEn = new Date().toISOString();
+      guardarColecciones();
+      renderizarTodo();
+    }
+
+    async function pausarIndicadorEscritura(ms) {
+      fijarEstadoGeneracion(true, "");
+      await new Promise((resolve) => window.setTimeout(resolve, ms || 160));
+      fijarEstadoGeneracion(false, "");
+    }
+
     async function aplicarCambioSeguimiento(conv, texto) {
       const limpio = gen.limpiarTexto(texto);
-      const bajo = limpio.toLowerCase().replace(/[.!?¡¿,:;]+$/g, "").trim();
+      const registroActual = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
+      chipsSeguimiento = [];
 
-      // Nunca guardar ni mostrar "Omitir" ni variantes de "sin WhatsApp"
-      if (
-        RESPUESTAS_NO_OFERTA.has(bajo) ||
-        esTextoOmision(limpio) ||
-        (typeof gen.esTextoRelleno === "function" && gen.esTextoRelleno(limpio))
-      ) {
-        estadoChatEl.textContent =
-          "Escribe un ajuste concreto (por ejemplo: \"cambia a tono profesional\" o \"agrega entregas a domicilio\"), o toca Editar.";
+      if (/^abrir\s+editor\s+visual$/i.test(limpio)) {
+        if (registroActual) {
+          fijarBorradorActivo(registroActual.id);
+        }
+        cambiarVistaApp("editor");
         return;
       }
 
+      const clasificacion =
+        typeof gen.clasificarIntencionChat === "function"
+          ? gen.clasificarIntencionChat(limpio, { registro: registroActual, conv })
+          : { intencion: "ambiguo", sugerencia: "cambiar el tono, agregar un servicio o ajustar el horario" };
+
+      if (!clasificacion || clasificacion.intencion === "vacio") {
+        return;
+      }
+
+      // 1) Saludos o cierres breves: responder sin modificar el borrador
+      if (clasificacion.intencion === "saludo") {
+        await pausarIndicadorEscritura(140);
+        responderEnHiloSinEditarBorrador(
+          conv,
+          `Aquí sigo con la página de ${conv.datos.nombre || "tu negocio"}. Si quieres cambiar el tono, agregar productos, ajustar el horario o subir tu logo, dime qué necesitas.`,
+          ["Cambiar el tono", "Abrir Editor visual"]
+        );
+        return;
+      }
+
+      // 2) Preguntas sobre el estado del borrador o instrucciones: NUNCA agregar texto al borrador
+      if (clasificacion.intencion === "pregunta") {
+        await pausarIndicadorEscritura(160);
+        const tema = clasificacion.tema || "general";
+        if (tema === "logo") {
+          const tieneLogo = Boolean(registroActual && registroActual.diseno && registroActual.diseno.logoDataUrl);
+          const msgLogo = tieneLogo
+            ? "Tu logo ya está cargado en la página. Si quieres cambiarlo o quitarlo, entra a Editor visual > Diseño > Logo del negocio."
+            : "Aún no has subido un logo. Puedes cargarlo en Editor visual > Diseño > Logo del negocio, y aparecerá en la parte superior de tu página.";
+          responderEnHiloSinEditarBorrador(conv, msgLogo, ["Abrir Editor visual"]);
+          return;
+        }
+        if (tema === "portada") {
+          const esPropia = Boolean(
+            registroActual && registroActual.diseno && registroActual.diseno.portadaOrigen === "propia"
+          );
+          const msgPortada = esPropia
+            ? "Tu página ya usa una foto subida desde tu dispositivo. Puedes cambiarla en Editor visual o tocar Subir imagen en la tarjeta."
+            : "Tu página tiene una foto sugerida para tu giro. Puedes tocar Cambiar foto o Subir imagen en el borrador, o ajustarla en Editor visual.";
+          responderEnHiloSinEditarBorrador(conv, msgPortada, ["Abrir Editor visual"]);
+          return;
+        }
+        if (tema === "whatsapp") {
+          const wa = gen.limpiarDigitos(conv.datos.whatsapp || "");
+          const msgWa = wa
+            ? `Tu WhatsApp configurado es ${wa}. Puedes escribir otro número con lada para cambiarlo, o decir "quita el WhatsApp".`
+            : "Tu página no tiene número de WhatsApp todavía. Escribe tu número con lada (ej. WhatsApp 528112345678) para activar el botón directo.";
+          responderEnHiloSinEditarBorrador(conv, msgWa, wa ? ["Quitar WhatsApp"] : []);
+          return;
+        }
+        if (tema === "horario") {
+          const hor = gen.limpiarTexto(conv.datos.horario || "");
+          const msgHor = hor
+            ? `Tu horario actual es: ${hor}. Si quieres cambiarlo escribe "Horario: ..." con el nuevo horario.`
+            : "Todavía no has indicado un horario. Escríbelo aquí (ej. Horario: Lunes a sábado de 8 a 7) para mostrarlo en tu página.";
+          responderEnHiloSinEditarBorrador(conv, msgHor);
+          return;
+        }
+        if (tema === "direccion") {
+          const dir = gen.limpiarTexto(conv.datos.direccion || "");
+          const msgDir = dir
+            ? `Tu dirección guardada es: ${dir}. Puedes escribir "Dirección: ..." para actualizarla.`
+            : `Por ahora solo aparece tu ciudad (${conv.datos.ciudad || "sin definir"}). Escribe "Dirección: ..." con tu calle o colonia si quieres mostrarla.`;
+          responderEnHiloSinEditarBorrador(conv, msgDir);
+          return;
+        }
+        if (tema === "publicar") {
+          const urlPub =
+            registroActual && registroActual.publicadaSlug
+              ? gen.construirUrlPublicada(registroActual.publicadaSlug)
+              : "";
+          const msgPub = urlPub
+            ? `Tu página ya está publicada en: ${urlPub}. Cada vez que edites algo, toca Actualizar para refrescar el enlace.`
+            : "Para publicar tu página, toca el botón Publicar debajo de tu borrador o entra a Editor visual > Publicar.";
+          responderEnHiloSinEditarBorrador(conv, msgPub, ["Abrir Editor visual"]);
+          return;
+        }
+        if (tema === "instrucciones") {
+          responderEnHiloSinEditarBorrador(
+            conv,
+            "Así puedes ajustar tu página desde aquí: 1) Pide cambios por chat (ej. cambia el tono, agrega un producto, cambia tu horario o quita el WhatsApp). 2) Abre Editor visual para subir tu logo, cambiar la foto o editar cada texto directo. 3) Toca Publicar cuando quieras tu enlace listo para compartir.",
+            ["Cambiar el tono", "Abrir Editor visual"]
+          );
+          return;
+        }
+        if (tema === "precios") {
+          responderEnHiloSinEditarBorrador(
+            conv,
+            "DMD nunca inventa precios por ti. Si quieres mostrar precios reales, escríbeme el producto con su monto (ej. Agrega conchas a $18) o edita cada tarjeta en Editor visual.",
+            ["Abrir Editor visual"]
+          );
+          return;
+        }
+        if (tema === "tono") {
+          const tonoAct = (gen.TONOS_ETIQUETAS && gen.TONOS_ETIQUETAS[conv.datos.tono]) || conv.datos.tono || "Cercano";
+          responderEnHiloSinEditarBorrador(
+            conv,
+            `Ahora mismo el texto usa tono ${tonoAct}. ¿Quieres cambiarlo a Cercano, Profesional o Formal?`,
+            ["Tono cercano", "Tono profesional", "Tono formal"]
+          );
+          return;
+        }
+        if (tema === "plantilla") {
+          const tplAct = (registroActual && registroActual.diseno && registroActual.diseno.plantilla) || "clasica";
+          responderEnHiloSinEditarBorrador(
+            conv,
+            `Tu borrador usa la plantilla ${tplAct}. Puedes elegir Clásica, Editorial o Directa sin perder tus textos.`,
+            ["Plantilla Clásica", "Plantilla Editorial", "Plantilla Directa"]
+          );
+          return;
+        }
+        responderEnHiloSinEditarBorrador(
+          conv,
+          `Tu borrador de ${conv.datos.nombre || "tu negocio"} está guardado y listo para editar. Dime si quieres cambiar el tono, agregar un producto, ajustar el horario o abrir el Editor visual.`,
+          ["Cambiar el tono", "Abrir Editor visual"]
+        );
+        return;
+      }
+
+      // 3) Ambiguo: nunca pegar texto literal con errores al borrador; pedir aclaración corta
+      if (clasificacion.intencion === "ambiguo") {
+        await pausarIndicadorEscritura(140);
+        const sug = clasificacion.sugerencia || "cambiar el tono, agregar un producto o ajustar el horario";
+        responderEnHiloSinEditarBorrador(
+          conv,
+          `No alcancé a entender del todo ese mensaje. ¿Quisiste ${sug}? Escríbemelo con un poco más de detalle y lo aplico sin tocar nada por error.`
+        );
+        return;
+      }
+
+      // 4) Cambios que requieren dato del usuario antes de editar o edición directa de diseño
       let cambio = "";
       let etiquetaVersion = "Actualización por chat";
       let detalleVersion = "";
+      let necesitaRegenerarBorrador = true;
 
-      const tonoDetectado =
-        /tono\s+(cercano|profesional|formal)/i.exec(limpio) ||
-        (/cambia|pon|usa|hazlo/.test(bajo) && /\b(cercano|profesional|formal)\b/i.exec(limpio));
-
-      if (tonoDetectado) {
-        conv.datos.tono = gen.normalizarTono(tonoDetectado[1]);
-        const tonoEtq = gen.TONOS_ETIQUETAS[conv.datos.tono] || conv.datos.tono;
-        cambio = `Tono cambiado a ${tonoEtq}. Borrador actualizado.`;
-        etiquetaVersion = `Tono ${tonoEtq}`;
-        detalleVersion = `Se cambió el tono de la redacción a ${tonoEtq}`;
-      } else if (/whatsapp|tel[eé]fono|n[uú]mero/i.test(bajo)) {
-        const dig = gen.limpiarDigitos(limpio);
-        if (dig.length >= 10 && dig.length <= 15) {
-          conv.datos.whatsapp = dig;
-          cambio = `WhatsApp actualizado: ${dig}. Borrador actualizado.`;
-          etiquetaVersion = "WhatsApp actualizado";
-          detalleVersion = `Número configurado: ${dig}`;
-        } else if (/quita|borra|sin\s+whats?app/i.test(bajo)) {
+      if (clasificacion.intencion === "quitar") {
+        const obj = clasificacion.objetivo;
+        if (obj === "whatsapp") {
           conv.datos.whatsapp = "";
-          cambio = "Número retirado del borrador.";
+          cambio = "Listo, retiré el número de WhatsApp de tu borrador.";
           etiquetaVersion = "Contacto actualizado";
           detalleVersion = "Se retiró el número de WhatsApp";
-        } else {
-          conv.mensajes.push({
-            id: crearId("msg"),
-            rol: "asistente",
-            tipo: "texto",
-            texto: "Para actualizar tu WhatsApp escribe entre 10 y 15 dígitos con lada, por ejemplo: WhatsApp 528112345678."
-          });
-          conv.actualizadaEn = new Date().toISOString();
-          guardarColecciones();
-          renderizarTodo();
+        } else if (obj === "logo") {
+          necesitaRegenerarBorrador = false;
+          await pausarIndicadorEscritura(140);
+          if (registroActual && registroActual.diseno && registroActual.diseno.logoDataUrl) {
+            registroActual.diseno.logoDataUrl = "";
+            registroActual.actualizadoEn = new Date().toISOString();
+            sincronizarPublicada(registroActual);
+            if (window.dmdEditor && borradorActivoId === registroActual.id) {
+              window.dmdEditor.cargarBorrador(registroActual, false);
+            }
+            responderEnHiloSinEditarBorrador(conv, "Listo, quité el logo de tu página.");
+          } else {
+            responderEnHiloSinEditarBorrador(conv, "Tu página no tiene un logo cargado en este momento.");
+          }
           return;
+        } else if (obj === "portada") {
+          necesitaRegenerarBorrador = false;
+          await pausarIndicadorEscritura(140);
+          if (registroActual) {
+            registroActual.diseno = registroActual.diseno || {};
+            registroActual.diseno.portadaOrigen = "ninguna";
+            registroActual.diseno.portadaDataUrl = "";
+            registroActual.actualizadoEn = new Date().toISOString();
+            sincronizarPublicada(registroActual);
+            if (window.dmdEditor && borradorActivoId === registroActual.id) {
+              window.dmdEditor.cargarBorrador(registroActual, false);
+            }
+            responderEnHiloSinEditarBorrador(conv, "Listo, oculté la foto de portada de tu página.");
+          }
+          return;
+        } else if (obj === "horario") {
+          conv.datos.horario = "";
+          cambio = "Listo, quité el horario del borrador.";
+          etiquetaVersion = "Horario retirado";
+          detalleVersion = "Se quitó el horario guardado";
+        } else if (obj === "direccion") {
+          conv.datos.direccion = "";
+          cambio = "Listo, quité la calle o colonia del borrador.";
+          etiquetaVersion = "Dirección retirada";
+          detalleVersion = "Se quitó la dirección guardada";
+        } else if (obj === "servicio" && clasificacion.valor) {
+          const objetivoNorm = clasificacion.valor
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+          const partes = String(conv.datos.oferta || "")
+            .split(/[,;\n]+/)
+            .map((p) => p.trim())
+            .filter(Boolean);
+          const restantes = partes.filter((p) => {
+            const pNorm = p
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+            return !pNorm.includes(objetivoNorm);
+          });
+          if (restantes.length === partes.length || restantes.length === 0) {
+            await pausarIndicadorEscritura(140);
+            responderEnHiloSinEditarBorrador(
+              conv,
+              restantes.length === 0
+                ? "Tu página necesita al menos un producto o servicio. Puedes editar la lista completa en Editor visual."
+                : `No encontré "${clasificacion.valor}" en tu lista actual (${conv.datos.oferta || "vacía"}). Dime el nombre exacto o ajústalo en Editor visual.`,
+              ["Abrir Editor visual"]
+            );
+            return;
+          }
+          conv.datos.oferta = restantes.join(", ");
+          cambio = `Listo, quité "${clasificacion.valor}" de tu oferta. Borrador actualizado.`;
+          etiquetaVersion = `Quitó: ${clasificacion.valor.slice(0, 24)}`;
+          detalleVersion = `Se retiró "${clasificacion.valor}"`;
         }
-      } else if (/ciudad\s+(?:a|en|:)?\s*(.+)/i.test(limpio)) {
-        const m = /ciudad\s+(?:a|en|:)?\s*(.+)/i.exec(limpio);
-        if (m && m[1].trim().length >= 2) {
-          const ciudadNueva =
-            typeof gen.formatearNombrePropio === "function"
-              ? gen.formatearNombrePropio(m[1], "ciudad")
-              : gen.limpiarTexto(m[1]);
-          conv.datos.ciudad = ciudadNueva;
-          cambio = `Ciudad actualizada a ${ciudadNueva}. Borrador actualizado.`;
-          etiquetaVersion = `Ciudad: ${ciudadNueva}`;
-          detalleVersion = `Ubicación cambiada a ${ciudadNueva}`;
+      } else if (clasificacion.intencion === "cambiar") {
+        const obj = clasificacion.objetivo;
+        if (obj === "tono") {
+          if (!clasificacion.valor) {
+            await pausarIndicadorEscritura(140);
+            responderEnHiloSinEditarBorrador(
+              conv,
+              "¿A qué tono quieres cambiar tu página? Elige una opción:",
+              ["Tono cercano", "Tono profesional", "Tono formal"]
+            );
+            return;
+          }
+          conv.datos.tono = gen.normalizarTono(clasificacion.valor);
+          const tonoEtq = (gen.TONOS_ETIQUETAS && gen.TONOS_ETIQUETAS[conv.datos.tono]) || conv.datos.tono;
+          cambio = `Tono cambiado a ${tonoEtq}. Borrador actualizado.`;
+          etiquetaVersion = `Tono ${tonoEtq}`;
+          detalleVersion = `Se cambió el tono de la redacción a ${tonoEtq}`;
+        } else if (obj === "plantilla") {
+          necesitaRegenerarBorrador = false;
+          if (!clasificacion.valor) {
+            await pausarIndicadorEscritura(140);
+            responderEnHiloSinEditarBorrador(
+              conv,
+              "¿Qué plantilla prefieres probar? Tus textos y fotos se conservan:",
+              ["Plantilla Clásica", "Plantilla Editorial", "Plantilla Directa"]
+            );
+            return;
+          }
+          await pausarIndicadorEscritura(160);
+          if (registroActual) {
+            registroActual.diseno = registroActual.diseno || {};
+            registroActual.diseno.plantilla = clasificacion.valor;
+            registroActual.actualizadoEn = new Date().toISOString();
+            sincronizarPublicada(registroActual);
+            if (window.dmdEditor && borradorActivoId === registroActual.id) {
+              window.dmdEditor.cargarBorrador(registroActual, false);
+            }
+            const etqTpl =
+              clasificacion.valor === "editorial"
+                ? "Editorial"
+                : clasificacion.valor === "directa"
+                  ? "Directa"
+                  : "Clásica";
+            responderEnHiloSinEditarBorrador(
+              conv,
+              `Listo, cambié el diseño a la plantilla ${etqTpl}. Puedes ver el resultado en Editor visual.`,
+              ["Abrir Editor visual"]
+            );
+          }
+          return;
+        } else if (obj === "precios_sin_monto") {
+          await pausarIndicadorEscritura(150);
+          responderEnHiloSinEditarBorrador(
+            conv,
+            "No invento precios para tu negocio. Dime qué productos y cuánto cuestan (por ejemplo: Agrega conchas a $18) y los muestro exactamente como me indiques."
+          );
+          return;
+        } else if (obj === "horario_destacado") {
+          const horActual = gen.limpiarTexto(conv.datos.horario || "");
+          if (!horActual) {
+            await pausarIndicadorEscritura(150);
+            responderEnHiloSinEditarBorrador(
+              conv,
+              "Aún no has guardado un horario. Escríbelo aquí (por ejemplo: Horario: Lunes a sábado de 8 a 7) y lo destaco al principio de tu página."
+            );
+            return;
+          }
+          necesitaRegenerarBorrador = false;
+          await pausarIndicadorEscritura(160);
+          if (registroActual && registroActual.borrador) {
+            const prefijoHor = `Horario: ${horActual}.`;
+            if (!String(registroActual.borrador.presentacion || "").toLowerCase().includes(horActual.toLowerCase())) {
+              registroActual.borrador.presentacion = `${prefijoHor} ${registroActual.borrador.presentacion || ""}`.trim();
+            } else if (!String(registroActual.borrador.presentacion || "").startsWith("Horario:")) {
+              registroActual.borrador.presentacion = `${prefijoHor} ${registroActual.borrador.presentacion || ""}`.trim();
+            }
+            registroActual.actualizadoEn = new Date().toISOString();
+            sincronizarPublicada(registroActual);
+            if (window.dmdEditor && borradorActivoId === registroActual.id) {
+              window.dmdEditor.cargarBorrador(registroActual, false);
+            }
+            responderEnHiloSinEditarBorrador(
+              conv,
+              `Listo, puse tu horario (${horActual}) bien visible al inicio de la presentación.`
+            );
+          }
+          return;
+        } else if (obj === "horario" && clasificacion.valor) {
+          conv.datos.horario = clasificacion.valor;
+          cambio = `Horario actualizado a "${clasificacion.valor}". Borrador actualizado.`;
+          etiquetaVersion = "Horario actualizado";
+          detalleVersion = `Horario: ${clasificacion.valor.slice(0, 48)}`;
+        } else if (obj === "horario_pedir") {
+          await pausarIndicadorEscritura(140);
+          responderEnHiloSinEditarBorrador(
+            conv,
+            "Escribe tu horario real (por ejemplo: Horario: Lunes a sábado de 8 a 7) y lo actualizo en tu página."
+          );
+          return;
+        } else if (obj === "direccion" && clasificacion.valor) {
+          conv.datos.direccion = clasificacion.valor;
+          cambio = `Dirección actualizada a "${clasificacion.valor}". Borrador actualizado.`;
+          etiquetaVersion = "Dirección actualizada";
+          detalleVersion = `Dirección: ${clasificacion.valor.slice(0, 48)}`;
+        } else if (obj === "direccion_pedir") {
+          await pausarIndicadorEscritura(140);
+          responderEnHiloSinEditarBorrador(
+            conv,
+            "Escribe la calle o colonia de tu negocio (por ejemplo: Dirección: Av. Colón 210, col. Americana) y la agrego a tu página."
+          );
+          return;
+        } else if (obj === "whatsapp" && clasificacion.valor) {
+          conv.datos.whatsapp = clasificacion.valor;
+          cambio = `WhatsApp actualizado: ${clasificacion.valor}. Borrador actualizado.`;
+          etiquetaVersion = "WhatsApp actualizado";
+          detalleVersion = `Número configurado: ${clasificacion.valor}`;
+        } else if (obj === "portada") {
+          necesitaRegenerarBorrador = false;
+          await pausarIndicadorEscritura(160);
+          if (registroActual && typeof gen.obtenerSiguientePortada === "function") {
+            const sig = gen.obtenerSiguientePortada(
+              registroActual.datos,
+              registroActual.diseno && registroActual.diseno.portadaIndice,
+              registroActual.diseno && registroActual.diseno.portadaDataUrl
+            );
+            if (sig && sig.url && window.dmdEditor && typeof window.dmdEditor.aplicarPortadaEnRegistro === "function") {
+              window.dmdEditor.aplicarPortadaEnRegistro(registroActual, sig);
+              registroActual.actualizadoEn = new Date().toISOString();
+              sincronizarPublicada(registroActual);
+              if (borradorActivoId === registroActual.id) {
+                window.dmdEditor.cargarBorrador(registroActual, false);
+              }
+              responderEnHiloSinEditarBorrador(
+                conv,
+                "Listo, cambié la foto de portada por otra opción de tu giro. También puedes subir una foto propia en Editor visual.",
+                ["Abrir Editor visual"]
+              );
+              return;
+            }
+          }
+          responderEnHiloSinEditarBorrador(
+            conv,
+            "Puedes cambiar o subir una foto propia desde el botón Subir imagen en tu borrador o en Editor visual.",
+            ["Abrir Editor visual"]
+          );
+          return;
+        } else if (obj === "ciudad" && clasificacion.valor) {
+          conv.datos.ciudad = clasificacion.valor;
+          cambio = `Ciudad actualizada a ${clasificacion.valor}. Borrador actualizado.`;
+          etiquetaVersion = `Ciudad: ${clasificacion.valor}`;
+          detalleVersion = `Ubicación cambiada a ${clasificacion.valor}`;
+        } else if (obj === "nombre" && clasificacion.valor) {
+          conv.datos.nombre = clasificacion.valor;
+          cambio = `Nombre actualizado a ${clasificacion.valor}. Borrador actualizado.`;
+          etiquetaVersion = `Nombre: ${clasificacion.valor}`;
+          detalleVersion = `Se cambió el nombre del negocio a ${clasificacion.valor}`;
         }
-      } else if (/agrega|añade|incluye|suma|tambi[eé]n/i.test(bajo)) {
-        const extraCrudo = limpio
-          .replace(/^(agrega|añade|incluye|suma|pon|también|tambien)\s+/i, "")
-          .trim();
+      } else if (clasificacion.intencion === "agregar" && clasificacion.valor) {
         const extra =
           typeof gen.limpiarOfertaDeRelleno === "function"
-            ? gen.limpiarOfertaDeRelleno(extraCrudo)
-            : extraCrudo;
-        if (extra.length >= 3) {
-          conv.datos.oferta = conv.datos.oferta ? `${conv.datos.oferta}, ${extra}` : extra;
-          cambio = `Se agregó "${extra}" a tu oferta. Borrador actualizado.`;
-          etiquetaVersion = `Agregó: ${extra.slice(0, 28)}`;
-          detalleVersion = `Se añadió "${extra}" a la lista de oferta`;
-        }
-      } else if (/nombre\s+(?:a|:)?\s*(.+)/i.test(limpio)) {
-        const m = /nombre\s+(?:a|:)?\s*(.+)/i.exec(limpio);
-        if (m && m[1].trim().length >= 2) {
-          const nomNuevo =
-            typeof gen.formatearNombrePropio === "function"
-              ? gen.formatearNombrePropio(m[1], "nombre")
-              : gen.limpiarTexto(m[1]);
-          conv.datos.nombre = nomNuevo;
-          cambio = `Nombre actualizado a ${nomNuevo}. Borrador actualizado.`;
-          etiquetaVersion = `Nombre: ${nomNuevo}`;
-          detalleVersion = `Se cambió el nombre del negocio a ${nomNuevo}`;
-        }
-      }
-
-      if (!cambio) {
-        const ofertaNueva =
-          typeof gen.limpiarOfertaDeRelleno === "function"
-            ? gen.limpiarOfertaDeRelleno(limpio)
-            : limpio;
-        if (ofertaNueva.length < 3) {
-          estadoChatEl.textContent =
-            "Escribe un producto, servicio o ajuste claro para actualizar tu borrador.";
+            ? gen.limpiarOfertaDeRelleno(clasificacion.valor)
+            : clasificacion.valor;
+        if (extra.length < 2) {
+          await pausarIndicadorEscritura(140);
+          responderEnHiloSinEditarBorrador(
+            conv,
+            "Dime qué producto o servicio quieres agregar (por ejemplo: Agrega tacos al pastor)."
+          );
           return;
         }
-        conv.datos.oferta = conv.datos.oferta ? `${conv.datos.oferta}, ${ofertaNueva}` : ofertaNueva;
-        cambio = `Se agregó "${ofertaNueva}". Borrador actualizado.`;
-        etiquetaVersion = `Oferta: ${ofertaNueva.slice(0, 28)}`;
-        detalleVersion = `Se añadió "${ofertaNueva}"`;
+        conv.datos.oferta = conv.datos.oferta ? `${conv.datos.oferta}, ${extra}` : extra;
+        cambio = `Listo, agregué "${extra}" a tu oferta. Borrador actualizado.`;
+        etiquetaVersion = `Agregó: ${extra.slice(0, 28)}`;
+        detalleVersion = `Se añadió "${extra}" a la lista de oferta`;
       }
 
-      const registroActual = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
+      if (!cambio || !necesitaRegenerarBorrador) {
+        await pausarIndicadorEscritura(140);
+        responderEnHiloSinEditarBorrador(
+          conv,
+          "No alcancé a identificar el ajuste exacto. Dime si quieres cambiar el tono, agregar un servicio, cambiar el horario o quitar el WhatsApp."
+        );
+        return;
+      }
+
       const varianteActual =
         registroActual && registroActual.borrador ? registroActual.borrador.variante || 0 : 0;
 
@@ -1385,9 +1940,11 @@
         const paso = PASOS[conv.pasoIndice];
         const validacion = validarRespuestaPaso(paso.campo, texto);
 
-        // Si en el paso de WhatsApp se omite, tratarlo como VACÍO sin guardar ni mostrar "Omitir" en el chat
-        const omitioWhatsapp = paso.campo === "whatsapp" && validacion.ok && validacion.omitido;
-        if (!omitioWhatsapp) {
+        // Si en un paso opcional (dirección, horario o WhatsApp) se omite, guardar vacío sin mostrar "Omitir" ni "Continuar sin..." en el chat
+        const esPasoOpcional =
+          paso.campo === "whatsapp" || paso.campo === "direccion" || paso.campo === "horario";
+        const omitioOpcional = esPasoOpcional && validacion.ok && validacion.omitido;
+        if (!omitioOpcional) {
           let textoBurbuja = texto;
           if (validacion.ok && (paso.campo === "nombre" || paso.campo === "ciudad")) {
             textoBurbuja = validacion.valor;
@@ -1438,7 +1995,7 @@
           return;
         }
 
-        // Completó los 6 pasos: generar borrador con estado de carga claro
+        // Completó los pasos: generar borrador con indicador de escritura
         fijarEstadoGeneracion(true, "Armando el borrador de tu página...");
         try {
           const { registro, origen } = await guardarOActualizarBorradorDesdeConv(
@@ -1475,15 +2032,17 @@
         return;
       }
 
-      // Conversación ya completada: ignorar "Omitir" / "sin WhatsApp" sin agregarlos al hilo
-      const bajo = texto.toLowerCase().replace(/[.!?¡¿,:;]+$/g, "").trim();
-      if (
-        RESPUESTAS_NO_OFERTA.has(bajo) ||
-        esTextoOmision(texto) ||
-        (typeof gen.esTextoRelleno === "function" && gen.esTextoRelleno(texto))
-      ) {
+      // Conversación ya completada: ignorar solo "Omitir" / "Continuar sin..." literales
+      if (esTextoOmision(texto)) {
         estadoChatEl.textContent =
-          "Tu borrador ya está listo. Escribe un cambio concreto (ej. cambia a tono profesional o agrega envíos) o toca Editar.";
+          "Tu borrador ya está listo. Escribe una pregunta o un ajuste concreto (ej. cambia el tono o agrega un producto).";
+        return;
+      }
+
+      // Chip directo para ir al editor sin ensuciar el historial
+      if (/^abrir\s+editor\s+visual$/i.test(texto)) {
+        chipsSeguimiento = [];
+        await aplicarCambioSeguimiento(conv, texto);
         return;
       }
 
@@ -2122,32 +2681,41 @@
         hilo.appendChild(fila);
       });
 
-      // Burbuja clara de carga mientras se genera o actualiza el borrador
+      // Burbuja de 3 puntos animados mientras responde o arma el borrador
       if (generandoAhora) {
         const filaCarga = document.createElement("div");
         filaCarga.className = "chat-msg chat-msg-asistente";
         const burbujaCarga = document.createElement("div");
-        burbujaCarga.className = "chat-bubble chat-loading-bubble";
-        const sp = document.createElement("span");
-        sp.className = "spinner spinner-accent";
-        sp.setAttribute("aria-hidden", "true");
-        const txt = document.createElement("span");
-        txt.textContent = "Armando el borrador de tu página...";
-        burbujaCarga.appendChild(sp);
-        burbujaCarga.appendChild(txt);
+        burbujaCarga.className = "chat-bubble chat-typing-bubble";
+        burbujaCarga.setAttribute("aria-label", "Escribiendo respuesta");
+        const puntos = document.createElement("span");
+        puntos.className = "typing-dots";
+        puntos.setAttribute("aria-hidden", "true");
+        for (let i = 0; i < 3; i += 1) {
+          const dot = document.createElement("span");
+          dot.className = "typing-dot";
+          puntos.appendChild(dot);
+        }
+        const srTxt = document.createElement("span");
+        srTxt.className = "sr-only";
+        srTxt.textContent = "Escribiendo respuesta...";
+        burbujaCarga.appendChild(puntos);
+        burbujaCarga.appendChild(srTxt);
         filaCarga.appendChild(burbujaCarga);
         hilo.appendChild(filaCarga);
       }
 
-      // Chips de sugerencia según paso actual (ocultos mientras se genera)
+      // Chips de sugerencia según paso actual o seguimiento
       sugerenciasEl.textContent = "";
-      if (
-        !generandoAhora &&
-        conv.pasoIndice < PASOS.length &&
-        PASOS[conv.pasoIndice].chips.length > 0
-      ) {
+      const chipsActivos =
+        !generandoAhora && conv.pasoIndice < PASOS.length
+          ? PASOS[conv.pasoIndice].chips
+          : !generandoAhora && chipsSeguimiento.length > 0
+            ? chipsSeguimiento
+            : [];
+      if (chipsActivos.length > 0) {
         sugerenciasEl.hidden = false;
-        PASOS[conv.pasoIndice].chips.forEach((chipTexto) => {
+        chipsActivos.forEach((chipTexto) => {
           const b = document.createElement("button");
           b.type = "button";
           b.className = "chip-btn";
@@ -2163,18 +2731,37 @@
         entradaChat.placeholder =
           conv.pasoIndice < PASOS.length
             ? "Escribe tu respuesta aquí..."
-            : "Pide un ajuste (ej. cambia a tono profesional o agrega envíos)...";
+            : "Pregunta algo o pide un ajuste (ej. cambia el tono o agrega tacos)...";
       }
 
       hilo.scrollTop = hilo.scrollHeight;
     }
 
+    function coincideBusquedaSidebar(texto) {
+      if (!terminoBusquedaSidebar) {
+        return true;
+      }
+      const norm = String(texto || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      return norm.includes(terminoBusquedaSidebar);
+    }
+
     function renderizarListaConversaciones() {
-      const lista = convsDelPropietario();
+      const todas = convsDelPropietario();
+      const lista = todas.filter((conv) =>
+        coincideBusquedaSidebar(
+          `${conv.titulo || ""} ${(conv.datos && conv.datos.ciudad) || ""} ${(conv.datos && conv.datos.giroTexto) || ""}`
+        )
+      );
       contadorConv.textContent = String(lista.length);
       listaConvEl.textContent = "";
 
       if (lista.length === 0) {
+        convVacio.textContent = terminoBusquedaSidebar
+          ? "Sin conversaciones que coincidan con tu búsqueda."
+          : "Sin conversaciones guardadas.";
         convVacio.hidden = false;
         listaConvEl.hidden = true;
         return;
@@ -2204,13 +2791,13 @@
         btnAbrir.appendChild(f);
         btnAbrir.addEventListener("click", () => {
           confirmandoBorrarConvId = null;
+          chipsSeguimiento = [];
           fijarConvActiva(conv.id);
           if (conv.borradorId) {
             fijarBorradorActivo(conv.borradorId);
           }
           renderizarTodo();
-          cambiarModo("chat");
-          abrirSidebar(false);
+          cambiarVistaApp("chat");
         });
 
         const btnDel = document.createElement("button");
@@ -2265,15 +2852,24 @@
     }
 
     function renderizarListaBorradores() {
-      const lista = borradoresDelPropietario();
+      const todos = borradoresDelPropietario();
+      const lista = todos.filter((reg) => {
+        const gTxt = obtenerEtiquetaGiroLimpia(reg.datos);
+        return coincideBusquedaSidebar(
+          `${(reg.datos && reg.datos.nombre) || ""} ${gTxt} ${(reg.datos && reg.datos.ciudad) || ""}`
+        );
+      });
       contadorBorradores.textContent = String(lista.length);
       if (badgeBorradoresMobile) {
-        badgeBorradoresMobile.textContent = String(lista.length);
-        badgeBorradoresMobile.hidden = lista.length === 0;
+        badgeBorradoresMobile.textContent = String(todos.length);
+        badgeBorradoresMobile.hidden = todos.length === 0;
       }
       listaBorradoresEl.textContent = "";
 
       if (lista.length === 0) {
+        borradoresVacio.textContent = terminoBusquedaSidebar
+          ? "Sin páginas que coincidan con tu búsqueda."
+          : "Aún no tienes borradores guardados.";
         borradoresVacio.hidden = false;
         listaBorradoresEl.hidden = true;
         return;
@@ -2300,8 +2896,7 @@
 
         const meta = document.createElement("p");
         meta.className = "draft-meta";
-        const gTxt =
-          reg.datos.giroTexto || gen.GIROS_ETIQUETAS[reg.datos.giro] || reg.datos.giro;
+        const gTxt = obtenerEtiquetaGiroLimpia(reg.datos);
         meta.textContent = `${gTxt} · ${reg.datos.ciudad}`;
 
         const acciones = document.createElement("div");
@@ -2321,8 +2916,7 @@
             fijarConvActiva(convVinculada.id);
           }
           renderizarTodo();
-          cambiarModo("editor");
-          abrirSidebar(false);
+          cambiarVistaApp("editor");
         });
 
         const bDup = document.createElement("button");
@@ -2387,6 +2981,555 @@
         }
 
         listaBorradoresEl.appendChild(li);
+      });
+    }
+
+    function abrirBorradorEnEditor(reg) {
+      if (!reg) {
+        return;
+      }
+      fijarBorradorActivo(reg.id);
+      const convVinculada = convsDelPropietario().find((c) => c.borradorId === reg.id);
+      if (convVinculada) {
+        fijarConvActiva(convVinculada.id);
+      }
+      renderizarTodo();
+      cambiarVistaApp("editor");
+    }
+
+    function construirMiniVentanaPagina(reg) {
+      const datos = reg.datos || {};
+      const borrador = reg.borrador || {};
+      const diseno = reg.diseno || {};
+      const tpl = diseno.plantilla || "clasica";
+      const portadaUrl =
+        diseno.portadaOrigen === "ninguna"
+          ? ""
+          : diseno.portadaDataUrl || (borrador.portada && borrador.portada.url) || "";
+
+      const card = document.createElement("article");
+      card.className = "miniwindow-card";
+
+      const btnPreview = document.createElement("button");
+      btnPreview.type = "button";
+      btnPreview.className = `miniwindow-viewport biz-page biz-template-${tpl}`;
+      btnPreview.setAttribute("aria-label", `Abrir ${datos.nombre || "página"} en Editor visual`);
+      btnPreview.addEventListener("click", () => abrirBorradorEnEditor(reg));
+
+      const chrome = document.createElement("span");
+      chrome.className = "miniwindow-chrome";
+      const dot1 = document.createElement("span");
+      dot1.className = "miniwindow-dot";
+      const dot2 = document.createElement("span");
+      dot2.className = "miniwindow-dot";
+      const urlMini = document.createElement("span");
+      urlMini.className = "miniwindow-url";
+      urlMini.textContent = reg.publicadaSlug
+        ? `ver.html?id=${reg.publicadaSlug}`
+        : `${(datos.nombre || "borrador").toLowerCase().replace(/\s+/g, "-")}`;
+      chrome.appendChild(dot1);
+      chrome.appendChild(dot2);
+      chrome.appendChild(urlMini);
+      btnPreview.appendChild(chrome);
+
+      const topbar = document.createElement("span");
+      topbar.className = "miniwindow-topbar biz-topbar";
+      const tNom = document.createElement("span");
+      tNom.className = "biz-topbar-name";
+      tNom.textContent = datos.nombre || "Tu negocio";
+      const tCiu = document.createElement("span");
+      tCiu.className = "biz-topbar-city";
+      tCiu.textContent = datos.ciudad || "";
+      topbar.appendChild(tNom);
+      topbar.appendChild(tCiu);
+      btnPreview.appendChild(topbar);
+
+      const body = document.createElement("span");
+      body.className = "miniwindow-body";
+      if (portadaUrl) {
+        const img = document.createElement("img");
+        img.className = "miniwindow-cover";
+        img.src = portadaUrl;
+        img.alt = "";
+        img.loading = "lazy";
+        body.appendChild(img);
+      }
+      const tit = document.createElement("span");
+      tit.className = "miniwindow-title";
+      tit.textContent = borrador.titulo || datos.nombre || "Página en borrador";
+      body.appendChild(tit);
+
+      const servs = Array.isArray(borrador.servicios) ? borrador.servicios.slice(0, 2) : [];
+      if (servs.length > 0) {
+        const chips = document.createElement("span");
+        chips.className = "miniwindow-chips";
+        servs.forEach((s) => {
+          const ch = document.createElement("span");
+          ch.className = "miniwindow-chip";
+          ch.textContent = s.titulo;
+          chips.appendChild(ch);
+        });
+        body.appendChild(chips);
+      }
+      btnPreview.appendChild(body);
+      card.appendChild(btnPreview);
+
+      const foot = document.createElement("div");
+      foot.className = "miniwindow-foot";
+      const metaCol = document.createElement("div");
+      metaCol.className = "miniwindow-meta";
+      const h = document.createElement("h4");
+      h.className = "miniwindow-name";
+      h.textContent = datos.nombre || "Sin nombre";
+      const g = document.createElement("p");
+      g.className = "miniwindow-sub";
+      const gTxt = obtenerEtiquetaGiroLimpia(datos);
+      g.textContent = `${gTxt}${datos.ciudad ? ` · ${datos.ciudad}` : ""}`;
+      metaCol.appendChild(h);
+      metaCol.appendChild(g);
+
+      const actionsCol = document.createElement("div");
+      actionsCol.className = "miniwindow-actions";
+      const pill = document.createElement("span");
+      pill.className = "draft-open-pill";
+      pill.textContent = reg.publicadaSlug ? "Publicada" : "Borrador";
+      actionsCol.appendChild(pill);
+
+      if (reg.publicadaSlug) {
+        const aVer = document.createElement("a");
+        aVer.className = "btn btn-secondary btn-sm";
+        aVer.href = `ver.html?id=${encodeURIComponent(reg.publicadaSlug)}`;
+        aVer.textContent = "Ver";
+        actionsCol.appendChild(aVer);
+      } else {
+        const bEd = document.createElement("button");
+        bEd.type = "button";
+        bEd.className = "btn btn-secondary btn-sm";
+        bEd.textContent = "Abrir";
+        bEd.addEventListener("click", () => abrirBorradorEnEditor(reg));
+        actionsCol.appendChild(bEd);
+      }
+
+      foot.appendChild(metaCol);
+      foot.appendChild(actionsCol);
+      card.appendChild(foot);
+      return card;
+    }
+
+    function renderizarFeed() {
+      if (!gridFeedPropias || !gridFeedCatalogo) {
+        return;
+      }
+      const propias = borradoresDelPropietario();
+      if (contadorFeedPropias) {
+        contadorFeedPropias.textContent = String(propias.length);
+      }
+      gridFeedPropias.textContent = "";
+      if (propias.length === 0) {
+        if (feedPropiasVacio) {
+          feedPropiasVacio.hidden = false;
+        }
+        gridFeedPropias.hidden = true;
+      } else {
+        if (feedPropiasVacio) {
+          feedPropiasVacio.hidden = true;
+        }
+        gridFeedPropias.hidden = false;
+        propias.forEach((reg) => {
+          gridFeedPropias.appendChild(construirMiniVentanaPagina(reg));
+        });
+      }
+
+      const plantillas = [
+        {
+          id: "clasica",
+          nombre: "Clásica",
+          ejemplo: "Panadería La Espiga",
+          ciudad: "Guadalajara",
+          giro: "Panadería y repostería",
+          foto: "img/ejemplo-panaderia.jpg",
+          titulo: "Conchas calientes y bolillo",
+          servicios: ["Conchas y cuernitos", "Pasteles sobre pedido"]
+        },
+        {
+          id: "editorial",
+          nombre: "Editorial",
+          ejemplo: "Ferretería El Tornillo",
+          ciudad: "Monterrey",
+          giro: "Ferretería",
+          foto: "img/ejemplo-ferreteria.jpg",
+          titulo: "Herramienta y material de obra",
+          servicios: ["Plomería y llaves", "Taladros y brocas"]
+        },
+        {
+          id: "directa",
+          nombre: "Directa",
+          ejemplo: "Taquería El Fogón",
+          ciudad: "Querétaro",
+          giro: "Taquería",
+          foto: "img/ejemplo-taqueria.jpg",
+          titulo: "Pastor al carbón y salsas frescas",
+          servicios: ["Tacos al pastor", "Gringas y quesadillas"]
+        }
+      ];
+
+      gridFeedCatalogo.textContent = "";
+      plantillas.forEach((tpl) => {
+        const card = document.createElement("article");
+        card.className = "miniwindow-card";
+
+        const vp = document.createElement("button");
+        vp.type = "button";
+        vp.className = `miniwindow-viewport biz-page biz-template-${tpl.id}`;
+        vp.setAttribute("aria-label", `Usar plantilla ${tpl.nombre}`);
+        vp.addEventListener("click", () => {
+          plantillaInicialUrl = tpl.id;
+          const activo = obtenerBorradorPorId(borradorActivoId);
+          if (activo) {
+            activo.diseno = activo.diseno || {};
+            activo.diseno.plantilla = tpl.id;
+            activo.actualizadoEn = new Date().toISOString();
+            sincronizarPublicada(activo);
+            guardarColecciones();
+            abrirBorradorEnEditor(activo);
+          } else {
+            crearNuevaConversacion();
+          }
+        });
+
+        const top = document.createElement("span");
+        top.className = "miniwindow-topbar biz-topbar";
+        const tn = document.createElement("span");
+        tn.className = "biz-topbar-name";
+        tn.textContent = tpl.ejemplo;
+        const tc = document.createElement("span");
+        tc.className = "biz-topbar-city";
+        tc.textContent = tpl.ciudad;
+        top.appendChild(tn);
+        top.appendChild(tc);
+        vp.appendChild(top);
+
+        const bd = document.createElement("span");
+        bd.className = "miniwindow-body";
+        const im = document.createElement("img");
+        im.className = "miniwindow-cover";
+        im.src = tpl.foto;
+        im.alt = "";
+        im.loading = "lazy";
+        bd.appendChild(im);
+        const tt = document.createElement("span");
+        tt.className = "miniwindow-title";
+        tt.textContent = tpl.titulo;
+        bd.appendChild(tt);
+        const chWrap = document.createElement("span");
+        chWrap.className = "miniwindow-chips";
+        tpl.servicios.forEach((sv) => {
+          const ch = document.createElement("span");
+          ch.className = "miniwindow-chip";
+          ch.textContent = sv;
+          chWrap.appendChild(ch);
+        });
+        bd.appendChild(chWrap);
+        vp.appendChild(bd);
+        card.appendChild(vp);
+
+        const ft = document.createElement("div");
+        ft.className = "miniwindow-foot";
+        const mc = document.createElement("div");
+        mc.className = "miniwindow-meta";
+        const h = document.createElement("h4");
+        h.className = "miniwindow-name";
+        h.textContent = `Plantilla ${tpl.nombre}`;
+        const p = document.createElement("p");
+        p.className = "miniwindow-sub";
+        p.textContent = tpl.giro;
+        mc.appendChild(h);
+        mc.appendChild(p);
+
+        const bUsar = document.createElement("button");
+        bUsar.type = "button";
+        bUsar.className = "btn btn-primary btn-sm";
+        bUsar.textContent = "Usar";
+        bUsar.addEventListener("click", () => vp.click());
+
+        ft.appendChild(mc);
+        ft.appendChild(bUsar);
+        card.appendChild(ft);
+        gridFeedCatalogo.appendChild(card);
+      });
+    }
+
+    function obtenerMediaSubidaUsuario() {
+      const prop = propietarioActual();
+      const vistos = new Set();
+      const items = [];
+
+      const inspeccionar = (reg) => {
+        if (!reg || !reg.diseno) {
+          return;
+        }
+        const nombreNeg = (reg.datos && reg.datos.nombre) || "Tu página";
+        const logoUrl = String(reg.diseno.logoDataUrl || "");
+        if (logoUrl.startsWith("data:image/") && !vistos.has(logoUrl)) {
+          vistos.add(logoUrl);
+          items.push({
+            dataUrl: logoUrl,
+            tipo: "Logo subido",
+            negocio: nombreNeg,
+            alt: reg.diseno.logoAlt || `Logo de ${nombreNeg}`
+          });
+        }
+        const portadaUrl = String(reg.diseno.portadaDataUrl || "");
+        if (
+          reg.diseno.portadaOrigen === "propia" &&
+          portadaUrl.startsWith("data:image/") &&
+          !vistos.has(portadaUrl)
+        ) {
+          vistos.add(portadaUrl);
+          items.push({
+            dataUrl: portadaUrl,
+            tipo: "Foto de portada",
+            negocio: nombreNeg,
+            alt: reg.diseno.portadaAlt || `Portada de ${nombreNeg}`
+          });
+        }
+      };
+
+      borradoresDelPropietario().forEach(inspeccionar);
+      todasPublicadas.filter((p) => p && p.cuentaId === prop).forEach(inspeccionar);
+      return items;
+    }
+
+    function abrirModalMedia(item) {
+      if (!modalMediaVisor || !mediaModalImg || !item) {
+        return;
+      }
+      mediaModalActual = item;
+      mediaModalImg.src = item.dataUrl;
+      mediaModalImg.alt = item.alt;
+      if (mediaModalTitulo) {
+        mediaModalTitulo.textContent = item.tipo;
+      }
+      if (mediaModalMeta) {
+        mediaModalMeta.textContent = `Subida en ${item.negocio}`;
+      }
+      modalMediaVisor.hidden = false;
+    }
+
+    function cerrarModalMedia() {
+      mediaModalActual = null;
+      if (modalMediaVisor) {
+        modalMediaVisor.hidden = true;
+      }
+      if (mediaModalImg) {
+        mediaModalImg.src = "";
+      }
+    }
+
+    function cambiarTabArchivos(tab) {
+      tabArchivosActual = tab === "multimedia" ? "multimedia" : "paginas";
+      botonesTabArchivos.forEach((btn) => {
+        const activo = btn.dataset.archivosTab === tabArchivosActual;
+        btn.classList.toggle("is-active", activo);
+        btn.setAttribute("aria-selected", activo ? "true" : "false");
+      });
+      if (panelArchivosPaginas) {
+        panelArchivosPaginas.hidden = tabArchivosActual !== "paginas";
+      }
+      if (panelArchivosMedia) {
+        panelArchivosMedia.hidden = tabArchivosActual !== "multimedia";
+      }
+      renderizarArchivos();
+    }
+
+    function renderizarArchivos() {
+      if (gridArchivosPaginas) {
+        const lista = borradoresDelPropietario();
+        gridArchivosPaginas.textContent = "";
+        if (lista.length === 0) {
+          if (archivosPaginasVacio) {
+            archivosPaginasVacio.hidden = false;
+          }
+          gridArchivosPaginas.hidden = true;
+        } else {
+          if (archivosPaginasVacio) {
+            archivosPaginasVacio.hidden = true;
+          }
+          gridArchivosPaginas.hidden = false;
+          lista.forEach((reg) => {
+            gridArchivosPaginas.appendChild(construirMiniVentanaPagina(reg));
+          });
+        }
+      }
+
+      if (gridArchivosMedia) {
+        const media = obtenerMediaSubidaUsuario();
+        gridArchivosMedia.textContent = "";
+        if (media.length === 0) {
+          if (archivosMediaVacio) {
+            archivosMediaVacio.hidden = false;
+          }
+          gridArchivosMedia.hidden = true;
+        } else {
+          if (archivosMediaVacio) {
+            archivosMediaVacio.hidden = true;
+          }
+          gridArchivosMedia.hidden = false;
+          media.forEach((item) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "media-thumb-btn";
+            btn.setAttribute("aria-label", `Ver ${item.tipo} de ${item.negocio}`);
+            btn.addEventListener("click", () => abrirModalMedia(item));
+
+            const img = document.createElement("img");
+            img.className = "media-thumb-img";
+            img.src = item.dataUrl;
+            img.alt = item.alt;
+            img.loading = "lazy";
+
+            const cap = document.createElement("span");
+            cap.className = "media-thumb-caption";
+            cap.textContent = `${item.tipo} · ${item.negocio}`;
+
+            btn.appendChild(img);
+            btn.appendChild(cap);
+            gridArchivosMedia.appendChild(btn);
+          });
+        }
+      }
+    }
+
+    function renderizarIdeas() {
+      if (!listaIdeas) {
+        return;
+      }
+      const reg = obtenerBorradorPorId(borradorActivoId) || borradoresDelPropietario()[0] || null;
+      listaIdeas.textContent = "";
+
+      if (!reg || !reg.datos) {
+        if (ideasVacio) {
+          ideasVacio.hidden = false;
+        }
+        listaIdeas.hidden = true;
+        if (ideasSubtitulo) {
+          ideasSubtitulo.textContent = "Sugerencias concretas basadas únicamente en lo que ya tiene tu borrador.";
+        }
+        return;
+      }
+
+      if (ideasVacio) {
+        ideasVacio.hidden = true;
+      }
+      listaIdeas.hidden = false;
+      if (ideasSubtitulo) {
+        ideasSubtitulo.textContent = `Revisión real de "${reg.datos.nombre}" según los datos que ya guardaste.`;
+      }
+
+      const ideas = [];
+      const diseno = reg.diseno || {};
+      const borrador = reg.borrador || {};
+
+      if (!gen.limpiarTexto(reg.datos.direccion || "")) {
+        ideas.push({
+          titulo: "Agregar calle o colonia",
+          desc: "Tus clientes podrán ubicar tu local más rápido sin que la página invente una dirección.",
+          accion: "Agregar en editor",
+          alClic: () => abrirBorradorEnEditor(reg)
+        });
+      }
+      if (!gen.limpiarTexto(reg.datos.horario || "")) {
+        ideas.push({
+          titulo: "Indicar horario de atención",
+          desc: "Anota tus días y horas reales para que aparezcan en la presentación y preguntas frecuentes.",
+          accion: "Definir horario",
+          alClic: () => abrirBorradorEnEditor(reg)
+        });
+      }
+      if (!diseno.logoDataUrl) {
+        ideas.push({
+          titulo: "Subir el logo de tu negocio",
+          desc: "Un logo propio refuerza tu marca en la barra superior de la página.",
+          accion: "Subir logo",
+          alClic: () => abrirBorradorEnEditor(reg)
+        });
+      }
+      if (diseno.portadaOrigen !== "propia") {
+        ideas.push({
+          titulo: "Usar una foto real de tu negocio",
+          desc: "Reemplaza la portada sugerida por una foto real de tus productos o local.",
+          accion: "Subir foto",
+          alClic: () => abrirBorradorEnEditor(reg)
+        });
+      }
+      if (!gen.limpiarDigitos(reg.datos.whatsapp || "")) {
+        ideas.push({
+          titulo: "Activar botón directo de WhatsApp (opcional)",
+          desc: "Si recibes pedidos por mensaje, agrega tu número con lada para habilitar el botón.",
+          accion: "Configurar",
+          alClic: () => abrirBorradorEnEditor(reg)
+        });
+      }
+      const cantServs = Array.isArray(borrador.servicios) ? borrador.servicios.length : 0;
+      if (cantServs < 3) {
+        ideas.push({
+          titulo: "Sumar más productos o servicios",
+          desc: `Ahora tienes ${cantServs} ${cantServs === 1 ? "tarjeta" : "tarjetas"}. Agregar 1 o 2 productos reales hace más clara tu oferta.`,
+          accion: "Pedir en chat",
+          alClic: () => {
+            cambiarVistaApp("chat");
+            if (entradaChat) {
+              entradaChat.focus();
+            }
+          }
+        });
+      }
+      if (!reg.publicadaSlug) {
+        ideas.push({
+          titulo: "Publicar tu página para obtener tu enlace",
+          desc: "Todavía está en borrador. Cuando termines de revisarla, publícala en un clic.",
+          accion: "Ir a publicar",
+          alClic: () => abrirBorradorEnEditor(reg)
+        });
+      }
+
+      if (ideas.length === 0) {
+        const liOk = document.createElement("li");
+        liOk.className = "idea-card idea-card-done";
+        const hOk = document.createElement("h4");
+        hOk.textContent = "Tu página tiene todos los datos clave completos";
+        const pOk = document.createElement("p");
+        pOk.className = "field-hint";
+        pOk.textContent = "Ya cuenta con dirección, horario, logo, foto propia, contacto y enlace publicado.";
+        liOk.appendChild(hOk);
+        liOk.appendChild(pOk);
+        listaIdeas.appendChild(liOk);
+        return;
+      }
+
+      ideas.forEach((idea) => {
+        const li = document.createElement("li");
+        li.className = "idea-card";
+
+        const body = document.createElement("div");
+        body.className = "idea-card-body";
+        const h = document.createElement("h4");
+        h.textContent = idea.titulo;
+        const p = document.createElement("p");
+        p.className = "field-hint";
+        p.textContent = idea.desc;
+        body.appendChild(h);
+        body.appendChild(p);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-secondary btn-sm";
+        btn.textContent = idea.accion;
+        btn.addEventListener("click", idea.alClic);
+
+        li.appendChild(body);
+        li.appendChild(btn);
+        listaIdeas.appendChild(li);
       });
     }
 
@@ -2541,6 +3684,13 @@
       renderizarListaConversaciones();
       renderizarListaBorradores();
       renderizarHilo();
+      if (vistaActual === "feed") {
+        renderizarFeed();
+      } else if (vistaActual === "archivos") {
+        renderizarArchivos();
+      } else if (vistaActual === "ideas") {
+        renderizarIdeas();
+      }
     }
 
     function restaurarEstadoCompleto(permitirCrearSiVacio) {
@@ -2612,12 +3762,19 @@
           guardarColecciones();
           renderizarListaBorradores();
           renderizarHilo();
+          if (vistaActual === "archivos") {
+            renderizarArchivos();
+          } else if (vistaActual === "feed") {
+            renderizarFeed();
+          } else if (vistaActual === "ideas") {
+            renderizarIdeas();
+          }
         },
         alPublicarBorrador(reg) {
           publicarBorrador(reg);
         },
         alIrAlChat() {
-          cambiarModo("chat");
+          cambiarVistaApp("chat");
         },
         alDescargarRespaldo() {
           descargarRespaldoJson();
@@ -2629,9 +3786,114 @@
     }
 
     // Eventos UI
-    btnAbrirSidebar.addEventListener("click", () => abrirSidebar(true));
+    btnAbrirSidebar.addEventListener("click", alternarSidebar);
     btnCerrarSidebar.addEventListener("click", () => abrirSidebar(false));
     backdrop.addEventListener("click", () => abrirSidebar(false));
+
+    if (sidebarBuscar) {
+      sidebarBuscar.addEventListener("input", () => {
+        terminoBusquedaSidebar = String(sidebarBuscar.value || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim();
+        renderizarListaConversaciones();
+        renderizarListaBorradores();
+      });
+    }
+
+    botonesVistaApp.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const destino = btn.dataset.appVista;
+        if (destino) {
+          cambiarVistaApp(destino);
+        }
+      });
+    });
+
+    botonesTabArchivos.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        cambiarTabArchivos(btn.dataset.archivosTab);
+      });
+    });
+
+    if (btnFeedNuevo) {
+      btnFeedNuevo.addEventListener("click", () => ejecutarCuandoHidrate(crearNuevaConversacion));
+    }
+    if (btnArchivosCrear) {
+      btnArchivosCrear.addEventListener("click", () => cambiarVistaApp("chat"));
+    }
+    if (btnArchivosSubirIr) {
+      btnArchivosSubirIr.addEventListener("click", () => cambiarVistaApp("editor"));
+    }
+    if (btnIdeasCrear) {
+      btnIdeasCrear.addEventListener("click", () => ejecutarCuandoHidrate(crearNuevaConversacion));
+    }
+    if (btnConfigDescargar) {
+      btnConfigDescargar.addEventListener("click", descargarRespaldoJson);
+    }
+    if (btnConfigImportar) {
+      btnConfigImportar.addEventListener("click", () => inputImportar.click());
+    }
+    if (btnBiblioDescargar) {
+      btnBiblioDescargar.addEventListener("click", descargarRespaldoJson);
+    }
+
+    if (btnCerrarMediaModal) {
+      btnCerrarMediaModal.addEventListener("click", cerrarModalMedia);
+    }
+    if (modalMediaVisor) {
+      modalMediaVisor.addEventListener("click", (e) => {
+        if (e.target === modalMediaVisor) {
+          cerrarModalMedia();
+        }
+      });
+    }
+    if (btnMediaUsarPortada) {
+      btnMediaUsarPortada.addEventListener("click", () => {
+        const reg = obtenerBorradorPorId(borradorActivoId) || borradoresDelPropietario()[0];
+        if (!reg || !mediaModalActual) {
+          cerrarModalMedia();
+          return;
+        }
+        reg.diseno = reg.diseno || {};
+        reg.diseno.portadaDataUrl = mediaModalActual.dataUrl;
+        reg.diseno.portadaOrigen = "propia";
+        reg.diseno.portadaAlt = mediaModalActual.alt;
+        reg.actualizadoEn = new Date().toISOString();
+        sincronizarPublicada(reg);
+        guardarColecciones();
+        cerrarModalMedia();
+        abrirBorradorEnEditor(reg);
+      });
+    }
+    if (btnMediaUsarLogo) {
+      btnMediaUsarLogo.addEventListener("click", () => {
+        const reg = obtenerBorradorPorId(borradorActivoId) || borradoresDelPropietario()[0];
+        if (!reg || !mediaModalActual) {
+          cerrarModalMedia();
+          return;
+        }
+        reg.diseno = reg.diseno || {};
+        reg.diseno.logoDataUrl = mediaModalActual.dataUrl;
+        reg.diseno.logoAlt = mediaModalActual.alt;
+        reg.actualizadoEn = new Date().toISOString();
+        sincronizarPublicada(reg);
+        guardarColecciones();
+        cerrarModalMedia();
+        abrirBorradorEnEditor(reg);
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (modalMediaVisor && !modalMediaVisor.hidden) {
+          cerrarModalMedia();
+        } else if (!esEscritorioApp() && sidebar.classList.contains("is-open")) {
+          abrirSidebar(false);
+        }
+      }
+    });
 
     btnNuevaSidebar.addEventListener("click", () =>
       ejecutarCuandoHidrate(crearNuevaConversacion)
@@ -2660,8 +3922,8 @@
       btnSidebarUndoCerrar.addEventListener("click", ocultarUndoToast);
     }
 
-    tabModoChat.addEventListener("click", () => cambiarModo("chat"));
-    tabModoEditor.addEventListener("click", () => cambiarModo("editor"));
+    tabModoChat.addEventListener("click", () => cambiarVistaApp("chat"));
+    tabModoEditor.addEventListener("click", () => cambiarVistaApp("editor"));
 
     btnEnviar.addEventListener("click", () =>
       ejecutarCuandoHidrate(() => enviarMensajeUsuario(entradaChat.value))
