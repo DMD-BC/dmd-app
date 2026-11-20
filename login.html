@@ -1,396 +1,224 @@
 <!DOCTYPE html>
 <html lang="es-MX">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <title>Tu cuenta | dmd</title>
-  <meta name="description" content="Inicia sesión o crea tu cuenta en dmd para consultar tu suscripción y gestionar tus páginas web.">
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Tu cuenta | dmd</title>
+<meta name="description" content="Inicia sesión o crea tu cuenta en dmd para consultar tu suscripción y activar un plan mensual.">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* Ajustes mobile-first propios de login.html, sin tocar styles.css. */
+.sub-summary-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; min-width: 0; }
+.sub-summary-item { min-width: 0; }
+@media (min-width: 640px) { .sub-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 960px) { .sub-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.site-nav { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.site-nav .nav-link { white-space: nowrap; }
+.site-nav .nav-link-cta { flex-shrink: 0; white-space: nowrap; }
+.password-toggle-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.password-toggle-btn svg { width: 20px; height: 20px; }
+.password-field { min-width: 0; }
+.password-field .password-input { min-width: 0; }
+.container, .account-card { min-width: 0; }
+body { overflow-x: hidden; }
+</style>
 </head>
 <body>
-  <a class="skip-link" href="#contenido">Saltar al contenido principal</a>
-
-  <header class="site-header">
-    <div class="container container-wide header-inner">
-      <a class="brand" href="index.html" aria-label="dmd, ir al inicio">
-        <span class="brand-squares" aria-hidden="true">
-          <span class="brand-sq brand-sq-1"></span>
-          <span class="brand-sq brand-sq-2"></span>
-          <span class="brand-sq brand-sq-3"></span>
-          <span class="brand-sq brand-sq-4"></span>
-        </span>
-        <span>dmd</span>
-      </a>
-
-      <nav class="site-nav" aria-label="Navegación principal">
-        <a class="nav-link nav-link-desktop" href="index.html">Inicio</a>
-        <a class="nav-link" href="pago.html">Planes</a>
-        <a class="nav-link nav-link-cta" href="app.html">Crear mi página</a>
-      </nav>
-    </div>
-  </header>
-
-  <main id="contenido" tabindex="-1">
-    <div class="container">
-      <section class="page-intro" aria-labelledby="titulo-cuenta">
-        <h1 id="titulo-cuenta">Tu cuenta</h1>
-        <p class="lead">Inicia sesión para consultar tu suscripción o activar un plan mensual.</p>
-      </section>
-
-      <section id="seccion-cuenta" class="card account-card" aria-label="Acceso a tu cuenta">
-        <div id="cuenta-cargando" class="loading-inline" role="status" aria-live="polite">
-          <span class="spinner spinner-accent" aria-hidden="true"></span>
-          <span>Verificando tu sesión...</span>
-        </div>
-
-        <div id="cuenta-error-servicio" class="service-notice" role="status" aria-live="polite" hidden>
-          <p id="cuenta-error-servicio-msg" class="service-notice-title"></p>
-          <p id="cuenta-error-servicio-hint" class="service-notice-hint">
-            Puedes crear, editar y guardar tus borradores en este navegador sin iniciar sesión, y revisar los planes disponibles.
-          </p>
-          <div class="service-alert-actions">
-            <a class="btn btn-primary btn-sm" href="app.html">
-              Seguir creando borradores
-            </a>
-            <a class="btn btn-secondary btn-sm" href="pago.html">
-              Ver planes
-            </a>
-            <button id="btn-reintentar-auth" class="btn btn-secondary btn-sm" type="button">
-              Comprobar de nuevo
-            </button>
-          </div>
-        </div>
-
-        <div id="cuenta-invitado" hidden>
-          <div class="auth-tabs" role="tablist" aria-label="Tipo de acceso">
-            <button
-              id="tab-login"
-              class="auth-tab auth-tab-active"
-              type="button"
-              role="tab"
-              aria-selected="true"
-              aria-controls="form-login"
-            >
-              Iniciar sesión
-            </button>
-            <button
-              id="tab-registro"
-              class="auth-tab"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              aria-controls="form-registro"
-            >
-              Crear cuenta
-            </button>
-          </div>
-
-          <form id="form-login" class="form-grid" novalidate onsubmit="return false;">
-            <div id="error-login-general" class="form-error-summary" role="alert" hidden></div>
-
-            <div class="field">
-              <label class="field-label" for="login-correo">
-                Correo electrónico <span class="required-mark" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="login-correo"
-                name="login_correo"
-                class="input"
-                type="email"
-                required
-                autocomplete="email"
-                placeholder="tucorreo@ejemplo.com"
-                aria-describedby="error-login-correo"
-              >
-              <p id="error-login-correo" class="field-error" aria-live="polite"></p>
-            </div>
-
-            <div class="field">
-              <div class="field-label-row">
-                <label class="field-label" for="login-password">
-                  Contraseña <span class="required-mark" aria-hidden="true">*</span>
-                </label>
-                <button
-                  id="btn-abrir-recuperar"
-                  class="text-link-btn"
-                  type="button"
-                  aria-expanded="false"
-                  aria-controls="bloque-recuperar-password"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
-              <div class="password-field">
-                <input
-                  id="login-password"
-                  name="login_password"
-                  class="input password-input"
-                  type="password"
-                  required
-                  autocomplete="current-password"
-                  placeholder="Tu contraseña"
-                  aria-describedby="error-login-password"
-                >
-                <button
-                  type="button"
-                  class="password-toggle-btn"
-                  data-toggle-password="login-password"
-                  aria-label="Mostrar contraseña"
-                  aria-pressed="false"
-                >
-                  Mostrar
-                </button>
-              </div>
-              <p id="error-login-password" class="field-error" aria-live="polite"></p>
-            </div>
-
-            <div id="bloque-recuperar-password" class="recovery-box" hidden>
-              <p class="recovery-title">Recuperar contraseña</p>
-              <p class="field-hint">
-                Escribe el correo con el que creaste tu cuenta. Cuando el servicio de cuentas esté activo, te enviaremos un enlace para restablecer tu clave sin salir de aquí.
-              </p>
-              <div class="field">
-                <label class="field-label" for="rec-correo">Correo registrado</label>
-                <input
-                  id="rec-correo"
-                  name="rec_correo"
-                  class="input"
-                  type="email"
-                  autocomplete="email"
-                  placeholder="tucorreo@ejemplo.com"
-                  aria-describedby="error-rec-correo"
-                >
-                <p id="error-rec-correo" class="field-error" aria-live="polite"></p>
-              </div>
-              <p id="estado-rec-password" class="field-hint" role="status" aria-live="polite"></p>
-              <div class="recovery-actions">
-                <button id="btn-enviar-recuperacion" class="btn btn-primary btn-sm" type="button">
-                  Enviar instrucciones
-                </button>
-                <button id="btn-cerrar-recuperar" class="btn btn-secondary btn-sm" type="button">
-                  Cerrar
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <button id="btn-iniciar-sesion" class="btn btn-primary btn-full" type="button">
-                Iniciar sesión
-              </button>
-            </div>
-          </form>
-
-          <form id="form-registro" class="form-grid" novalidate onsubmit="return false;" hidden>
-            <div id="error-reg-general" class="form-error-summary" role="alert" hidden></div>
-
-            <div class="field">
-              <label class="field-label" for="reg-nombre">
-                Nombre <span class="required-mark" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="reg-nombre"
-                name="reg_nombre"
-                class="input"
-                type="text"
-                required
-                maxlength="60"
-                autocomplete="name"
-                placeholder="Tu nombre"
-                aria-describedby="error-reg-nombre"
-              >
-              <p id="error-reg-nombre" class="field-error" aria-live="polite"></p>
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="reg-correo">
-                Correo electrónico <span class="required-mark" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="reg-correo"
-                name="reg_correo"
-                class="input"
-                type="email"
-                required
-                maxlength="90"
-                autocomplete="email"
-                placeholder="tucorreo@ejemplo.com"
-                aria-describedby="error-reg-correo"
-              >
-              <p id="error-reg-correo" class="field-error" aria-live="polite"></p>
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="reg-password">
-                Contraseña <span class="required-mark" aria-hidden="true">*</span>
-              </label>
-              <div class="password-field">
-                <input
-                  id="reg-password"
-                  name="reg_password"
-                  class="input password-input"
-                  type="password"
-                  required
-                  minlength="6"
-                  autocomplete="new-password"
-                  placeholder="Mínimo 6 caracteres"
-                  aria-describedby="error-reg-password"
-                >
-                <button
-                  type="button"
-                  class="password-toggle-btn"
-                  data-toggle-password="reg-password"
-                  aria-label="Mostrar contraseña"
-                  aria-pressed="false"
-                >
-                  Mostrar
-                </button>
-              </div>
-              <p id="error-reg-password" class="field-error" aria-live="polite"></p>
-            </div>
-
-            <div>
-              <button id="btn-crear-cuenta" class="btn btn-primary btn-full" type="button">
-                Crear cuenta
-              </button>
-            </div>
-          </form>
-
-          <div class="auth-divider" aria-hidden="true">
-            <span>o</span>
-          </div>
-
-          <div class="auth-google-box">
-            <button
-              id="btn-login-google-sso"
-              class="btn btn-secondary btn-full"
-              type="button"
-            >
-              <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M21.35 11.1h-9.18v2.98h5.27c-.23 1.46-1.74 4.28-5.27 4.28-3.17 0-5.76-2.63-5.76-5.86s2.59-5.86 5.76-5.86c1.81 0 3.02.77 3.71 1.43l2.53-2.44C16.79 4.1 14.69 3.2 12.17 3.2 7.21 3.2 3.2 7.21 3.2 12.17s4.01 8.97 8.97 8.97c5.18 0 8.61-3.64 8.61-8.77 0-.59-.06-1.04-.14-1.27Z"></path>
-              </svg>
-              <span>Continuar con Google</span>
-            </button>
-            <p id="estado-google-sso" class="field-hint" role="status" aria-live="polite">
-              Acceso rápido con tu cuenta de Google a través del servicio de cuentas de dmd.
-            </p>
-          </div>
-        </div>
-
-        <div id="cuenta-activa" hidden>
-          <div class="session-header">
-            <div>
-              <p id="sesion-nombre" class="session-name"></p>
-              <p id="sesion-correo" class="session-email"></p>
-              <p id="sesion-cuota" class="session-quota" hidden></p>
-            </div>
-            <span class="status-pill">Sesión activa</span>
-          </div>
-
-          <div class="account-primary-cta">
-            <a id="btn-ir-chat" class="btn btn-primary btn-full" href="app.html">
-              Ir al creador de páginas
-            </a>
-          </div>
-
-          <div class="session-actions">
-            <a id="btn-ir-planes" class="btn btn-secondary btn-sm" href="pago.html">
-              Planes y suscripción
-            </a>
-            <button id="btn-cerrar-sesion" class="btn btn-secondary btn-sm" type="button">
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-
-        <p id="estado-cuenta" class="status-banner" role="status" aria-live="polite"></p>
-      </section>
-
-      <section id="seccion-mi-suscripcion" class="card account-card subscription-section" aria-labelledby="titulo-mi-suscripcion">
-        <div class="payment-secure-head">
-          <div>
-            <p class="field-hint">Suscripción mensual</p>
-            <h2 id="titulo-mi-suscripcion" class="payment-biz-name">Mi suscripción</h2>
-          </div>
-          <span id="mi-sub-badge" class="status-pill status-pill-muted">Consultando...</span>
-        </div>
-
-        <div id="mi-sub-resumen" class="sub-summary-grid">
-          <div class="sub-summary-item">
-            <span class="sub-summary-label">Plan activo</span>
-            <strong id="mi-sub-plan" class="sub-summary-value">Sin datos por ahora</strong>
-          </div>
-          <div class="sub-summary-item">
-            <span class="sub-summary-label">Estado</span>
-            <strong id="mi-sub-estado-texto" class="sub-summary-value">Verificando...</strong>
-          </div>
-          <div id="mi-sub-fecha-wrap" class="sub-summary-item" hidden>
-            <span class="sub-summary-label">Fecha de alta</span>
-            <strong id="mi-sub-fecha" class="sub-summary-value"></strong>
-          </div>
-        </div>
-
-        <p id="mi-sub-detalle" class="field-hint"></p>
-
-        <div id="mi-sub-acciones" class="session-actions">
-          <a id="btn-mi-sub-cambiar" class="btn btn-primary btn-sm" href="pago.html">
-            Ver o cambiar plan
-          </a>
-          <button id="btn-mi-sub-cancelar" class="btn btn-danger-ghost btn-sm" type="button" hidden>
-            Cancelar suscripción
-          </button>
-          <button id="btn-mi-sub-cerrar-sesion" class="btn btn-secondary btn-sm" type="button" hidden>
-            Cerrar sesión
-          </button>
-          <button id="btn-mi-sub-reintentar" class="btn btn-secondary btn-sm" type="button" hidden>
-            Comprobar de nuevo
-          </button>
-        </div>
-
-        <div id="mi-sub-confirmar-cancelar" class="confirm-box" role="alert" hidden>
-          <p>¿Confirmas que deseas cancelar tu suscripción actual? El cobro mensual dejará de renovarse en Mercado Pago.</p>
-          <div class="confirm-actions">
-            <button id="btn-mi-sub-confirmar-si" class="btn btn-danger-ghost btn-sm" type="button">
-              Sí, cancelar
-            </button>
-            <button id="btn-mi-sub-confirmar-no" class="btn btn-secondary btn-sm" type="button">
-              No, volver
-            </button>
-          </div>
-        </div>
-
-        <p id="mi-sub-aviso" class="status-banner" role="status" aria-live="polite"></p>
-      </section>
-
-      <div class="subpage-back-row">
-        <a class="btn btn-secondary btn-full" href="app.html">Volver al creador de páginas</a>
-      </div>
-    </div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container container-wide footer-inner">
-      <div class="footer-top">
-        <a class="footer-brand" href="index.html" aria-label="dmd, ir al inicio">
-          <span class="brand-squares brand-squares-sm" aria-hidden="true">
-            <span class="brand-sq brand-sq-1"></span>
-            <span class="brand-sq brand-sq-2"></span>
-            <span class="brand-sq brand-sq-3"></span>
-            <span class="brand-sq brand-sq-4"></span>
-          </span>
-          <span>dmd</span>
-        </a>
-        <nav class="footer-nav" aria-label="Navegación del pie de página">
-          <a class="footer-link" href="index.html">Inicio</a>
-          <a class="footer-link" href="app.html">Crear páginas web</a>
-          <a class="footer-link" href="pago.html">Planes</a>
-          <a class="footer-link" href="legal.html">Legal y contacto</a>
-        </nav>
-      </div>
-      <p class="footer-note">dmd · Constructor de páginas web para negocios.</p>
-    </div>
-  </footer>
-
-  <script src="cuenta.js"></script>
+<a class="skip-link" href="#contenido">Saltar al contenido principal</a>
+<header class="site-header">
+<div class="container container-wide header-inner">
+<a class="brand" href="index.html" aria-label="dmd, ir al inicio">
+<span class="brand-squares" aria-hidden="true">
+<span class="brand-sq brand-sq-1"></span>
+<span class="brand-sq brand-sq-2"></span>
+<span class="brand-sq brand-sq-3"></span>
+<span class="brand-sq brand-sq-4"></span>
+</span>
+<span>dmd</span>
+</a>
+<nav class="site-nav" aria-label="Navegación principal">
+<a class="nav-link nav-link-desktop" href="index.html">Inicio</a>
+<a id="nav-planes" class="nav-link" href="pago.html">Planes</a>
+<a class="nav-link nav-link-cta" href="app.html">Crear mi página</a>
+</nav>
+</div>
+</header>
+<main id="contenido" tabindex="-1">
+<div class="container">
+<section class="page-intro" aria-labelledby="titulo-cuenta">
+<h1 id="titulo-cuenta">Tu cuenta</h1>
+<p class="lead">Inicia sesión para consultar tu suscripción o activar un plan mensual.</p>
+</section>
+<section id="seccion-cuenta" class="card account-card" aria-label="Acceso a tu cuenta">
+<div id="cuenta-cargando" class="loading-inline" role="status" aria-live="polite">
+<span class="spinner spinner-accent" aria-hidden="true"></span>
+<span>Verificando tu sesión...</span>
+</div>
+<div id="cuenta-error-servicio" class="service-notice" role="status" aria-live="polite" hidden>
+<p id="cuenta-error-servicio-msg" class="service-notice-title"></p>
+<p id="cuenta-error-servicio-hint" class="service-notice-hint">Puedes crear, editar y guardar tus borradores en este navegador sin iniciar sesión, y revisar los planes. Cuando el servicio vuelva, podrás iniciar sesión sin perder tus borradores.</p>
+<div class="service-alert-actions">
+<a class="btn btn-primary btn-sm" href="app.html">Seguir creando borradores</a>
+<a id="btn-servicio-ver-planes" class="btn btn-secondary btn-sm" href="pago.html">Ver planes</a>
+<button id="btn-reintentar-auth" class="btn btn-secondary btn-sm" type="button">Comprobar de nuevo</button>
+</div>
+</div>
+<div id="cuenta-invitado" hidden>
+<div class="auth-tabs" role="tablist" aria-label="Tipo de acceso">
+<button id="tab-login" class="auth-tab auth-tab-active" type="button" role="tab" aria-selected="true" aria-controls="form-login">Iniciar sesión</button>
+<button id="tab-registro" class="auth-tab" type="button" role="tab" aria-selected="false" aria-controls="form-registro">Crear cuenta</button>
+</div>
+<form id="form-login" class="form-grid" novalidate>
+<div id="error-login-general" class="form-error-summary" role="alert" hidden></div>
+<div class="field">
+<label class="field-label" for="login-correo">Correo electrónico <span class="required-mark" aria-hidden="true">*</span></label>
+<input id="login-correo" name="email" class="input" type="email" required autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" aria-describedby="error-login-correo">
+<p id="error-login-correo" class="field-error" aria-live="polite"></p>
+</div>
+<div class="field">
+<div class="field-label-row">
+<label class="field-label" for="login-password">Contraseña <span class="required-mark" aria-hidden="true">*</span></label>
+<button id="btn-abrir-recuperar" class="text-link-btn" type="button" aria-expanded="false" aria-controls="bloque-recuperar-password">¿Olvidaste tu contraseña?</button>
+</div>
+<div class="password-field">
+<input id="login-password" name="password" class="input password-input" type="password" required autocomplete="current-password" placeholder="Tu contraseña" aria-describedby="error-login-password">
+<button type="button" class="password-toggle-btn" data-toggle-password="login-password" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+</div>
+<p id="error-login-password" class="field-error" aria-live="polite"></p>
+</div>
+<div id="bloque-recuperar-password" class="recovery-box" hidden>
+<p class="recovery-title">Recuperar contraseña</p>
+<p class="field-hint">El restablecimiento de contraseña todavía no está habilitado en el servicio de cuentas. Cuando esté disponible, podrás solicitarlo desde aquí.</p>
+<div class="field">
+<label class="field-label" for="rec-correo">Correo registrado</label>
+<input id="rec-correo" name="email" class="input" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" aria-describedby="error-rec-correo">
+<p id="error-rec-correo" class="field-error" aria-live="polite"></p>
+</div>
+<p id="estado-rec-password" class="field-hint" role="status" aria-live="polite"></p>
+<div class="recovery-actions">
+<button id="btn-enviar-recuperacion" class="btn btn-primary btn-sm" type="button">Enviar instrucciones</button>
+<button id="btn-cerrar-recuperar" class="btn btn-secondary btn-sm" type="button">Cerrar</button>
+</div>
+</div>
+<div>
+<button id="btn-iniciar-sesion" class="btn btn-primary btn-full" type="submit">Iniciar sesión</button>
+</div>
+</form>
+<form id="form-registro" class="form-grid" novalidate hidden>
+<div id="error-reg-general" class="form-error-summary" role="alert" hidden></div>
+<div class="field">
+<label class="field-label" for="reg-nombre">Nombre <span class="required-mark" aria-hidden="true">*</span></label>
+<input id="reg-nombre" name="name" class="input" type="text" required maxlength="60" autocomplete="name" placeholder="Tu nombre" aria-describedby="error-reg-nombre">
+<p id="error-reg-nombre" class="field-error" aria-live="polite"></p>
+</div>
+<div class="field">
+<label class="field-label" for="reg-correo">Correo electrónico <span class="required-mark" aria-hidden="true">*</span></label>
+<input id="reg-correo" name="email" class="input" type="email" required maxlength="90" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" aria-describedby="error-reg-correo">
+<p id="error-reg-correo" class="field-error" aria-live="polite"></p>
+</div>
+<div class="field">
+<label class="field-label" for="reg-password">Contraseña <span class="required-mark" aria-hidden="true">*</span></label>
+<div class="password-field">
+<input id="reg-password" name="password" class="input password-input" type="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres" aria-describedby="pista-reg-password error-reg-password">
+<button type="button" class="password-toggle-btn" data-toggle-password="reg-password" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+</div>
+<p id="pista-reg-password" class="field-hint" aria-live="polite">Usa al menos 6 caracteres.</p>
+<p id="error-reg-password" class="field-error" aria-live="polite"></p>
+</div>
+<div>
+<button id="btn-crear-cuenta" class="btn btn-primary btn-full" type="submit">Crear cuenta</button>
+</div>
+</form>
+<div class="auth-divider" aria-hidden="true"><span>o</span></div>
+<div class="auth-google-box">
+<button id="btn-login-google-sso" class="btn btn-secondary btn-full" type="button">
+<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.35 11.1h-9.18v2.98h5.27c-.23 1.46-1.74 4.28-5.27 4.28-3.17 0-5.76-2.59-5.76-5.76s2.59-5.76 5.76-5.76c1.55 0 2.94.62 3.96 1.62l2.2-2.2C17.9 1.19 15.24 0 12.17 0 5.45 0 .06 5.39.06 12.1s5.39 12.1 12.11 12.1c6.98 0 11.58-4.91 11.58-11.82 0-.79-.08-1.39-.4-2.28z"/></svg>
+<span>Continuar con Google</span>
+</button>
+<p id="estado-google-sso" class="field-hint" role="status" aria-live="polite">Acceso rápido con tu cuenta de Google a través del servicio de cuentas de dmd.</p>
+</div>
+</div>
+<div id="cuenta-activa" hidden>
+<div class="session-header">
+<div>
+<p id="sesion-nombre" class="session-name"></p>
+<p id="sesion-correo" class="session-email"></p>
+<p id="sesion-cuota" class="session-quota" hidden></p>
+</div>
+<span class="status-pill">Sesión activa</span>
+</div>
+<div class="account-primary-cta">
+<a id="btn-ir-chat" class="btn btn-primary btn-full" href="app.html">Ir al creador de páginas</a>
+</div>
+<div class="session-actions">
+<a id="btn-ir-planes" class="btn btn-secondary btn-sm" href="pago.html">Planes y suscripción</a>
+<button id="btn-cerrar-sesion" class="btn btn-secondary btn-sm" type="button">Cerrar sesión</button>
+</div>
+</div>
+<p id="estado-cuenta" class="status-banner" role="status" aria-live="polite"></p>
+</section>
+<section id="seccion-mi-suscripcion" class="card account-card subscription-section" aria-labelledby="titulo-mi-suscripcion">
+<div class="payment-secure-head">
+<div>
+<p class="field-hint">Suscripción mensual</p>
+<h2 id="titulo-mi-suscripcion" class="payment-biz-name">Mi suscripción</h2>
+</div>
+<span id="mi-sub-badge" class="status-pill status-pill-muted">Consultando...</span>
+</div>
+<div id="mi-sub-resumen" class="sub-summary-grid">
+<div class="sub-summary-item">
+<span class="sub-summary-label">Plan activo</span>
+<strong id="mi-sub-plan" class="sub-summary-value">Sin datos por ahora</strong>
+</div>
+<div class="sub-summary-item">
+<span class="sub-summary-label">Estado</span>
+<strong id="mi-sub-estado-texto" class="sub-summary-value">Verificando...</strong>
+</div>
+<div id="mi-sub-fecha-wrap" class="sub-summary-item" hidden>
+<span class="sub-summary-label">Fecha de alta</span>
+<strong id="mi-sub-fecha" class="sub-summary-value"></strong>
+</div>
+</div>
+<p id="mi-sub-detalle" class="field-hint"></p>
+<div id="mi-sub-acciones" class="session-actions">
+<a id="btn-mi-sub-cambiar" class="btn btn-primary btn-sm" href="pago.html">Ver o cambiar plan</a>
+<button id="btn-mi-sub-cancelar" class="btn btn-danger-ghost btn-sm" type="button" hidden>Cancelar suscripción</button>
+<button id="btn-mi-sub-reintentar" class="btn btn-secondary btn-sm" type="button" hidden>Comprobar de nuevo</button>
+</div>
+<div id="mi-sub-confirmar-cancelar" class="confirm-box" role="alert" hidden>
+<p>¿Confirmas que deseas cancelar tu suscripción actual? El cobro mensual dejará de renovarse en Mercado Pago.</p>
+<div class="confirm-actions">
+<button id="btn-mi-sub-confirmar-si" class="btn btn-danger-ghost btn-sm" type="button">Sí, cancelar</button>
+<button id="btn-mi-sub-confirmar-no" class="btn btn-secondary btn-sm" type="button">No, volver</button>
+</div>
+</div>
+<p id="mi-sub-aviso" class="status-banner" role="status" aria-live="polite"></p>
+</section>
+</div>
+</main>
+<footer class="site-footer">
+<div class="container container-wide footer-inner">
+<div class="footer-top">
+<a class="footer-brand" href="index.html" aria-label="dmd, ir al inicio">
+<span class="brand-squares brand-squares-sm" aria-hidden="true">
+<span class="brand-sq brand-sq-1"></span>
+<span class="brand-sq brand-sq-2"></span>
+<span class="brand-sq brand-sq-3"></span>
+<span class="brand-sq brand-sq-4"></span>
+</span>
+<span>dmd</span>
+</a>
+<nav class="footer-nav" aria-label="Navegación del pie de página">
+<a class="footer-link" href="index.html">Inicio</a>
+<a class="footer-link" href="app.html">Crear páginas web</a>
+<a class="footer-link" href="pago.html">Planes</a>
+<a class="footer-link" href="legal.html">Legal y contacto</a>
+</nav>
+</div>
+<p class="footer-note">dmd · Constructor de páginas web para negocios.</p>
+</div>
+</footer>
+<script src="cuenta.js"></script>
 </body>
 </html>
