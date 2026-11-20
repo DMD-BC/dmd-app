@@ -10,48 +10,57 @@ const DEMOS_PLANTILLAS_HOME = {
   clasica: {
     giro: "cafeteria",
     sticker: "Grano al día",
+    forma: "ticket",
+    pos: "tr",
+    tono: "claro",
     nombre: "Café de Barrio",
     ciudad: "Puebla",
     foto: "img/ejemplo-cafeteria.jpg",
     alt: "Preparación de café de filtro en barra de Café de Barrio",
     titulo: "Café de grano tostado en Puebla",
-    intro: "Preparamos espresso, filtrado y pan salado desde las 7:30. Si pasas con prisa, aparta tu vaso antes de llegar.",
+    intro: "Barra abierta desde las 7:30 con espresso, filtrado y pan salado. Si vas tarde, aparta tu vaso antes de llegar.",
     seccion: "En barra",
     servicios: [
-      { titulo: "Americano y capuchino", desc: "Grano de Veracruz molido al momento." },
-      { titulo: "Panini de jamón serrano", desc: "Caliente al comal para llevar o comer aquí." }
+      { titulo: "Americano y capuchino", desc: "Grano de Veracruz, molido al momento." },
+      { titulo: "Panini de jamón serrano", desc: "Al comal en cinco minutos, para comer en barra o llevar." }
     ],
     cta: "Pedir para recoger"
   },
   editorial: {
     giro: "ferreteria",
     sticker: "Pieza y mayoreo",
+    forma: "tag",
+    pos: "bl",
+    tono: "verde",
     nombre: "Ferretería El Tornillo",
     ciudad: "Monterrey",
     foto: "img/ejemplo-ferreteria.jpg",
     alt: "Herramientas manuales de ejemplo para plantilla Editorial",
     titulo: "Herramienta, plomería y material eléctrico",
-    intro: "Surtido para reparaciones de casa y obra chica. Pregunta si tenemos la pieza antes de venir.",
+    intro: "Para reparaciones de casa o lista de obra chica. Pregunta existencia antes de dar la vuelta.",
     seccion: "Departamentos",
     servicios: [
-      { titulo: "Plomería y tubería", desc: "Codos, llaves de paso, empaques y selladores." },
-      { titulo: "Taladros y llaves", desc: "Dados, pinzas, brocas y tornillería por pieza." }
+      { titulo: "Plomería y tubería", desc: "Codos, empaques, llaves de paso y sellador." },
+      { titulo: "Taladros y llaves", desc: "Brocas, dados y tornillería desde una pieza suelta." }
     ],
     cta: "Consultar existencia"
   },
   directa: {
     giro: "taqueria",
     sticker: "Al carbón",
+    forma: "ribbon",
+    pos: "br",
+    tono: "verde",
     nombre: "Taquería El Fogón",
     ciudad: "Querétaro",
     foto: "img/ejemplo-taqueria.jpg",
     alt: "Tacos tradicionales con rábanos y salsa de ejemplo para plantilla Directa",
     titulo: "Asada, pastor y gringas al carbón",
-    intro: "Abrimos de martes a domingo de 6 de la tarde a medianoche. Pedidos para recoger sin hacer fila.",
+    intro: "Martes a domingo de 6 de la tarde a medianoche. Aparta tu orden y pásala a recoger sin fila.",
     seccion: "De la parrilla",
     servicios: [
-      { titulo: "Orden de pastor", desc: "Cinco tacos con piña, cebolla asada y salsa de árbol." },
-      { titulo: "Gringas y volcanes", desc: "En tortilla de harina o tostada dorada al carbón." }
+      { titulo: "Orden de pastor", desc: "Cinco tacos con piña y salsa de árbol." },
+      { titulo: "Gringas y volcanes", desc: "Queso fundido al carbón en tortilla de harina o tostada." }
     ],
     cta: "Hacer pedido ahora"
   }
@@ -128,8 +137,11 @@ function inicializarDemoPlantillasHome() {
     if (elCta) elCta.textContent = info.cta;
     if (elSticker) elSticker.textContent = info.sticker;
     if (stickerWrap) {
-      stickerWrap.classList.remove("biz-sticker-cafeteria", "biz-sticker-ferreteria", "biz-sticker-taqueria");
-      stickerWrap.classList.add(`biz-sticker-${info.giro}`);
+      stickerWrap.className = `biz-sticker biz-sticker-${info.giro} sticker-diecut sticker-pos-${info.pos} sticker-var-${info.forma}`;
+      const cutout = stickerWrap.querySelector(".sticker-cutout");
+      if (cutout) {
+        cutout.className = `sticker-cutout sticker-shape-${info.forma} sticker-tone-${info.tono}`;
+      }
     }
 
     tabs.forEach((btn) => {

@@ -1835,69 +1835,69 @@ function describirProductoReal(titulo, temaEspecifico, giro, tono, tieneWa, indi
   const reglas = [
     {
       rx: /\b(pintur|esmalte|vinilic|barniz|sellador|impermeabiliz|brocha|rodillo)/,
-      texto: "Pintura vinílica, esmalte y selladores en varios tonos y presentaciones, por litro o cubeta."
+      texto: "Vinílica, esmalte y sellador. Tenemos litro, galón y cubeta."
     },
     {
       rx: /\b(taladr|rotomartill|esmeril|sierr|lijador|calador|atornillador|compresor)/,
-      texto: "Equipos para trabajos en casa y uso continuo, junto con brocas y accesorios compatibles."
+      texto: "Equipos para arreglos de casa o uso rudo, además de brocas y puntas de repuesto."
     },
     {
       rx: /\b(tornill|pija|clavo|taquet|tuerca|arandela|birlo|fijacion)/,
-      texto: "Medidas estándar y milimétricas, disponibles desde una pieza suelta hasta por caja."
+      texto: "Desde una pieza suelta hasta caja cerrada, en medida estándar o milimétrica."
     },
     {
       rx: /\b(plomer|tuberi|pvc|cobre|llave\s+de\s+paso|conexion|empaque|tinaco|valvula)/,
-      texto: "Conexiones, codos, empaques y selladores para fugas o instalaciones nuevas."
+      texto: "Codos, empaques, llaves de paso y sellador para sacar rápido cualquier fuga."
     },
     {
       rx: /\b(electric|cable|apagador|contacto|foco|pastilla|centro\s+de\s+carga|iluminacion)/,
-      texto: "Cableado, contactos, apagadores y accesorios para instalaciones residenciales o de obra."
+      texto: "Cable por metro, contactos, apagadores y pastillas."
     },
     {
       rx: /\b(herramient|llave|pinza|desarmador|martillo|dado|broca|flexometro|nivel)/,
-      texto: "Herramienta manual por pieza o en juego para reparaciones del hogar y trabajo diario."
+      texto: "Pinzas, llaves y desarmadores. Se venden sueltos o en estuche."
     },
     {
       rx: /\b(material|cemento|yeso|arena|grava|pegazulejo|mortero|construccion|obra)/,
-      texto: "Insumos básicos para resanes, acabados y listas de obra chica."
+      texto: "Cemento, yeso y pegazulejo para resanes o listas de obra chica."
     },
     {
       rx: /\b(concha)/,
-      texto: "De vainilla y chocolate con costra crujiente, salidas del horno temprano."
+      texto: "Vainilla y chocolate. Salen temprano."
     },
     {
       rx: /\b(pan\s+dulce|cuerno|oreja|mantecad|dona|rol|churro|empanad|polvoron|garibaldi|bisquet)/,
-      texto: "Piezas variadas de vitrina elaboradas cada jornada para acompañar el café."
+      texto: "Cuernitos, orejas y mantecadas en vitrina hasta que se acaban."
     },
     {
       rx: /\b(bolillo|telera|birote|baguette|pan\s+salado|hogaza|ciabatta)/,
-      texto: "Corteza dorada y miga suave para tortas o para llevar a la mesa."
+      texto: "Para tortas o para la comida; llévalo suelto o por bolsa."
     },
     {
       rx: /\b(pastel|tres\s+leches|reposteri|pay|tarta|galleta|rosca|gelatina)/,
-      texto: "Enteros o en rebanada, con opción de apartado anticipado para reuniones."
+      texto: "Entero o en rebanada. Si es para cumpleaños o reunión, apártalo un día antes."
     },
     {
       rx: /\b(taco|pastor|asada|suadero|birria|carnita|barbacoa|cabeza|tripa|chorizo|bistec)/,
-      texto: "Servidos en tortilla caliente con cebolla, cilantro y salsas preparadas el mismo día."
+      texto: "En tortilla caliente, con su cebolla, cilantro y salsa de la casa."
     },
     {
       rx: /\b(gringa|quesadilla|volcan|mulita|torta|alambre|burrito|huarache|sope)/,
-      texto: "Con queso fundido al comal y la carne de tu preferencia, para comer aquí o llevar."
+      texto: "Queso fundido al comal. Para comer aquí o bien empacado para llevar."
     },
     {
       rx: /\b(cafe|espresso|americano|capuchino|latte|filtrado|frappe|matcha|te\b|tisana)/,
-      texto: "Preparado al momento con grano recién molido, disponible caliente o frío."
+      texto: "Caliente o con hielo. Molido al momento."
     },
     {
       rx: /\b(panini|sandwich|chapata|mollete|desayuno|chilaquil|bagel|crepa|waffle)/,
-      texto: "Preparado al momento en plancha para comer en barra o pedir para llevar."
+      texto: "A la plancha, listo en pocos minutos si pasas con prisa."
     },
     {
       rx: /\b(asesori|mostrador|cotizacion)/,
       texto: tieneWa
-        ? "Trae tu muestra o manda foto por WhatsApp para ubicar lo que necesitas."
-        : "Trae tu muestra o lista al mostrador y revisamos opciones compatibles."
+        ? "¿No sabes la medida exacta? Manda foto por WhatsApp y te confirmamos si la tenemos."
+        : "¿No sabes la medida exacta? Trae la pieza vieja al mostrador y la buscamos juntos."
     }
   ];
 
@@ -1907,50 +1907,50 @@ function describirProductoReal(titulo, temaEspecifico, giro, tono, tieneWa, indi
     }
   }
 
-  // Respaldo sobrio que nunca pega el nombre del producto al final de una frase ajena
+  // Respaldos con ritmo y longitud variados (sin frases paralelas ni sustantivos pegados)
   const porGiro = {
     panaderia: [
-      "Elaborado con receta de casa y disponible en vitrina según existencia del día.",
-      "Puedes llevar por pieza suelta o apartar charola con anticipación en mostrador.",
-      "Horneado en tandas cortas durante la jornada."
+      "Sale en tandas cortas durante la mañana.",
+      "Receta de casa en vitrina. Si necesitas varias piezas para una reunión, apártalas con tiempo.",
+      "Por pieza suelta en mostrador."
     ],
     ferreteria: [
-      "Disponible en mostrador; pregunta por marcas, presentaciones y existencias.",
-      "Opciones para reparaciones domésticas y trabajo de uso rudo.",
-      "Si traes tu muestra, revisamos compatibilidad en el momento."
+      "Pregunta en mostrador por medidas y marcas disponibles.",
+      "Para arreglos en casa o trabajo diario. Si traes tu muestra, revisamos compatibilidad al momento.",
+      "Se vende suelto o por paquete."
     ],
     taqueria: [
-      "Preparado al momento con salsas y guarniciones frescas del día.",
-      "Disponible para comer en el local o empacado caliente para llevar."
+      "Sale caliente al momento.",
+      "Puedes pedirlo para comer en mesa o empacado con limones y salsas aparte."
     ],
     cafeteria: [
-      "Hecho al momento en barra para tomar aquí o pedir para llevar.",
-      "Opciones de tamaño y tipo de leche al gusto."
+      "Caliente o frío, al gusto.",
+      "Se prepara al momento en barra; pide la leche que prefieras."
     ],
     tienda: [
-      "Surtido actualizado directo en mostrador.",
-      "Distintas presentaciones disponibles según lo que busques."
+      "Existencia directa en mostrador.",
+      "Varias presentaciones según lo que vayas a ocupar."
     ],
     comida: [
-      "Preparado al día con ingredientes frescos, para comer aquí o llevar.",
-      "Porción individual o para compartir según tu pedido."
+      "Hecho al día. Para comer aquí o llevar.",
+      "Porción individual o charola para compartir."
     ],
     servicios: [
-      "Revisamos tu caso y definimos alcance y tiempos antes de iniciar.",
-      "Seguimiento puntual y presupuesto claro desde el primer contacto."
+      "Revisamos primero lo que necesitas y te damos presupuesto claro.",
+      "Seguimiento directo hasta cerrar el trabajo."
     ],
     "salud y belleza": [
-      "Atención dedicada y material higienizado en cada sesión.",
-      "Valoración breve al inicio para adaptar el servicio a tu gusto."
+      "Material higienizado y cita sin prisas.",
+      "Platicamos primero qué buscas para ajustar cada detalle."
     ],
     "taller u oficio": [
-      "Revisión directa antes de cotizar, con mano de obra cuidada y prueba final.",
-      "Explicamos tiempos de entrega y refacciones con claridad."
+      "Diagnóstico antes de empezar, sin cargos sorpresa.",
+      "Te decimos tiempos de entrega y refacciones con claridad."
     ]
   };
   const lista = porGiro[temaEspecifico] || porGiro[giro] || [
-    "Disponible con trato directo; pregunta por opciones y presentaciones.",
-    "Atención local con información clara desde el inicio."
+    "Trato directo en el local; pregunta por opciones disponibles.",
+    "Te damos información clara antes de decidir."
   ];
   return lista[indice % lista.length];
 }
@@ -1961,46 +1961,46 @@ const COPIA_ESPECIFICA_GIRO = {
     construirIntro: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
       const p1 = d.ubicacion
-        ? `En ${v.nombre} preparamos ${v.oferta}. Estamos en ${lugar}.`
-        : `En ${v.nombre} preparamos ${v.oferta} en ${v.ciudad}.`;
+        ? `En ${v.nombre} horneamos ${v.oferta}. Nos encuentras en ${lugar}.`
+        : `${v.nombre}: ${v.oferta} en ${v.ciudad}.`;
       const p2 = d.horario
-        ? `Abrimos ${d.horario} para compras en mostrador y encargos.`
+        ? `Abrimos ${d.horario}.`
         : tieneWa
-          ? "Venta en mostrador y apartado de charolas o pasteles por WhatsApp."
-          : "Venta directa en mostrador y encargos con anticipación en el local.";
+          ? "Pasa al mostrador o aparta tus charolas por WhatsApp."
+          : "Venta directa en mostrador; encargos con un día de aviso.";
       return `${p1} ${p2}`;
     },
     beneficios: (v, d, tieneWa) => [
-      `Horneado por jornada en ${v.ciudad}, sin piezas guardadas de días anteriores.`,
+      `Horneado por tandas en ${v.ciudad}, nada guardado de días atrás.`,
       tieneWa
-        ? "Charolas y pasteles sobre pedido confirmados directo por WhatsApp."
-        : "Encargos de charolas y pasteles tomados directamente en mostrador.",
-      "Venta desde una pieza suelta hasta pedidos para eventos."
+        ? "¿Necesitas una charola o pastel? Apártalo directo por WhatsApp."
+        : "Charolas y pasteles sobre pedido directo en mostrador.",
+      "Lleva desde una pieza suelta."
     ],
     faqs: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
       const lista = [
         {
-          q: "¿Con cuánta anticipación aparto un pedido grande o pastel?",
+          q: "¿Con cuánto tiempo aparto un pastel o charola?",
           a: tieneWa
-            ? "Para charolas o pasteles conviene escribirnos al menos 24 horas antes para tenerlos listos a tu hora."
-            : "Para charolas o pasteles conviene pasar al mostrador al menos 24 horas antes para agendar tu entrega."
+            ? "Con un día de aviso por WhatsApp queda agendado para la hora que pases."
+            : "Con un día de aviso en mostrador queda agendado para la hora que pases."
         }
       ];
       if (d.horario) {
         lista.push({
-          q: "¿Qué horario manejan?",
+          q: "¿A qué hora abren?",
           a: `Abrimos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
         });
       } else if (d.ubicacion) {
         lista.push({
-          q: `¿Dónde está ${v.nombre}?`,
+          q: `¿Dónde queda ${v.nombre}?`,
           a: `Estamos en ${lugar}.`
         });
       } else {
         lista.push({
-          q: "¿Venden por pieza suelta o solo por charola?",
-          a: "Puedes llevar desde una pieza suelta en mostrador hasta charolas completas sobre pedido."
+          q: "¿Venden por pieza suelta?",
+          a: "Sí, puedes llevar desde una pieza en mostrador hasta charolas completas."
         });
       }
       return lista;
@@ -2012,47 +2012,46 @@ const COPIA_ESPECIFICA_GIRO = {
     construirIntro: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
       const p1 = d.ubicacion
-        ? `${v.nombre} surte ${v.oferta} en ${lugar}.`
-        : `${v.nombre} tiene surtido de ${v.oferta} en ${v.ciudad}.`;
+        ? `${v.nombre} está en ${lugar} con surtido de ${v.oferta}.`
+        : `En ${v.nombre} (${v.ciudad}) encuentras ${v.oferta}.`;
       const p2 = d.horario
-        ? `Atendemos ${d.horario}, tanto reparaciones de casa como listas de obra.`
+        ? `Horario: ${d.horario}.`
         : tieneWa
-          ? "Atendemos reparaciones de casa y obra; puedes preguntar existencias por WhatsApp antes de venir."
-          : "Atendemos reparaciones de casa y obra directamente en mostrador.";
+          ? "¿Dudas si tenemos la pieza? Pregunta por WhatsApp antes de dar la vuelta."
+          : "Atendemos reparaciones de casa y listas de obra directo en mostrador.";
       return `${p1} ${p2}`;
     },
     beneficios: (v, d, tieneWa) => [
       tieneWa
-        ? "Confirmamos medida y existencia por WhatsApp antes de que vengas."
-        : "Revisamos medidas y piezas compatibles directamente en mostrador.",
-      "Venta desde un tornillo suelto hasta listas completas de material.",
-      "Si traes la pieza vieja, buscamos el reemplazo exacto en el momento.",
-      `Surtido local en ${v.ciudad} sin esperar envíos de varios días.`
+        ? "Confirmamos existencia y medida por WhatsApp antes de que vengas."
+        : "Trae la pieza vieja y buscamos el reemplazo exacto contigo.",
+      "Desde un tornillo suelto hasta listas completas de obra.",
+      `Surtido a la mano en ${v.ciudad}, sin esperar paquetería.`
     ],
     faqs: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
       const lista = [
         {
-          q: tieneWa ? "¿Puedo mandar mi lista de material o foto de la pieza?" : "¿Puedo llevar mi lista de material o la pieza de muestra?",
+          q: tieneWa ? "¿Puedo mandar foto de la pieza o mi lista?" : "¿Puedo llevar la pieza de muestra o mi lista?",
           a: tieneWa
-            ? `Sí. Manda la lista o una foto clara de lo que necesitas de ${v.oferta} y te confirmamos existencia${d.precios ? ` (manejamos opciones ${d.precios})` : ""}.`
-            : `Sí. Trae tu lista o la pieza de muestra al mostrador y revisamos juntos lo que necesitas de ${v.oferta}${d.precios ? ` (manejamos opciones ${d.precios})` : ""}.`
+            ? `Claro. Manda tu lista o foto de lo que buscas en ${v.oferta} y te avisamos si hay existencia${d.precios ? ` (opciones ${d.precios})` : ""}.`
+            : `Claro. Trae la muestra o tu lista de ${v.oferta} al mostrador y revisamos juntos${d.precios ? ` (opciones ${d.precios})` : ""}.`
         },
         {
-          q: "¿Venden por pieza suelta o solo por caja?",
-          a: "Vendemos desde una pieza suelta hasta paquetes completos, según lo que ocupe tu trabajo."
+          q: "¿Venden piezas sueltas o solo por caja?",
+          a: "Lo que ocupes: desde una pieza suelta hasta caja cerrada."
         }
       ];
       if (d.horario) {
         lista.push({
-          q: "¿Cuál es su horario de atención?",
-          a: `Abrimos ${d.horario}.`
+          q: "¿Cuál es el horario?",
+          a: `Atendemos ${d.horario}.`
         });
       }
       if (d.ubicacion) {
         lista.push({
           q: `¿Dónde está ${v.nombre}?`,
-          a: `Estamos en ${lugar}.`
+          a: `En ${lugar}.`
         });
       }
       return lista;
@@ -2060,17 +2059,17 @@ const COPIA_ESPECIFICA_GIRO = {
     complementos: (tieneWa) => [
       {
         titulo: "Tornillería y fijación",
-        descripcion: "Tornillos, pijas, taquetes y clavos vendidos por pieza suelta o por caja."
+        descripcion: "Pijas, taquetes y clavos. Desde una pieza suelta hasta por caja."
       },
       {
-        titulo: "Plomería y material eléctrico",
-        descripcion: "Conexiones, empaques, cableado y apagadores para reparaciones del día a día."
+        titulo: "Plomería y eléctrico",
+        descripcion: "Empaques, conexiones, cable por metro y apagadores para resolver rápido."
       },
       {
         titulo: "Asesoría en mostrador",
         descripcion: tieneWa
-          ? "Trae la pieza de muestra o mándanos foto por WhatsApp para ubicar el repuesto exacto."
-          : "Trae la pieza de muestra o tu lista de obra y revisamos medidas directo en mostrador."
+          ? "¿No sabes la medida exacta? Manda foto por WhatsApp y te ayudamos a ubicar el repuesto."
+          : "¿No sabes la medida exacta? Trae la pieza vieja y la buscamos juntos en mostrador."
       }
     ]
   },
@@ -2079,41 +2078,41 @@ const COPIA_ESPECIFICA_GIRO = {
     minTarjetas: 3,
     construirIntro: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
-      const p1 = `En ${v.nombre} salen ${v.oferta} al momento en ${lugar}.`;
+      const p1 = `${v.nombre} en ${lugar}: ${v.oferta} recién salidos.`;
       const p2 = d.horario
-        ? `Abrimos ${d.horario} para comer aquí o llevar.`
+        ? `Abrimos ${d.horario}.`
         : tieneWa
-          ? "Puedes comer en el local o apartar tu orden por WhatsApp para pasar solo a recoger."
-          : "Servicio en comedor y órdenes para llevar preparadas al momento.";
+          ? "Come aquí o aparta tu orden por WhatsApp para no hacer fila."
+          : "Comedor abierto y órdenes calientes para llevar.";
       return `${p1} ${p2}`;
     },
     beneficios: (v) => [
-      "Todo sale caliente de la plancha o al carbón en el momento.",
-      "Salsas del día y verdura fresca en cada orden.",
-      `Comedor y pedidos para llevar en ${v.ciudad}.`
+      "Todo sale al momento, directo de la plancha o al carbón.",
+      "Salsas hechas ese mismo día.",
+      `Comedor y para llevar en ${v.ciudad}.`
     ],
     faqs: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
       const lista = [
         {
-          q: "¿Tienen servicio para llevar?",
+          q: "¿Preparan para llevar?",
           a: tieneWa
-            ? `Sí, puedes pedir tu orden de ${v.oferta} por WhatsApp y pasar solo a recogerla.`
-            : `Sí, empacamos tu orden de ${v.oferta} bien caliente para llevar con salsas y limones aparte.`
+            ? `Sí. Pide tu orden de ${v.oferta} por WhatsApp y pasa directo a recoger.`
+            : `Sí, empacamos tu orden de ${v.oferta} bien caliente con salsas y limones aparte.`
         },
         {
-          q: d.precios ? "¿Qué precios manejan?" : "¿Arman charolas para reuniones?",
+          q: d.precios ? "¿Qué precios manejan?" : "¿Arman charolas para eventos?",
           a: d.precios
-            ? `Manejamos opciones ${d.precios}. Pregunta por paquetes para compartir.`
+            ? `Tenemos opciones ${d.precios}. Pregunta por paquetes para compartir.`
             : tieneWa
-              ? `Sí, preparamos charolas de ${v.oferta} avisándonos por WhatsApp con anticipación.`
-              : `Sí, preparamos charolas de ${v.oferta} si las apartas en el local con un día de anticipación.`
+              ? `Sí, apartando con un día de aviso por WhatsApp.`
+              : `Sí, apartando en el local con un día de anticipación.`
         }
       ];
       if (d.horario) {
         lista.push({
-          q: "¿Qué días y horarios abren?",
-          a: `Atendemos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+          q: "¿Qué horario tienen?",
+          a: `Abrimos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
         });
       } else if (d.ubicacion) {
         lista.push({
@@ -2129,36 +2128,36 @@ const COPIA_ESPECIFICA_GIRO = {
     minTarjetas: 2,
     construirIntro: (v, d, tieneWa) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
-      const p1 = `En ${v.nombre} molemos el grano al momento en ${lugar} para preparar ${v.oferta}.`;
+      const p1 = `${v.nombre} en ${lugar}. Grano molido al momento para ${v.oferta}.`;
       const p2 = d.horario
-        ? `La barra abre ${d.horario}.`
+        ? `Barra abierta ${d.horario}.`
         : tieneWa
-          ? "Si vas con prisa, puedes pedir tu vaso por WhatsApp antes de pasar."
-          : "Bebidas calientes y frías para consumir en barra o llevar.";
+          ? "¿Vas con prisa? Pide tu vaso por WhatsApp y pásalo a recoger."
+          : "Para tomar en barra o llevar.";
       return `${p1} ${p2}`;
     },
     beneficios: (v) => [
-      "Grano molido al momento para cada taza.",
-      "Opciones calientes y frías en barra.",
-      `Barra local en ${v.ciudad} para trabajar o pasar por tu vaso.`
+      "Grano molido justo antes de preparar tu taza.",
+      "Opciones calientes y frías.",
+      `Barra local en ${v.ciudad}.`
     ],
     faqs: (v, d) => {
       const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
       const lista = [
         {
-          q: "¿Tienen opciones frías y leches vegetales?",
-          a: "Sí, la mayoría de las bebidas se preparan calientes o frías y con leche de tu preferencia."
+          q: "¿Manejan bebidas frías y otras leches?",
+          a: "Sí, casi toda la barra sale caliente o con hielo y con la leche que prefieras."
         }
       ];
       if (d.horario) {
         lista.push({
-          q: "¿En qué horario abren?",
-          a: `La barra abre ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+          q: "¿Cuál es su horario?",
+          a: `Abrimos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
         });
       } else if (d.ubicacion) {
         lista.push({
-          q: `¿Dónde está ${v.nombre}?`,
-          a: `Estamos en ${lugar}.`
+          q: `¿Dónde están?`,
+          a: `En ${lugar}.`
         });
       }
       return lista;
@@ -2541,16 +2540,86 @@ function limpiarMencionesWhatsappSiVacio(texto, tieneWhatsapp) {
 }
 
 const STICKERS_POR_GIRO = {
-  panaderia: { texto: "Recién horneado", icono: "horno", clase: "panaderia" },
-  ferreteria: { texto: "Pieza y mayoreo", icono: "llave", clase: "ferreteria" },
-  taqueria: { texto: "Al momento", icono: "flama", clase: "taqueria" },
-  cafeteria: { texto: "Grano al día", icono: "taza", clase: "cafeteria" },
-  comida: { texto: "Sazón del día", icono: "flama", clase: "comida" },
-  tienda: { texto: "En mostrador", icono: "etiqueta", clase: "tienda" },
-  "taller u oficio": { texto: "Trabajo directo", icono: "llave", clase: "taller" },
-  "salud y belleza": { texto: "Atención dedicada", icono: "chispa", clase: "salud" },
-  servicios: { texto: "Trato directo", icono: "pin", clase: "servicios" },
-  otro: { texto: "Atención local", icono: "pin", clase: "otro" }
+  panaderia: {
+    texto: "Recién horneado",
+    icono: "horno",
+    clase: "panaderia",
+    forma: "seal",
+    pos: "tr",
+    tono: "claro"
+  },
+  ferreteria: {
+    texto: "Pieza y mayoreo",
+    icono: "llave",
+    clase: "ferreteria",
+    forma: "tag",
+    pos: "bl",
+    tono: "verde"
+  },
+  taqueria: {
+    texto: "Al carbón",
+    icono: "flama",
+    clase: "taqueria",
+    forma: "ribbon",
+    pos: "br",
+    tono: "verde"
+  },
+  cafeteria: {
+    texto: "Grano al día",
+    icono: "taza",
+    clase: "cafeteria",
+    forma: "ticket",
+    pos: "tr",
+    tono: "claro"
+  },
+  comida: {
+    texto: "Sazón del día",
+    icono: "flama",
+    clase: "comida",
+    forma: "ribbon",
+    pos: "bl",
+    tono: "verde"
+  },
+  tienda: {
+    texto: "En mostrador",
+    icono: "etiqueta",
+    clase: "tienda",
+    forma: "tag",
+    pos: "br",
+    tono: "verde"
+  },
+  "taller u oficio": {
+    texto: "Trabajo directo",
+    icono: "llave",
+    clase: "taller",
+    forma: "shield",
+    pos: "tl",
+    tono: "verde"
+  },
+  "salud y belleza": {
+    texto: "Con cita previa",
+    icono: "chispa",
+    clase: "salud",
+    forma: "burst",
+    pos: "tr",
+    tono: "claro"
+  },
+  servicios: {
+    texto: "Trato directo",
+    icono: "pin",
+    clase: "servicios",
+    forma: "ticket",
+    pos: "br",
+    tono: "claro"
+  },
+  otro: {
+    texto: "Atención local",
+    icono: "pin",
+    clase: "otro",
+    forma: "shield",
+    pos: "bl",
+    tono: "claro"
+  }
 };
 
 function crearStickerElemento(stickerInfo) {
@@ -2558,14 +2627,21 @@ function crearStickerElemento(stickerInfo) {
     return null;
   }
   const ns = "http://www.w3.org/2000/svg";
-  const badge = document.createElement("span");
-  badge.className = `biz-sticker biz-sticker-${stickerInfo.clase || "otro"}`;
-  badge.setAttribute("aria-hidden", "true");
+  const forma = stickerInfo.forma || "tag";
+  const pos = stickerInfo.pos || "br";
+  const tono = stickerInfo.tono === "verde" ? "verde" : "claro";
+
+  const wrap = document.createElement("span");
+  wrap.className = `biz-sticker biz-sticker-${stickerInfo.clase || "otro"} sticker-diecut sticker-pos-${pos} sticker-var-${forma}`;
+  wrap.setAttribute("aria-hidden", "true");
+
+  const cuerpo = document.createElement("span");
+  cuerpo.className = `sticker-cutout sticker-shape-${forma} sticker-tone-${tono}`;
 
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("width", "14");
-  svg.setAttribute("height", "14");
+  svg.setAttribute("width", "15");
+  svg.setAttribute("height", "15");
   svg.setAttribute("fill", "none");
   svg.setAttribute("stroke", "currentColor");
   svg.setAttribute("stroke-width", "2.1");
@@ -2589,10 +2665,12 @@ function crearStickerElemento(stickerInfo) {
   });
 
   const label = document.createElement("span");
+  label.className = "sticker-label";
   label.textContent = stickerInfo.texto;
-  badge.appendChild(svg);
-  badge.appendChild(label);
-  return badge;
+  cuerpo.appendChild(svg);
+  cuerpo.appendChild(label);
+  wrap.appendChild(cuerpo);
+  return wrap;
 }
 
 function obtenerEstructuraNegocio(datos, detallesOpt) {
@@ -3046,7 +3124,10 @@ function contienePlantillaLegadaBorrador(registro) {
     /venta por pieza suelta, juego completo o lista de material en\s+(?!tornill|clavo|pija|taquet)/i,
     /horneamos\b.*\btodos los d[ií]as/i,
     /pregunta en mostrador por d[ií]as festivos/i,
-    /atendemos de manera local en/i
+    /atendemos de manera local en/i,
+    /piezas variadas de vitrina elaboradas cada jornada para acompa[ñn]ar el caf[eé]/i,
+    /de vainilla y chocolate con costra crujiente,\s*salidas del horno temprano/i,
+    /corteza dorada y miga suave para tortas o para llevar a la mesa/i
   ];
   if (patronesLegados.some((rx) => rx.test(textoPlan))) {
     return true;
