@@ -396,7 +396,7 @@
       generandoAhora = Boolean(activo);
       if (btnEnviar) {
         btnEnviar.disabled = generandoAhora;
-        btnEnviar.textContent = generandoAhora ? "Generando..." : "Enviar";
+        btnEnviar.textContent = "Enviar";
       }
       if (entradaChat) {
         entradaChat.disabled = generandoAhora;

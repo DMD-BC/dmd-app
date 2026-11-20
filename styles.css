@@ -5816,7 +5816,7 @@ p {
    ========================================================================== */
 
 .app-body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .app-shell {
@@ -5825,7 +5825,7 @@ p {
 
 .app-main {
   min-width: 0;
-  padding-bottom: 66px;
+  padding-bottom: 68px;
 }
 
 .app-topbar {
@@ -5834,24 +5834,39 @@ p {
   z-index: 40;
   flex-wrap: nowrap;
   min-height: 58px;
-  padding: 6px 10px;
-  gap: 8px;
+  padding: 6px 8px;
+  gap: 6px;
   background-color: var(--surface);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 0 rgba(15, 28, 24, 0.04);
 }
 
+.app-topbar-brand {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .brand-topbar-always {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 2px 4px;
-  font-size: 1rem;
+  gap: 6px;
+  padding: 2px 2px;
+  font-size: 0.94rem;
   font-weight: 800;
   letter-spacing: 0.02em;
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
+}
+
+.brand-squares-sm {
+  gap: 2px;
+}
+
+.brand-squares-sm .brand-sq {
+  width: 6px;
+  height: 6px;
 }
 
 .brand-word-dmd {
@@ -5860,19 +5875,33 @@ p {
 }
 
 .app-topbar .app-mode-bar {
+  display: inline-flex;
+  align-items: center;
   width: auto;
   flex-shrink: 0;
-  min-width: 176px;
+  min-width: 0;
   padding: 3px;
-  gap: 4px;
+  gap: 3px;
   border-bottom: 1px solid var(--border);
 }
 
 .app-topbar .mode-tab {
   min-height: 44px;
   padding: 6px 10px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   white-space: nowrap;
+}
+
+@media (min-width: 480px) {
+  .app-topbar {
+    padding: 6px 12px;
+    gap: 10px;
+  }
+
+  .app-topbar .mode-tab {
+    padding: 6px 14px;
+    font-size: 0.84rem;
+  }
 }
 
 .sidebar-search-wrap {
@@ -5950,6 +5979,8 @@ p {
   }
 
   .app-topbar .app-mode-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 240px;
   }
 }
@@ -6030,6 +6061,11 @@ p {
   border-top: 1px solid var(--border);
 }
 
+.chat-send-btn {
+  flex-shrink: 0;
+  min-width: 78px;
+}
+
 /* Barra inferior fija de 5 iconos */
 .app-bottom-nav {
   position: fixed;
@@ -6039,8 +6075,9 @@ p {
   z-index: 35;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
   height: 62px;
-  padding: 2px 4px;
+  padding: 4px 4px;
   background-color: var(--surface);
   border-top: 1px solid var(--border);
   box-shadow: 0 -2px 12px rgba(15, 28, 24, 0.06);
@@ -6061,18 +6098,25 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   min-height: 48px;
+  height: 54px;
   min-width: 0;
-  padding: 4px 2px;
+  padding: 2px;
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-muted);
-  font-size: 0.67rem;
+  font-size: 0.65rem;
   font-weight: 600;
   line-height: 1.1;
   cursor: pointer;
+}
+
+.bottom-nav-btn svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
 }
 
 .bottom-nav-btn span {
