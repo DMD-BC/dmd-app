@@ -1663,18 +1663,41 @@ function extraerDetallesRealesUsuario(datos) {
     return detalles;
   }
 
-  const mHorario = fuente.match(
-    /\b((?:de\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\s+a\s+(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)(?:\s+de\s+\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?|am|pm|hrs?)?\s*(?:a|-)\s*\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?|am|pm|hrs?|de\s+la\s+(?:ma[ñn]ana|tarde|noche))?)?|(?:todos\s+los\s+d[ií]as\s+)?de\s+\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?|am|pm|hrs?)?\s*a\s*\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?|am|pm|hrs?|de\s+la\s+(?:ma[ñn]ana|tarde|noche))?|24\s*horas)\b/i
+  // Capturar horarios compuestos completos, ej. "lunes a viernes de 9 a 6 y sábado de 9 a 2"
+  const dia = "(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)";
+  const hora = "\\d{1,2}(?::\\d{2})?(?:\\s*(?:a\\.?\\s*m\\.?|p\\.?\\s*m\\.?|am|pm|hrs?))?";
+  const rangoHora = `${hora}\\s*(?:a|-)\\s*${hora}(?:\\s*de\\s+la\\s+(?:ma[ñn]ana|tarde|noche))?`;
+  const tramoDia = `(?:de\\s+)?${dia}(?:\\s*(?:a|y|,)\\s*${dia})*(?:\\s+de\\s+${rangoHora})?`;
+  const regexHorario = new RegExp(
+    `\\b(${tramoDia}(?:(?:\\s*,\\s*|\\s+y\\s+)${tramoDia})+|${tramoDia}|(?:todos\\s+los\\s+d[ií]as\\s+)?de\\s+${rangoHora}|24\\s*horas)\\b`,
+    "i"
   );
+  const mHorario = fuente.match(regexHorario);
   if (mHorario) {
     detalles.horario = limpiarTextoGen(mHorario[0]).replace(/[,;.\s]+$/, "");
   }
 
-  const mUbic = fuente.match(
-    /\b((?:col\.|colonia|av\.|avenida|calle|blvd\.|boulevard|plaza|mercado|zona|frente\s+a|cerca\s+de)\s+[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+){0,4})/i
+  // Capturar dirección completa incluyendo calle + número + colonia (sin cortar en la primera coma)
+  const prefUbic = "(?:av\\.|avenida|calle|blvd\\.|boulevard|calz\\.|calzada|col\\.|colonia|plaza|mercado|zona|frente\\s+a|cerca\\s+de)";
+  const segUbic = "[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+(?:\\s+[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#]+){0,4}";
+  const regexUbic = new RegExp(
+    `\\b(${prefUbic}\\s+${segUbic}(?:\\s*,\\s*(?:col\\.|colonia|fracc\\.|fraccionamiento|esq\\.|esquina|centro|zona|no\\.|n[uú]m\\.|#)?\\s*${segUbic})*)`,
+    "i"
   );
+  const mUbic = fuente.match(regexUbic);
   if (mUbic) {
-    detalles.ubicacion = limpiarTextoGen(mUbic[0]).replace(/[,;.\s]+$/, "");
+    let ub = limpiarTextoGen(mUbic[0]);
+    if (detalles.horario) {
+      const idxH = ub.toLowerCase().indexOf(detalles.horario.toLowerCase());
+      if (idxH > 0) {
+        ub = ub.slice(0, idxH);
+      }
+    }
+    ub = ub
+      .replace(/,?\s*(?:abrimos|atendemos|horario|de\s+\d|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b[\s\S]*$/i, "")
+      .replace(/[,;.\s]+$/, "")
+      .trim();
+    detalles.ubicacion = ub;
   }
 
   const mPrecio = fuente.match(
@@ -1691,272 +1714,417 @@ function limpiarOfertaSoloProductos(ofertaLimpia, detalles) {
   let texto = String(ofertaLimpia || "");
   if (detalles && detalles.horario) {
     const escH = detalles.horario.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    texto = texto.replace(new RegExp(`(?:,?\\s*(?:abrimos|atendemos|horario:?)\\s*)?${escH}`, "gi"), "");
+    texto = texto.replace(
+      new RegExp(`(?:[.;,]?\\s*(?:abrimos|atendemos|nuestro\\s+horario(?:\\s+es)?|horario:?)\\s*)?${escH}`, "gi"),
+      ""
+    );
   }
   if (detalles && detalles.ubicacion) {
     const escU = detalles.ubicacion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    texto = texto.replace(new RegExp(`(?:,?\\s*(?:ubicados?\\s+)?en\\s+)?${escU}`, "gi"), "");
+    texto = texto.replace(
+      new RegExp(`(?:[.;,]?\\s*(?:estamos|nos\\s+ubicamos|nos\\s+encontramos|ubicados?)\\s*(?:en\\s+)?)?${escU}`, "gi"),
+      ""
+    );
   }
+  // Quitar restos de frases de ubicación/horario que hayan quedado sueltos (ej. ". Estamos", ", y sábado...")
   texto = texto
-    .replace(/\b(?:abrimos|atendemos|ubicados?)\s*(?:en)?\s*$/i, "")
-    .replace(/[,;\s]+$/g, "")
+    .replace(/[.;,]?\s*\b(?:estamos|nos\s+ubicamos|nos\s+encontramos|ubicados?|abrimos|atendemos|horario)\b(?:\s+en)?\s*(?=[.,;]|$)/gi, "")
+    .replace(/(?:^|[.;,]\s*)(?:estamos|ubicados?|abrimos|atendemos)\s*(?:en)?\s*(?:[.,;]|$)/gi, " ")
+    .replace(/\s*,\s*y\s*$/i, "")
+    .replace(/[,;.\s]+$/g, "")
+    .replace(/^[,;.\s]+/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
   return texto || ofertaLimpia;
 }
 
+function fraseUbicacionCompleta(ubicacion, ciudad) {
+  if (!ubicacion) {
+    return ciudad;
+  }
+  const uNorm = ubicacion.toLowerCase();
+  const cNorm = String(ciudad || "").toLowerCase();
+  if (cNorm && uNorm.includes(cNorm)) {
+    return ubicacion;
+  }
+  return `${ubicacion}, ${ciudad}`;
+}
+
+const ESTRUCTURAS_ESPECIFICAS_GIRO = {
+  panaderia: {
+    ordenSecciones: ["presentacion", "servicios", "contacto", "preguntas"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Lo que horneamos",
+      beneficios: "Por qué nos eligen",
+      preguntas: "Dudas sobre pedidos y horarios",
+      contacto: "Encargos y mostrador"
+    },
+    ctaWhatsapp: "Apartar pan en {nombre}",
+    notaSinWhatsapp: "Mostrador en {ubicacion}."
+  },
+  ferreteria: {
+    ordenSecciones: ["presentacion", "servicios", "beneficios", "preguntas", "contacto"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "Departamentos y surtido",
+      beneficios: "Ventajas en mostrador",
+      preguntas: "Antes de venir",
+      contacto: "Ubicación y mostrador"
+    },
+    ctaWhatsapp: "Consultar existencia en {nombre}",
+    notaSinWhatsapp: "Venta en mostrador · {ubicacion}."
+  },
+  taqueria: {
+    ordenSecciones: ["presentacion", "servicios", "contacto", "preguntas"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "De la parrilla",
+      beneficios: "Por qué nos eligen",
+      preguntas: "Preguntas rápidas",
+      contacto: "Pedidos y local"
+    },
+    ctaWhatsapp: "Hacer pedido a {nombre}",
+    notaSinWhatsapp: "Comedor y para llevar en {ubicacion}."
+  },
+  cafeteria: {
+    ordenSecciones: ["presentacion", "servicios", "beneficios", "contacto", "preguntas"],
+    titulos: {
+      presentacion: "Presentación",
+      servicios: "En barra",
+      beneficios: "Lo que cuidamos",
+      preguntas: "Preguntas frecuentes",
+      contacto: "Dónde estamos"
+    },
+    ctaWhatsapp: "Pedir para recoger en {nombre}",
+    notaSinWhatsapp: "Barra abierta en {ubicacion}."
+  }
+};
+
 const COPIA_ESPECIFICA_GIRO = {
   panaderia: {
-    intro: {
-      cercano: [
-        "En {nombre} sacamos {oferta} directo del horno en {ciudad}. Si vas a pasar por una charola o necesitas un pastel en fecha especial, avísanos antes.",
-        "Horneamos {oferta} en {ciudad}. Pasa temprano por el pan caliente o apártalo con tiempo para que no te quedes sin tus favoritos."
-      ],
-      profesional: [
-        "{nombre} elabora {oferta} todos los días en {ciudad}, con pedidos programados para reuniones o consumo diario.",
-        "Panadería en {ciudad} dedicada a {oferta}, con horneado fresco y entrega puntual sobre pedido."
-      ],
-      formal: [
-        "En {nombre} preparamos {oferta} en {ciudad}. Atendemos compras de mostrador y pedidos especiales con anticipación.",
-        "{nombre} ofrece {oferta} en {ciudad}, elaborados diariamente con ingredientes seleccionados."
-      ]
+    minTarjetas: 2,
+    construirIntro: (v, d, tieneWa) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      const yaTieneHorno = /hornead|cada\s+ma[ñn]ana|reci[eé]n\s+salid/i.test(v.oferta);
+      const p1 = d.ubicacion
+        ? yaTieneHorno
+          ? `En ${v.nombre} preparamos ${v.oferta}. Estamos en ${lugar}.`
+          : `Horneamos ${v.oferta} cada mañana. Estamos en ${lugar}.`
+        : yaTieneHorno
+          ? `En ${v.nombre} preparamos ${v.oferta} en ${v.ciudad}.`
+          : `En ${v.nombre} horneamos ${v.oferta} todos los días en ${v.ciudad}.`;
+      const p2 = d.horario
+        ? `Abrimos ${d.horario} para compras de mostrador y encargos.`
+        : tieneWa
+          ? "Puedes pasar directo al local o apartar charolas por WhatsApp."
+          : "Puedes pasar directo al mostrador o apartar charolas con anticipación en el local.";
+      return `${p1} ${p2}`;
     },
-    descServicios: [
-      (t) => `Horneado en tandas frescas; pregunta qué acaba de salir de ${t}.`,
-      (t) => `Para llevar por pieza o por charola. Apartamos ${t} si avisas con tiempo.`,
-      (t) => `Receta de casa en ${t}, ideal para el desayuno o la merienda.`,
-      (t) => `Pedidos chicos o para reunión en ${t} con fecha acordada.`
+    descServicios: (tieneWa) => [
+      (t) => `Horneado en tandas frescas para llevar por pieza o por charola en ${t}.`,
+      (t) =>
+        tieneWa
+          ? `Apartamos ${t} por WhatsApp si nos escribes un día antes.`
+          : `Puedes apartar ${t} directamente en mostrador con un día de anticipación.`,
+      (t) => `Receta de casa en ${t}, pensada para desayuno o reunión familiar.`,
+      (t) => `Surtido del día en ${t} hasta agotar existencias.`
     ],
-    beneficios: [
-      "Pan recién salido del horno en {ciudad}, no guardado de días anteriores.",
-      "Puedes apartar charolas o pasteles con un día de anticipación.",
-      "Venta por pieza en mostrador o por pedido para reuniones."
+    beneficios: (v, d, tieneWa) => [
+      `Pan del día horneado en ${v.ciudad}, nunca guardado de jornadas anteriores.`,
+      tieneWa
+        ? "Charolas y pasteles sobre pedido confirmados directo por WhatsApp."
+        : "Encargos de charolas y pasteles tomados directamente en mostrador.",
+      "Venta desde una pieza suelta hasta pedidos para eventos."
     ],
-    faqs: (v, d) => [
-      {
-        q: "¿Con cuánta anticipación aparto un pedido grande o pastel?",
-        a: "Para charolas o pasteles conviene avisar al menos 24 horas antes para tenerlos listos a la hora que pases."
-      },
-      {
-        q: d.horario ? "¿En qué horario abren?" : "¿A qué hora sale el pan caliente?",
-        a: d.horario
-          ? `Atendemos ${d.horario}. Te recomendamos pasar temprano para encontrar todo el surtido de ${v.oferta}.`
-          : `Horneamos ${v.oferta} desde temprano en ${v.ciudad}; por mensaje te confirmamos a qué hora sale la siguiente tanda.`
-      },
-      {
-        q: d.ubicacion ? `¿Dónde está ${v.nombre}?` : `¿En qué parte de ${v.ciudad} están?`,
-        a: d.ubicacion
-          ? `Nos encuentras en ${d.ubicacion}, ${v.ciudad}.`
-          : `Atendemos en ${v.ciudad}. Si necesitas referencias para llegar rápido, escríbenos.`
-      }
-    ]
+    faqs: (v, d, tieneWa) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      return [
+        {
+          q: "¿Con cuánta anticipación aparto un pedido grande o pastel?",
+          a: tieneWa
+            ? "Para charolas o pasteles conviene escribirnos al menos 24 horas antes para tenerlos listos a tu hora."
+            : "Para charolas o pasteles conviene pasar al mostrador al menos 24 horas antes para agendar tu entrega."
+        },
+        {
+          q: d.horario ? "¿Qué horario manejan?" : `¿Dónde está ${v.nombre}?`,
+          a: d.horario
+            ? `Abrimos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+            : d.ubicacion
+              ? `Estamos en ${lugar}.`
+              : `Atendemos en ${v.ciudad}. Pasa por el mostrador para ver el pan recién salido.`
+        }
+      ];
+    }
   },
 
   ferreteria: {
-    intro: {
-      cercano: [
-        "{nombre} tiene {oferta} en {ciudad}. Antes de echarte la vuelta, pregunta por la medida o refacción que buscas y te confirmamos si está en mostrador.",
-        "Surtido de {oferta} en {ciudad}. Atendemos reparaciones de casa, plomeros, electricistas y obra chica sin complicarte."
-      ],
-      profesional: [
-        "{nombre} suministra {oferta} en {ciudad}. Confirmamos existencias, medidas y cotizaciones por lista de material.",
-        "Ferretería en {ciudad} especializada en {oferta}, con atención directa en mostrador y venta por pieza o volumen."
-      ],
-      formal: [
-        "{nombre} pone a su disposición {oferta} en {ciudad}. Atendemos requerimientos domésticos y de obra con surtido constante.",
-        "En {nombre} encontrará {oferta} en {ciudad}, con asesoría técnica en mostrador para elegir el material adecuado."
-      ]
+    minTarjetas: 4,
+    construirIntro: (v, d, tieneWa) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      const p1 = d.ubicacion
+        ? `${v.nombre} surte ${v.oferta} en ${lugar}.`
+        : `${v.nombre} tiene surtido de ${v.oferta} en ${v.ciudad}.`;
+      const p2 = d.horario
+        ? `Atendemos ${d.horario}, tanto reparaciones de casa como listas de obra.`
+        : tieneWa
+          ? "Atendemos reparaciones de casa y obra; puedes preguntar existencias por WhatsApp antes de venir."
+          : "Atendemos reparaciones de casa y obra directamente en mostrador.";
+      return `${p1} ${p2}`;
     },
-    descServicios: [
-      (t) => `Venta por pieza, juego o lista de material en ${t}.`,
-      (t) => `Distintas medidas y calibres en ${t}; te ayudamos a ubicar el repuesto exacto.`,
-      (t) => `Existencia en mostrador para ${t} y cotización rápida por lista.`,
-      (t) => `Material resistente de uso doméstico y rudo en ${t}.`
+    descServicios: (tieneWa) => [
+      (t) => `Venta por pieza suelta, juego completo o lista de material en ${t}.`,
+      (t) => `Distintas medidas y calibres en ${t} para reparaciones de casa y obra.`,
+      (t) =>
+        tieneWa
+          ? `Confirmamos existencias de ${t} por WhatsApp o en mostrador.`
+          : `Existencia en mostrador para ${t}; te ayudamos a ubicar el repuesto exacto.`,
+      (t) => `Opciones económicas y de uso rudo en ${t}.`
     ],
-    beneficios: [
-      "Confirmamos medida y existencia en mostrador antes de que vengas.",
-      "Venta desde un tornillo suelto hasta listas completas de obra.",
-      "Asesoría práctica si traes la pieza vieja o una foto para compararla.",
-      "Surtido local en {ciudad} sin esperar envíos de varios días."
+    beneficios: (v, d, tieneWa) => [
+      tieneWa
+        ? "Confirmamos medida y existencia por WhatsApp antes de que vengas."
+        : "Revisamos medidas y piezas compatibles directamente en mostrador.",
+      "Venta desde un tornillo suelto hasta listas completas de material.",
+      "Si traes la pieza vieja, buscamos el reemplazo exacto en el momento.",
+      `Surtido local en ${v.ciudad} sin esperar envíos de varios días.`
     ],
-    faqs: (v, d) => [
+    faqs: (v, d, tieneWa) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      const lista = [
+        {
+          q: tieneWa ? "¿Puedo mandar mi lista de material o foto de la pieza?" : "¿Puedo llevar mi lista de material o la pieza de muestra?",
+          a: tieneWa
+            ? `Sí. Manda la lista o una foto clara de lo que necesitas de ${v.oferta} y te confirmamos existencia${d.precios ? ` (manejamos opciones ${d.precios})` : ""}.`
+            : `Sí. Trae tu lista o la pieza de muestra al mostrador y revisamos juntos lo que necesitas de ${v.oferta}${d.precios ? ` (manejamos opciones ${d.precios})` : ""}.`
+        },
+        {
+          q: "¿Venden por pieza suelta o solo por caja?",
+          a: "Vendemos desde una pieza suelta hasta paquetes completos, según lo que ocupe tu trabajo."
+        },
+        {
+          q: "¿Cuál es su horario de atención?",
+          a: d.horario
+            ? `Abrimos ${d.horario}.`
+            : `Atendemos de manera local en ${v.ciudad}; pregunta en mostrador por días festivos.`
+        },
+        {
+          q: `¿Dónde está ${v.nombre}?`,
+          a: d.ubicacion
+            ? `Estamos en ${lugar}.`
+            : `Atendemos en ${v.ciudad}.`
+        }
+      ];
+      return lista;
+    },
+    complementos: (tieneWa) => [
       {
-        q: "¿Puedo mandar mi lista de material o foto de la pieza?",
-        a: `Sí. Manda la lista o una foto clara de lo que necesitas de ${v.oferta} y te decimos qué hay en existencia${d.precios ? ` (manejamos opciones ${d.precios})` : ""}.`
+        titulo: "Tornillería y fijación",
+        descripcion: "Tornillos, pijas, taquetes y clavos vendidos por pieza suelta o por caja."
       },
       {
-        q: "¿Venden por pieza suelta o solo por caja?",
-        a: "Vendemos desde una pieza suelta hasta paquetes completos, según lo que ocupe tu reparación."
+        titulo: "Plomería y material eléctrico",
+        descripcion: "Conexiones, empaques, cableado y apagadores para reparaciones del día a día."
       },
       {
-        q: d.horario ? "¿Cuál es su horario de atención?" : `¿Dónde se ubican en ${v.ciudad}?`,
-        a: d.horario
-          ? `Abrimos ${d.horario}${d.ubicacion ? ` en ${d.ubicacion}, ${v.ciudad}` : ` en ${v.ciudad}`}.`
-          : d.ubicacion
-            ? `Estamos en ${d.ubicacion}, ${v.ciudad}.`
-            : `Estamos en ${v.ciudad}. Pregunta por tu pieza y te compartimos ubicación exacta.`
+        titulo: "Asesoría en mostrador",
+        descripcion: tieneWa
+          ? "Trae la pieza de muestra o mándanos foto por WhatsApp para ubicar el repuesto exacto."
+          : "Trae la pieza de muestra o tu lista de obra y revisamos medidas directo en mostrador."
       }
     ]
   },
 
   taqueria: {
-    intro: {
-      cercano: [
-        "En {nombre} preparamos {oferta} al momento en {ciudad}. Pide para comer aquí o haz tu orden para recoger sin esperar fila.",
-        "{oferta} recién salidos de la plancha en {ciudad}. En {nombre} armamos órdenes individuales y paquetes para compartir."
-      ],
-      profesional: [
-        "{nombre} ofrece {oferta} en {ciudad}, preparados al momento con servicio en local y pedidos para llevar.",
-        "Taquería en {ciudad} especializada en {oferta}, con preparación rápida y órdenes listas para recoger."
-      ],
-      formal: [
-        "En {nombre} servimos {oferta} en {ciudad}, elaborados al momento con ingredientes frescos.",
-        "{nombre} le ofrece {oferta} en {ciudad}, tanto en comedor como en pedidos para llevar."
-      ]
+    minTarjetas: 3,
+    construirIntro: (v, d, tieneWa) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      const p1 = `En ${v.nombre} salen ${v.oferta} al momento en ${lugar}.`;
+      const p2 = d.horario
+        ? `Abrimos ${d.horario} para comer aquí o llevar.`
+        : tieneWa
+          ? "Puedes comer en el local o apartar tu orden por WhatsApp para pasar solo a recoger."
+          : "Servicio en comedor y órdenes para llevar preparadas al momento.";
+      return `${p1} ${p2}`;
     },
-    descServicios: [
-      (t) => `Preparados al momento con cebolla, cilantro y salsas de la casa en ${t}.`,
-      (t) => `Por orden o por pieza, listos para comer aquí o llevar en ${t}.`,
-      (t) => `Carne recién picada de la parrilla para ${t}.`,
-      (t) => `Paquetes para compartir o taquizas chicas con ${t}.`
+    descServicios: () => [
+      (t) => `Preparados al momento con cebolla, cilantro y salsas hechas cada día en ${t}.`,
+      (t) => `Por orden o por pieza, para comer en el local o para llevar en ${t}.`,
+      (t) => `Recién salidos de la parrilla en ${t}.`,
+      (t) => `Paquetes para compartir o reuniones chicas con ${t}.`
     ],
-    beneficios: [
+    beneficios: (v) => [
       "Todo sale caliente de la plancha o al carbón en el momento.",
-      "Salsas hechas cada día y complementos siempre frescos.",
-      "Pedidos para recoger sin hacer fila en {ciudad}."
+      "Salsas del día y verdura fresca en cada orden.",
+      `Comedor y pedidos para llevar en ${v.ciudad}.`
     ],
-    faqs: (v, d) => [
-      {
-        q: "¿Puedo pedir para recoger y no hacer fila?",
-        a: `Claro, avísanos qué vas a llevar de ${v.oferta} y te decimos en cuántos minutos pasa por tu orden.`
-      },
-      {
-        q: "¿Qué días y horarios abren?",
-        a: d.horario
-          ? `Atendemos ${d.horario}${d.ubicacion ? ` en ${d.ubicacion}, ${v.ciudad}` : ` en ${v.ciudad}`}.`
-          : `Atendemos en ${v.ciudad}. Escríbenos antes de venir si quieres confirmar horario de hoy.`
-      },
-      {
-        q: d.precios ? "¿Qué precios manejan?" : "¿Preparan órdenes grandes para reuniones?",
-        a: d.precios
-          ? `Manejamos opciones ${d.precios}. Pregunta por paquetes para compartir.`
-          : `Sí, armamos charolas y paquetes de ${v.oferta} si nos avisas con anticipación.`
-      }
-    ]
+    faqs: (v, d, tieneWa) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      return [
+        {
+          q: "¿Tienen servicio para llevar?",
+          a: tieneWa
+            ? `Sí, puedes pedir tu orden de ${v.oferta} por WhatsApp y pasar solo a recogerla.`
+            : `Sí, empacamos tu orden de ${v.oferta} bien caliente para llevar con salsas y limones aparte.`
+        },
+        {
+          q: "¿Qué días y horarios abren?",
+          a: d.horario
+            ? `Atendemos ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+            : `Atendemos en ${lugar}.`
+        },
+        {
+          q: d.precios ? "¿Qué precios manejan?" : "¿Arman charolas para reuniones?",
+          a: d.precios
+            ? `Manejamos opciones ${d.precios}. Pregunta por paquetes para compartir.`
+            : tieneWa
+              ? `Sí, preparamos charolas de ${v.oferta} avisándonos por WhatsApp con anticipación.`
+              : `Sí, preparamos charolas de ${v.oferta} si las apartas en el local con un día de anticipación.`
+        }
+      ];
+    }
   },
 
   cafeteria: {
-    intro: {
-      cercano: [
-        "En {nombre} molemos el grano al momento en {ciudad}. Pasa por {oferta} o pide tu vaso para recoger de camino al trabajo.",
-        "Barra de {oferta} en {ciudad}. En {nombre} cuidamos cada extracción y tenemos opciones frías y calientes todo el día."
-      ],
-      profesional: [
-        "{nombre} es una barra de café en {ciudad} dedicada a {oferta}, con grano recién molido y pedidos para llevar.",
-        "Preparamos {oferta} al momento en {ciudad}, con opciones de leche vegetal y bebidas frías o calientes."
-      ],
-      formal: [
-        "En {nombre} servimos {oferta} en {ciudad}, preparados al momento con café seleccionado.",
-        "{nombre} ofrece {oferta} en {ciudad}, en un espacio tranquilo para trabajar o pasar por su bebida."
-      ]
+    minTarjetas: 2,
+    construirIntro: (v, d, tieneWa) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      const p1 = `En ${v.nombre} molemos el grano al momento en ${lugar} para preparar ${v.oferta}.`;
+      const p2 = d.horario
+        ? `La barra abre ${d.horario}.`
+        : tieneWa
+          ? "Si vas con prisa, puedes pedir tu vaso por WhatsApp antes de pasar."
+          : "Bebidas calientes y frías para consumir en barra o llevar.";
+      return `${p1} ${p2}`;
     },
-    descServicios: [
-      (t) => `Grano recién molido y preparación al momento para ${t}.`,
-      (t) => `Disponible caliente o en las rocas según tu gusto en ${t}.`,
+    descServicios: () => [
+      (t) => `Grano recién molido y preparación al momento en ${t}.`,
+      (t) => `Disponible caliente o en las rocas según tu preferencia en ${t}.`,
       (t) => `Vaso para llevar o consumo en barra con ${t}.`,
       (t) => `Opciones de tamaño y tipo de leche en ${t}.`
     ],
-    beneficios: [
+    beneficios: (v) => [
       "Grano molido al momento para cada taza.",
-      "Puedes pedir por adelantado y pasar solo a recoger en {ciudad}.",
-      "Bebidas calientes y frías todo el día."
+      "Opciones calientes y frías todo el día.",
+      `Barra local en ${v.ciudad} para trabajar o pasar por tu vaso.`
     ],
-    faqs: (v, d) => [
-      {
-        q: "¿Tienen opciones frías y leches vegetales?",
-        a: `Sí, la mayoría de nuestras bebidas en ${v.oferta} se preparan calientes o frías.`
-      },
-      {
-        q: d.horario ? "¿A qué hora abren la barra?" : "¿Puedo apartar mi café antes de pasar?",
-        a: d.horario
-          ? `La barra abre ${d.horario}${d.ubicacion ? ` en ${d.ubicacion}, ${v.ciudad}` : ` en ${v.ciudad}`}.`
-          : "Sí, manda tu pedido unos minutos antes y lo tienes listo al llegar."
-      },
-      {
-        q: d.ubicacion ? `¿Dónde queda ${v.nombre}?` : `¿En qué zona de ${v.ciudad} están?`,
-        a: d.ubicacion
-          ? `Estamos en ${d.ubicacion}, ${v.ciudad}.`
-          : `Estamos en ${v.ciudad}. Escríbenos si necesitas ubicación o estacionamiento cercano.`
-      }
-    ]
+    faqs: (v, d) => {
+      const lugar = fraseUbicacionCompleta(d.ubicacion, v.ciudad);
+      return [
+        {
+          q: "¿Tienen opciones frías y leches vegetales?",
+          a: `Sí, la mayoría de nuestras bebidas en ${v.oferta} se preparan calientes o frías.`
+        },
+        {
+          q: d.horario ? "¿En qué horario abren?" : `¿Dónde está ${v.nombre}?`,
+          a: d.horario
+            ? `La barra abre ${d.horario}${d.ubicacion ? ` en ${lugar}` : ` en ${v.ciudad}`}.`
+            : `Estamos en ${lugar}.`
+        }
+      ];
+    }
   },
 
   tienda: {
-    descServicios: [
-      (t) => `Distintas presentaciones y colores en ${t}, directo en mostrador.`,
-      (t) => `Surtido continuo de ${t}; te confirmamos tallas o modelos disponibles.`,
-      (t) => `Compra en tienda o aparta ${t} para recoger el mismo día.`,
-      (t) => `Te mandamos foto del modelo actual de ${t} antes de apartarlo.`
+    minTarjetas: 3,
+    descServicios: (tieneWa) => [
+      (t) => `Distintas presentaciones y modelos en ${t}, directo en mostrador.`,
+      (t) => `Surtido continuo de ${t} con atención en tienda.`,
+      (t) =>
+        tieneWa
+          ? `Compra en tienda o aparta ${t} por WhatsApp para recoger el mismo día.`
+          : `Compra directa en tienda con surtido actualizado en ${t}.`,
+      (t) => `Opciones variadas en ${t} según lo que busques.`
     ]
   },
 
   comida: {
-    descServicios: [
+    minTarjetas: 3,
+    descServicios: () => [
       (t) => `Cocinado al día con sazón casero en ${t}.`,
       (t) => `Porción individual o para compartir de ${t}, para comer aquí o llevar.`,
       (t) => `Recién preparado al momento para que ${t} llegue caliente.`,
-      (t) => `Pregunta por los acompañamientos disponibles hoy para ${t}.`
+      (t) => `Acompañamientos frescos incluidos con ${t}.`
     ]
   },
 
   servicios: {
-    descServicios: [
+    minTarjetas: 3,
+    descServicios: () => [
       (t) => `Evaluamos tu caso y definimos alcance claro para ${t}.`,
       (t) => `Seguimiento puntual de principio a fin en ${t}.`,
-      (t) => `Atención por cita o programación directa en ${t}.`,
-      (t) => `Cotización clara antes de comenzar cualquier etapa de ${t}.`
+      (t) => `Atención organizada y tiempos acordados en ${t}.`,
+      (t) => `Presupuesto claro antes de iniciar ${t}.`
     ]
   },
 
   "salud y belleza": {
-    descServicios: [
+    minTarjetas: 3,
+    descServicios: () => [
       (t) => `Sesión programada sin prisas para ${t}.`,
       (t) => `Valoración breve al inicio para adaptar ${t} a tu gusto.`,
       (t) => `Material higienizado y cuidado posterior incluido en ${t}.`,
-      (t) => `Agenda tu horario por mensaje para ${t}.`
+      (t) => `Atención dedicada en cada sesión de ${t}.`
     ]
   },
 
   "taller u oficio": {
-    descServicios: [
+    minTarjetas: 3,
+    descServicios: () => [
       (t) => `Revisión directa de la falla antes de cotizar ${t}.`,
       (t) => `Mano de obra cuidada y prueba final en ${t}.`,
-      (t) => `Te indicamos tiempo de entrega y piezas necesarias para ${t}.`,
+      (t) => `Tiempo de entrega y refacciones explicados desde el inicio en ${t}.`,
       (t) => `Atención en taller o visita programada para ${t}.`
     ]
   }
 };
 
-function extraerServiciosGen(oferta, giro, tono, variante, temaEspecifico) {
+function esFragmentoNoServicio(texto) {
+  const bajo = limpiarTextoGen(texto)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  if (!bajo || bajo.length < 3) {
+    return true;
+  }
+  if (/^(estamos|ubicados?|abrimos|atendemos|horario|nos\s+ubicamos|nos\s+encontramos|en\s+(?:av|col|calle|blvd)|y\s+(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)|de\s+\d)/i.test(bajo)) {
+    return true;
+  }
+  return esTextoRellenoGen(bajo);
+}
+
+function extraerServiciosGen(ofertaProductos, giro, tono, variante, temaEspecifico, tieneWhatsapp) {
   const perfil = PERFILES_GIRO[giro] || PERFILES_GIRO.otro;
-  const textoLimpio = limpiarOfertaDeRelleno(oferta)
-    .replace(/\b(?:abrimos|horario|atendemos)\s+(?:de\s+)?(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|todos\s+los\s+d[ií]as|\d{1,2})[^.;,]*/gi, "")
-    .replace(/\b(?:en\s+)?(?:col\.?|colonia|av\.?|avenida|calle|blvd\.?)\s+[A-Za-zÁÉÍÓÚÑáéíóúñ0-9#\s]{3,36}/gi, "")
+  // Proteger abreviaturas con punto antes de dividir por punto de fin de oración
+  const protegido = limpiarOfertaDeRelleno(ofertaProductos)
+    .replace(/\b(av|col|blvd|calz|no|n[uú]m|esq|fracc)\./gi, "$1__DOT__")
     .replace(/[.]+$/, "")
     .trim();
 
-  let partes = textoLimpio
-    .split(/[\n;,\u2022]+/)
-    .map((parte) => limpiarTextoGen(parte).replace(/^[-*]\s*/, ""))
-    .filter((parte) => parte.length >= 2 && !esTextoRellenoGen(parte));
+  let partes = protegido
+    .split(/[\n;,\u2022]+|\.\s+/)
+    .map((parte) =>
+      limpiarTextoGen(parte.replace(/__DOT__/g, "."))
+        .replace(/^[-*]\s*/, "")
+        .replace(/[.;,]?\s*\b(?:estamos|ubicados?|abrimos|atendemos)\b(?:\s+en)?\s*$/i, "")
+        .trim()
+    )
+    .filter((parte) => parte.length >= 2 && !esFragmentoNoServicio(parte));
 
   if (partes.length === 1 && /\s+y\s+/i.test(partes[0])) {
-    const divididas = partes[0]
-      .split(/\s+y\s+/i)
-      .map((parte) => limpiarTextoGen(parte))
-      .filter((parte) => parte.length >= 4 && !esTextoRellenoGen(parte));
-    if (divididas.length >= 2) {
-      partes = divididas;
+    const idxY = partes[0].search(/\s+y\s+/i);
+    if (idxY > 0) {
+      const izq = limpiarTextoGen(partes[0].slice(0, idxY));
+      const der = limpiarTextoGen(partes[0].slice(idxY).replace(/^\s+y\s+/i, ""));
+      if (
+        izq.length >= 4 &&
+        der.length >= 4 &&
+        !esFragmentoNoServicio(izq) &&
+        !esFragmentoNoServicio(der) &&
+        !/\b(?:para|de|con|en)\s+\S+$/i.test(izq)
+      ) {
+        partes = [izq, der];
+      }
     }
   }
 
@@ -1976,16 +2144,16 @@ function extraerServiciosGen(oferta, giro, tono, variante, temaEspecifico) {
   const especifico = COPIA_ESPECIFICA_GIRO[temaEspecifico] || COPIA_ESPECIFICA_GIRO[giro] || null;
   const descripcionesFallback = {
     cercano: [
-      (t) => `Trabajamos ${t} con trato directo; pregunta por opciones disponibles hoy.`,
-      (t) => `Te orientamos por mensaje para elegir ${t} sin dar vueltas.`,
-      (t) => `Atención directa para ${t} según lo que necesites.`,
-      (t) => `Consulta detalles y tiempos de ${t} antes de venir.`
+      (t) => `Trabajamos ${t} con trato directo y atención local.`,
+      (t) => `Opciones disponibles en ${t} según lo que busques.`,
+      (t) => `Atención directa para ${t} sin dar vueltas.`,
+      (t) => `Detalles y disponibilidad clara para ${t}.`
     ],
     profesional: [
       (t) => `Disponibilidad y especificaciones claras para ${t}.`,
       (t) => `Atención organizada en ${t}, con tiempos definidos desde el inicio.`,
       (t) => `Opciones en ${t} ajustadas a cada requerimiento.`,
-      (t) => `Consulta detalles y agenda de ${t} por mensaje.`
+      (t) => `Información clara sobre ${t} antes de decidir.`
     ],
     formal: [
       (t) => `Ponemos a su disposición ${t}, con información clara sobre disponibilidad.`,
@@ -1995,10 +2163,13 @@ function extraerServiciosGen(oferta, giro, tono, variante, temaEspecifico) {
     ]
   };
 
-  const listaPlantillas =
-    especifico && Array.isArray(especifico.descServicios)
-      ? especifico.descServicios
-      : descripcionesFallback[tono] || descripcionesFallback.profesional;
+  let listaPlantillas = descripcionesFallback[tono] || descripcionesFallback.profesional;
+  if (especifico && especifico.descServicios) {
+    listaPlantillas =
+      typeof especifico.descServicios === "function"
+        ? especifico.descServicios(Boolean(tieneWhatsapp))
+        : especifico.descServicios;
+  }
   const desplazamiento = Math.abs(Number(variante) || 0);
 
   const servicios = unicos.map((item, indice) => {
@@ -2010,14 +2181,48 @@ function extraerServiciosGen(oferta, giro, tono, variante, temaEspecifico) {
     };
   });
 
-  if (servicios.length < 3) {
-    for (const comp of perfil.complementos) {
-      if (servicios.length >= 3) {
+  const minTarjetas =
+    especifico && Number.isInteger(especifico.minTarjetas) ? especifico.minTarjetas : 3;
+
+  if (servicios.length < minTarjetas && especifico && typeof especifico.complementos === "function") {
+    const compEsp = especifico.complementos(Boolean(tieneWhatsapp)) || [];
+    const textoActualNorm = normalizarTextoBusquedaGen(servicios.map((s) => s.titulo).join(" "));
+    for (const comp of compEsp) {
+      if (servicios.length >= minTarjetas) {
         break;
+      }
+      if (!comp || !comp.titulo) {
+        continue;
+      }
+      const primeraPal = normalizarTextoBusquedaGen(comp.titulo).split(" ")[0] || "";
+      const yaExiste =
+        vistos.has(comp.titulo.toLowerCase()) ||
+        (primeraPal.length >= 5 && textoActualNorm.includes(primeraPal.slice(0, 6)));
+      if (!yaExiste) {
+        vistos.add(comp.titulo.toLowerCase());
+        servicios.push({
+          titulo: comp.titulo,
+          descripcion: comp.descripcion || ""
+        });
+      }
+    }
+  }
+
+  if (servicios.length < minTarjetas) {
+    for (const comp of perfil.complementos) {
+      if (servicios.length >= minTarjetas) {
+        break;
+      }
+      let descComp = comp[tono] || comp.profesional;
+      if (!tieneWhatsapp) {
+        descComp = descComp
+          .replace(/\bpor\s+WhatsApp\b/gi, "en el local")
+          .replace(/\bm[aá]ndanos\s+(?:un\s+)?mensaje\b/gi, "pasa al local")
+          .replace(/\bescr[ií]benos\b/gi, "pregunta en el negocio");
       }
       servicios.push({
         titulo: comp.titulo,
-        descripcion: comp[tono] || comp.profesional
+        descripcion: descComp
       });
     }
   }
@@ -2035,9 +2240,15 @@ function construirMensajeWhatsappNegocioGen(nombre, tono) {
   return `Hola, me comunico desde la página de ${nombre} para pedir informes.`;
 }
 
-function construirTituloGen(nombre, ciudad, ofertaLimpia, giro, tono, variante) {
-  const primeraParte = limpiarTextoGen(ofertaLimpia.split(/[\n;,]+/)[0] || "");
-  const ofertaCorta = primeraParte.length >= 4 && primeraParte.length <= 36 ? primeraParte : "";
+function construirTituloGen(nombre, ciudad, ofertaProductos, giro, tono, variante) {
+  const limpio = limpiarTextoGen(ofertaProductos || "").replace(/\.\s*$/, "");
+  const primeraParte = limpiarTextoGen(limpio.split(/[\n;,.]+/)[0] || "");
+  const ofertaCorta =
+    primeraParte.length >= 4 &&
+    primeraParte.length <= 36 &&
+    !esFragmentoNoServicio(primeraParte)
+      ? primeraParte
+      : "";
   const v = Math.abs(Number(variante) || 0) % 2;
 
   if (ofertaCorta) {
@@ -2051,14 +2262,13 @@ function construirTituloGen(nombre, ciudad, ofertaLimpia, giro, tono, variante) 
     return `${nombre}: ${fraseOferta} en ${ciudad}`;
   }
 
-  const etiquetaGiro = (GIROS_ETIQUETAS[giro] || "negocio").toLowerCase();
   if (v === 1) {
     return `${nombre} en ${ciudad}`;
   }
   if (tono === "formal") {
     return `${nombre}, atención en ${ciudad}`;
   }
-  return `${nombre} en ${ciudad}, ${etiquetaGiro}`;
+  return `${nombre} en ${ciudad}`;
 }
 
 const CLAVES_GIRO_GENERALES = [
@@ -2242,24 +2452,64 @@ function obtenerSiguientePortada(datos, indiceActual, urlActual) {
   return seleccionarPortadaNegocio(info, 0, siguiente);
 }
 
-function obtenerEstructuraNegocio(datos) {
+function limpiarMencionesWhatsappSiVacio(texto, tieneWhatsapp) {
+  let out = String(texto || "");
+  if (tieneWhatsapp || !out) {
+    return out;
+  }
+  out = out
+    .replace(/\bav[ií]sanos\s+por\s+WhatsApp\b/gi, "pregunta en el local")
+    .replace(/\bconfirmar\s+por\s+WhatsApp\b/gi, "confirmar en mostrador")
+    .replace(/\bpor\s+WhatsApp\b/gi, "en el local")
+    .replace(/\ben\s+WhatsApp\b/gi, "en el local")
+    .replace(/\bdirecto\s+a\s+WhatsApp\b/gi, "directo en el local")
+    .replace(/\bm[aá]ndanos\s+(?:un\s+)?(?:WhatsApp|mensaje)\b/gi, "pasa al local")
+    .replace(/\benv[ií]anos\s+(?:un\s+)?(?:WhatsApp|mensaje)\b/gi, "pasa al local")
+    .replace(/\bescr[ií]benos\s+(?:por\s+WhatsApp|antes\s+de\s+pasar|para\s+confirmar)\b/gi, "pregunta directo en mostrador")
+    .replace(/\bescr[ií]benos\b/gi, "visítanos en el local")
+    .replace(/\bWhatsApp\b/gi, "mostrador")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return out;
+}
+
+function obtenerEstructuraNegocio(datos, detallesOpt) {
   const info = datos && typeof datos === "object" ? datos : {};
   const nombre = formatearNombrePropio(info.nombre, "nombre") || "tu negocio";
-  let tipo = PERFILES_GIRO[info.giro] ? info.giro : "";
-  if (!tipo || tipo === "otro") {
-    const inferido = normalizarGiro(
-      `${info.giroTexto || ""} ${info.giro || ""} ${info.nombre || ""} ${info.oferta || ""}`
-    );
-    if (inferido && ESTRUCTURAS_POR_TIPO_NEGOCIO[inferido]) {
-      tipo = inferido;
+  const ciudad = formatearNombrePropio(info.ciudad, "ciudad") || "tu ciudad";
+  const detalles = detallesOpt || extraerDetallesRealesUsuario(info);
+  const temaEspecifico = resolverTemaPortada(info);
+
+  let tipo = temaEspecifico && ESTRUCTURAS_ESPECIFICAS_GIRO[temaEspecifico] ? temaEspecifico : "";
+  let base = tipo ? ESTRUCTURAS_ESPECIFICAS_GIRO[tipo] : null;
+
+  if (!base) {
+    tipo = PERFILES_GIRO[info.giro] ? info.giro : "";
+    if (!tipo || tipo === "otro") {
+      const inferido = normalizarGiro(
+        `${info.giroTexto || ""} ${info.giro || ""} ${info.nombre || ""} ${info.oferta || ""}`
+      );
+      if (inferido && ESTRUCTURAS_POR_TIPO_NEGOCIO[inferido]) {
+        tipo = inferido;
+      }
     }
+    base = ESTRUCTURAS_POR_TIPO_NEGOCIO[tipo] || ESTRUCTURAS_POR_TIPO_NEGOCIO.otro;
   }
-  const base = ESTRUCTURAS_POR_TIPO_NEGOCIO[tipo] || ESTRUCTURAS_POR_TIPO_NEGOCIO.otro;
+
+  const lugar = fraseUbicacionCompleta(detalles.ubicacion, ciudad);
+  const baseNota = base.notaSinWhatsapp
+    ? base.notaSinWhatsapp.replace(/\{ubicacion\}/g, lugar).replace(/\{nombre\}/g, nombre)
+    : `Atención en ${lugar}.`;
+  const notaContactoSinWhatsapp = detalles.horario
+    ? `${baseNota.replace(/\.+$/, "")} · ${detalles.horario}.`
+    : baseNota;
+
   return {
     tipo: tipo || "otro",
     ordenSecciones: base.ordenSecciones.slice(),
     titulos: { ...base.titulos },
-    ctaWhatsapp: base.ctaWhatsapp.replace(/\{nombre\}/g, nombre)
+    ctaWhatsapp: base.ctaWhatsapp.replace(/\{nombre\}/g, nombre),
+    notaContactoSinWhatsapp
   };
 }
 
@@ -2336,10 +2586,11 @@ function generarBorradorNegocio(datos, variante) {
   const oferta = limpiarOfertaDeRelleno(datos.oferta) || "nuestros productos y servicios";
   const tono = TONOS_ETIQUETAS[datos.tono] ? datos.tono : "cercano";
   const whatsapp = limpiarDigitosGen(datos.whatsapp);
+  const tieneWhatsapp = Boolean(whatsapp);
 
   const perfil = PERFILES_GIRO[giro];
   const ofertaLimpia = oferta.replace(/[.]+$/, "");
-  const datosPortada = { nombre, giro, giroTexto, oferta: ofertaLimpia };
+  const datosPortada = { nombre, ciudad, giro, giroTexto, oferta: ofertaLimpia };
   const temaEspecifico = resolverTemaPortada(datosPortada);
   const copiaEsp = COPIA_ESPECIFICA_GIRO[temaEspecifico] || null;
   const detallesReales = extraerDetallesRealesUsuario(datos);
@@ -2351,28 +2602,47 @@ function generarBorradorNegocio(datos, variante) {
     oferta: ofertaProductos.charAt(0).toLowerCase() + ofertaProductos.slice(1)
   };
 
-  const listaIntros =
-    copiaEsp && copiaEsp.intro && (copiaEsp.intro[tono] || copiaEsp.intro.cercano)
-      ? copiaEsp.intro[tono] || copiaEsp.intro.cercano
-      : perfil.introduccion[tono] || perfil.introduccion.cercano;
-  const plantillaIntro = listaIntros[v % listaIntros.length];
+  const titulo = quitarGuionesLargosGen(construirTituloGen(nombre, ciudad, ofertaProductos, giro, tono, v));
 
-  const titulo = quitarGuionesLargosGen(construirTituloGen(nombre, ciudad, ofertaLimpia, giro, tono, v));
-  let presentacion = quitarGuionesLargosGen(aplicarPlantillaGen(plantillaIntro, variables));
-  if (detallesReales.horario && !presentacion.toLowerCase().includes(detallesReales.horario.toLowerCase())) {
-    presentacion = `${presentacion} Horario: ${detallesReales.horario}.`;
+  let presentacion = "";
+  if (copiaEsp && typeof copiaEsp.construirIntro === "function") {
+    presentacion = quitarGuionesLargosGen(copiaEsp.construirIntro(variables, detallesReales, tieneWhatsapp));
+  } else {
+    const listaIntros =
+      copiaEsp && copiaEsp.intro && (copiaEsp.intro[tono] || copiaEsp.intro.cercano)
+        ? copiaEsp.intro[tono] || copiaEsp.intro.cercano
+        : perfil.introduccion[tono] || perfil.introduccion.cercano;
+    const plantillaIntro = listaIntros[v % listaIntros.length];
+    presentacion = limpiarMencionesWhatsappSiVacio(
+      quitarGuionesLargosGen(aplicarPlantillaGen(plantillaIntro, variables)),
+      tieneWhatsapp
+    );
+    const lugar = fraseUbicacionCompleta(detallesReales.ubicacion, ciudad);
+    if (detallesReales.ubicacion && !presentacion.toLowerCase().includes(detallesReales.ubicacion.toLowerCase())) {
+      presentacion = `${presentacion} Estamos en ${lugar}.`;
+    }
+    if (detallesReales.horario && !presentacion.toLowerCase().includes(detallesReales.horario.toLowerCase())) {
+      presentacion = `${presentacion} Abrimos ${detallesReales.horario}.`;
+    }
   }
-  if (detallesReales.ubicacion && !presentacion.toLowerCase().includes(detallesReales.ubicacion.toLowerCase())) {
-    presentacion = `${presentacion} Ubicación: ${detallesReales.ubicacion}.`;
+
+  const servicios = extraerServiciosGen(ofertaProductos, giro, tono, v, temaEspecifico, tieneWhatsapp);
+
+  let beneficiosBase;
+  if (copiaEsp && typeof copiaEsp.beneficios === "function") {
+    beneficiosBase = copiaEsp.beneficios(variables, detallesReales, tieneWhatsapp).map((texto) =>
+      quitarGuionesLargosGen(texto)
+    );
+  } else {
+    const beneficiosFuente =
+      copiaEsp && Array.isArray(copiaEsp.beneficios) ? copiaEsp.beneficios : perfil.beneficios[tono];
+    beneficiosBase = beneficiosFuente.map((texto) =>
+      limpiarMencionesWhatsappSiVacio(
+        quitarGuionesLargosGen(aplicarPlantillaGen(texto, variables)),
+        tieneWhatsapp
+      )
+    );
   }
-
-  const servicios = extraerServiciosGen(ofertaLimpia, giro, tono, v, temaEspecifico);
-
-  const beneficiosFuente =
-    copiaEsp && Array.isArray(copiaEsp.beneficios) ? copiaEsp.beneficios : perfil.beneficios[tono];
-  const beneficiosBase = beneficiosFuente.map((texto) =>
-    quitarGuionesLargosGen(aplicarPlantillaGen(texto, variables))
-  );
   const beneficios =
     v % 2 === 1 && beneficiosBase.length > 1
       ? beneficiosBase.slice(1).concat(beneficiosBase[0])
@@ -2380,18 +2650,25 @@ function generarBorradorNegocio(datos, variante) {
 
   let preguntasFrecuentes;
   if (copiaEsp && typeof copiaEsp.faqs === "function") {
-    preguntasFrecuentes = copiaEsp.faqs(variables, detallesReales).map((item) => ({
+    preguntasFrecuentes = copiaEsp.faqs(variables, detallesReales, tieneWhatsapp).map((item) => ({
       pregunta: quitarGuionesLargosGen(item.q),
       respuesta: quitarGuionesLargosGen(item.a)
     }));
   } else {
+    const lugar = fraseUbicacionCompleta(detallesReales.ubicacion, ciudad);
     preguntasFrecuentes = perfil.faqs[tono].map((item) => {
-      let preg = quitarGuionesLargosGen(aplicarPlantillaGen(item.q, variables));
-      let resp = quitarGuionesLargosGen(aplicarPlantillaGen(item.a, variables));
+      let preg = limpiarMencionesWhatsappSiVacio(
+        quitarGuionesLargosGen(aplicarPlantillaGen(item.q, variables)),
+        tieneWhatsapp
+      );
+      let resp = limpiarMencionesWhatsappSiVacio(
+        quitarGuionesLargosGen(aplicarPlantillaGen(item.a, variables)),
+        tieneWhatsapp
+      );
       if (detallesReales.horario && /horario|hora|abren|d[ií]as/i.test(preg + " " + resp)) {
-        resp = `Atendemos ${detallesReales.horario}${detallesReales.ubicacion ? ` en ${detallesReales.ubicacion}, ${ciudad}` : ` en ${ciudad}`}.`;
+        resp = `Atendemos ${detallesReales.horario}${detallesReales.ubicacion ? ` en ${lugar}` : ` en ${ciudad}`}.`;
       } else if (detallesReales.ubicacion && /ubicaci[oó]n|d[oó]nde|direcci[oó]n|zona/i.test(preg + " " + resp)) {
-        resp = `Nos encontramos en ${detallesReales.ubicacion}, ${ciudad}.`;
+        resp = `Estamos en ${lugar}.`;
       } else if (detallesReales.precios && /precio|costo|cotiz/i.test(preg + " " + resp)) {
         resp = `Manejamos opciones ${detallesReales.precios} en ${variables.oferta}.`;
       }
@@ -2401,7 +2678,7 @@ function generarBorradorNegocio(datos, variante) {
 
   const mensajeWhatsapp = construirMensajeWhatsappNegocioGen(nombre, tono);
   const portada = seleccionarPortadaNegocio(datosPortada, v);
-  const estructura = obtenerEstructuraNegocio(datosPortada);
+  const estructura = obtenerEstructuraNegocio(datosPortada, detallesReales);
 
   return {
     titulo,
@@ -2430,12 +2707,16 @@ async function generarBorradorConServicio(datos, variante) {
     const nombreFormateado = formatearNombrePropio(datos.nombre, "nombre");
     const ciudadFormateada = formatearNombrePropio(datos.ciudad, "ciudad");
     const ofertaLimpia = limpiarOfertaDeRelleno(datos.oferta);
+    const whatsappLimpio = limpiarDigitosGen(datos.whatsapp);
+    const tieneWhatsapp = Boolean(whatsappLimpio);
     const datosLimpios = {
       ...datos,
       nombre: nombreFormateado || limpiarTextoGen(datos.nombre),
       ciudad: ciudadFormateada || limpiarTextoGen(datos.ciudad),
-      oferta: ofertaLimpia || limpiarTextoGen(datos.oferta)
+      oferta: ofertaLimpia || limpiarTextoGen(datos.oferta),
+      whatsapp: whatsappLimpio
     };
+    const detallesReales = extraerDetallesRealesUsuario(datosLimpios);
 
     const controlador = new AbortController();
     const temporizador = setTimeout(() => controlador.abort(), 15000);
@@ -2483,16 +2764,16 @@ async function generarBorradorConServicio(datos, variante) {
       .map((s) => {
         if (typeof s === "string") {
           const tit = quitarGuionesLargosGen(s);
-          return tit && !esTextoRellenoGen(tit) ? { titulo: tit, descripcion: "" } : null;
+          return tit && !esFragmentoNoServicio(tit) ? { titulo: tit, descripcion: "" } : null;
         }
         if (s && typeof s === "object") {
           const tit = quitarGuionesLargosGen(s.titulo);
-          if (!tit || esTextoRellenoGen(tit)) {
+          if (!tit || esFragmentoNoServicio(tit)) {
             return null;
           }
           return {
             titulo: tit,
-            descripcion: quitarGuionesLargosGen(s.descripcion)
+            descripcion: limpiarMencionesWhatsappSiVacio(quitarGuionesLargosGen(s.descripcion), tieneWhatsapp)
           };
         }
         return null;
@@ -2502,22 +2783,26 @@ async function generarBorradorConServicio(datos, variante) {
       return null;
     }
     const v = Math.abs(Number(variante) || 0);
+    const tituloLimpio = quitarGuionesLargosGen(b.titulo).replace(
+      /,\s*(?:comida|tienda|servicios|otro|salud y belleza|taller u oficio)\s*$/i,
+      ""
+    );
     return {
-      titulo: quitarGuionesLargosGen(b.titulo),
-      presentacion: quitarGuionesLargosGen(b.presentacion),
+      titulo: tituloLimpio || `${datosLimpios.nombre} en ${datosLimpios.ciudad}`,
+      presentacion: limpiarMencionesWhatsappSiVacio(quitarGuionesLargosGen(b.presentacion), tieneWhatsapp),
       servicios,
       beneficios: b.beneficios
         .filter((x) => typeof x === "string" && x.trim())
         .slice(0, 6)
-        .map((x) => quitarGuionesLargosGen(x)),
+        .map((x) => limpiarMencionesWhatsappSiVacio(quitarGuionesLargosGen(x), tieneWhatsapp)),
       preguntasFrecuentes: b.preguntasFrecuentes
         .slice(0, 6)
         .map((f) => {
           if (!f || typeof f !== "object") {
             return null;
           }
-          const pregunta = quitarGuionesLargosGen(f.pregunta);
-          const respuestaTexto = quitarGuionesLargosGen(f.respuesta);
+          const pregunta = limpiarMencionesWhatsappSiVacio(quitarGuionesLargosGen(f.pregunta), tieneWhatsapp);
+          const respuestaTexto = limpiarMencionesWhatsappSiVacio(quitarGuionesLargosGen(f.respuesta), tieneWhatsapp);
           return pregunta && respuestaTexto ? { pregunta, respuesta: respuestaTexto } : null;
         })
         .filter(Boolean),
@@ -2525,9 +2810,9 @@ async function generarBorradorConServicio(datos, variante) {
         datosLimpios.nombre,
         TONOS_ETIQUETAS[datosLimpios.tono] ? datosLimpios.tono : "cercano"
       ),
-      whatsapp: limpiarDigitosGen(datosLimpios.whatsapp),
+      whatsapp: whatsappLimpio,
       portada: seleccionarPortadaNegocio(datosLimpios, v),
-      estructura: obtenerEstructuraNegocio(datosLimpios),
+      estructura: obtenerEstructuraNegocio(datosLimpios, detallesReales),
       variante: v
     };
   } catch (error) {
@@ -2547,6 +2832,108 @@ async function generarBorradorConDetalle(datos, variante) {
     borrador: generarBorradorNegocio(datos, variante),
     origen: "local"
   };
+}
+
+function contienePlantillaLegadaBorrador(registro) {
+  if (!registro || !registro.datos || !registro.borrador) {
+    return false;
+  }
+  const b = registro.borrador;
+  const wa = limpiarDigitosGen(registro.datos.whatsapp);
+  const textoPlan = [
+    b.titulo || "",
+    b.presentacion || "",
+    ...(Array.isArray(b.servicios) ? b.servicios.map((s) => `${s.titulo || ""} ${s.descripcion || ""}`) : []),
+    ...(Array.isArray(b.beneficios) ? b.beneficios : []),
+    ...(Array.isArray(b.preguntasFrecuentes)
+      ? b.preguntasFrecuentes.map((f) => `${f.pregunta || ""} ${f.respuesta || ""}`)
+      : [])
+  ].join("\n");
+
+  const patronesLegados = [
+    /disponible al d[ií]a\.\s*si quieres apartar/i,
+    /si quieres preguntar si hay existencia antes de darte la vuelta/i,
+    /m[aá]ndanos un whatsapp y te respondemos en corto/i,
+    /m[aá]ndanos mensaje y te pasamos la ubicaci[oó]n exacta/i,
+    /pr[oó]ximamente enlace de whatsapp/i,
+    /estamos,\s*col\./i,
+    /horario:\s*[^.]+\.\s*ubicaci[oó]n:/i
+  ];
+  if (patronesLegados.some((rx) => rx.test(textoPlan))) {
+    return true;
+  }
+  if (/,\s*(?:comida|tienda|servicios|otro|salud y belleza|taller u oficio)\s*$/i.test(String(b.titulo || ""))) {
+    return true;
+  }
+  if (
+    Array.isArray(b.servicios) &&
+    b.servicios.some(
+      (s) =>
+        s &&
+        typeof s.titulo === "string" &&
+        (/\.\s*estamos\s*$/i.test(s.titulo) || /^estamos\b/i.test(s.titulo.trim()))
+    )
+  ) {
+    return true;
+  }
+  if (!wa && /\b(?:whatsapp|m[aá]ndanos\s+(?:un\s+)?mensaje|escr[ií]benos|av[ií]sanos)\b/i.test(textoPlan)) {
+    return true;
+  }
+  return false;
+}
+
+function sanearBorradorLegado(registro) {
+  if (!registro || !registro.datos || !registro.borrador) {
+    return false;
+  }
+  let cambio = false;
+
+  const detallesReales = extraerDetallesRealesUsuario(registro.datos);
+  if (contienePlantillaLegadaBorrador(registro)) {
+    const varianteActual = Number.isInteger(registro.borrador.variante) ? registro.borrador.variante : 0;
+    const portadaPrevia = registro.borrador.portada;
+    const nuevo = generarBorradorNegocio(registro.datos, varianteActual);
+    if (portadaPrevia && portadaPrevia.url) {
+      nuevo.portada = portadaPrevia;
+    }
+    registro.borrador = nuevo;
+    if (registro.diseno && typeof registro.diseno === "object") {
+      const ordenAnterior = Array.isArray(registro.diseno.ordenSecciones)
+        ? registro.diseno.ordenSecciones.join(",")
+        : "";
+      const esOrdenGenerico =
+        !ordenAnterior ||
+        ordenAnterior === "presentacion,servicios,beneficios,preguntas,contacto" ||
+        ordenAnterior === "presentacion,servicios,beneficios,contacto,preguntas";
+      if (esOrdenGenerico && nuevo.estructura && Array.isArray(nuevo.estructura.ordenSecciones)) {
+        registro.diseno.ordenSecciones = nuevo.estructura.ordenSecciones.slice();
+      }
+    }
+    if (registro.seo && typeof registro.seo === "object") {
+      if (
+        typeof registro.seo.titulo === "string" &&
+        /,\s*(?:comida|tienda|servicios|otro|salud y belleza|taller u oficio)\b/i.test(registro.seo.titulo)
+      ) {
+        registro.seo.titulo = nuevo.titulo;
+      }
+      if (
+        typeof registro.seo.descripcion === "string" &&
+        (/disponible al d[ií]a/i.test(registro.seo.descripcion) || /estamos,\s*col\./i.test(registro.seo.descripcion))
+      ) {
+        registro.seo.descripcion = nuevo.presentacion.slice(0, 158);
+      }
+    }
+    cambio = true;
+  } else if (
+    !registro.borrador.estructura ||
+    typeof registro.borrador.estructura.notaContactoSinWhatsapp !== "string" ||
+    !registro.borrador.estructura.notaContactoSinWhatsapp
+  ) {
+    registro.borrador.estructura = obtenerEstructuraNegocio(registro.datos, detallesReales);
+    cambio = true;
+  }
+
+  return cambio;
 }
 
 function formatearBorradorTextoPlano(datos, borrador) {
@@ -2628,6 +3015,7 @@ window.dmdGenerador = {
   seleccionarPortada: seleccionarPortadaNegocio,
   obtenerSiguientePortada,
   obtenerEstructuraNegocio,
+  sanearBorradorLegado,
   esArchivoImagenValido,
   comprimirImagenArchivo: comprimirImagenArchivoLocal,
   generarBorrador: generarBorradorNegocio,

@@ -300,6 +300,9 @@
           registro.datos.oferta = ofertaSaneada;
         }
       }
+      if (typeof gen.sanearBorradorLegado === "function") {
+        gen.sanearBorradorLegado(registro);
+      }
     }
 
     const nombre = (registro.datos && registro.datos.nombre) || "Mi negocio";
@@ -318,15 +321,16 @@
     if (!FUENTES_MAPA[registro.diseno.fuente]) {
       registro.diseno.fuente = "sistema";
     }
-    if (
-      !Array.isArray(registro.diseno.ordenSecciones) ||
-      registro.diseno.ordenSecciones.length !== SECCIONES_DEFECTO.length
-    ) {
+    const ordenActualValido =
+      Array.isArray(registro.diseno.ordenSecciones) &&
+      registro.diseno.ordenSecciones.length >= 3 &&
+      registro.diseno.ordenSecciones.every((sec) => SECCIONES_DEFECTO.includes(sec));
+    if (!ordenActualValido) {
       const ordenSugerido =
         (registro.borrador &&
           registro.borrador.estructura &&
           Array.isArray(registro.borrador.estructura.ordenSecciones) &&
-          registro.borrador.estructura.ordenSecciones.length === SECCIONES_DEFECTO.length &&
+          registro.borrador.estructura.ordenSecciones.length >= 3 &&
           registro.borrador.estructura.ordenSecciones) ||
         (gen &&
           typeof gen.obtenerEstructuraNegocio === "function" &&
@@ -1712,7 +1716,9 @@
           pLoc.textContent = datos.nombre;
           const pDesc = document.createElement("p");
           pDesc.className = "biz-location-sub";
-          pDesc.textContent = `Atención directa en ${datos.ciudad}.`;
+          pDesc.textContent =
+            (borrador.estructura && borrador.estructura.notaContactoSinWhatsapp) ||
+            `Atención directa en ${datos.ciudad}.`;
           cardInfo.appendChild(pLoc);
           cardInfo.appendChild(pDesc);
           bloque.appendChild(cardInfo);

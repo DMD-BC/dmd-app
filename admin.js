@@ -67,6 +67,8 @@
   }
 
   function montar() {
+    const tituloAdminEl = document.getElementById("titulo-admin");
+    const subtituloAdminEl = document.getElementById("subtitulo-admin");
     const cargandoEl = document.getElementById("admin-cargando");
     const bloqueadoEl = document.getElementById("admin-bloqueado");
     const bloqueadoBadge = document.getElementById("admin-bloqueado-badge");
@@ -94,6 +96,23 @@
       pagos: document.getElementById("admin-panel-pagos"),
       cancelaciones: document.getElementById("admin-panel-cancelaciones")
     };
+
+    function aplicarEncabezadoBloqueado() {
+      document.title = "Acceso restringido | dmd";
+      if (tituloAdminEl) tituloAdminEl.textContent = "Acceso restringido";
+      if (subtituloAdminEl) {
+        subtituloAdminEl.textContent = "Esta página requiere una sesión autorizada.";
+      }
+    }
+
+    function aplicarEncabezadoAutorizado() {
+      document.title = "Panel de operación | dmd";
+      if (tituloAdminEl) tituloAdminEl.textContent = "Panel de operación";
+      if (subtituloAdminEl) {
+        subtituloAdminEl.textContent =
+          "Vista privada para consultar usuarios, suscripciones, pagos y cancelaciones reales.";
+      }
+    }
 
     function cambiarTab(clave) {
       tabBtns.forEach((btn) => {
@@ -134,12 +153,13 @@
       const res = await consultarResumenReal();
 
       if (res.denegado) {
+        aplicarEncabezadoBloqueado();
         if (contenidoEl) contenidoEl.hidden = true;
         if (bloqueadoEl) bloqueadoEl.hidden = false;
         if (bloqueadoBadge) bloqueadoBadge.textContent = "Sin permiso";
-        if (bloqueadoTitulo) bloqueadoTitulo.textContent = "Esta cuenta no tiene acceso de administración";
+        if (bloqueadoTitulo) bloqueadoTitulo.textContent = "Esta cuenta no tiene acceso";
         if (bloqueadoMsg) {
-          bloqueadoMsg.textContent = "Solo la cuenta del propietario puede consultar este panel.";
+          bloqueadoMsg.textContent = "Inicia sesión con una cuenta autorizada para continuar.";
         }
         return;
       }
@@ -205,6 +225,7 @@
         : "";
 
       if (!verificada) {
+        aplicarEncabezadoBloqueado();
         if (cargandoEl) cargandoEl.hidden = false;
         if (bloqueadoEl) bloqueadoEl.hidden = true;
         if (contenidoEl) contenidoEl.hidden = true;
@@ -214,6 +235,7 @@
       if (cargandoEl) cargandoEl.hidden = true;
 
       if (!sesion) {
+        aplicarEncabezadoBloqueado();
         if (contenidoEl) contenidoEl.hidden = true;
         if (bloqueadoEl) bloqueadoEl.hidden = false;
         if (errorSrv) {
@@ -221,19 +243,20 @@
           if (bloqueadoTitulo) bloqueadoTitulo.textContent = "No se puede verificar el acceso ahora";
           if (bloqueadoMsg) {
             bloqueadoMsg.textContent =
-              "El servicio de cuentas está fuera de línea en este momento. Por seguridad, el panel permanece bloqueado hasta confirmar una sesión válida.";
+              "El servicio de cuentas está fuera de línea en este momento. Esta vista permanece bloqueada hasta confirmar una sesión válida.";
           }
         } else {
           if (bloqueadoBadge) bloqueadoBadge.textContent = "Acceso restringido";
-          if (bloqueadoTitulo) bloqueadoTitulo.textContent = "Se requiere sesión del propietario";
+          if (bloqueadoTitulo) bloqueadoTitulo.textContent = "Inicia sesión para continuar";
           if (bloqueadoMsg) {
             bloqueadoMsg.textContent =
-              "Inicia sesión con tu cuenta autorizada para consultar usuarios, suscripciones, pagos y cancelaciones.";
+              "El contenido permanece oculto hasta confirmar una cuenta con permisos.";
           }
         }
         return;
       }
 
+      aplicarEncabezadoAutorizado();
       if (bloqueadoEl) bloqueadoEl.hidden = true;
       if (contenidoEl) contenidoEl.hidden = false;
       if (usuarioNombreEl) usuarioNombreEl.textContent = sesion.nombre;

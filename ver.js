@@ -101,6 +101,43 @@
     };
   }
 
+  function sanearPaginaPublicadaAlCargar(pagina) {
+    if (!pagina || !pagina.datos || !pagina.borrador || !window.dmdGenerador) {
+      return false;
+    }
+    const gen = window.dmdGenerador;
+    let cambio = false;
+    if (typeof gen.esOmisionWhatsapp === "function" && gen.esOmisionWhatsapp(pagina.datos.whatsapp)) {
+      pagina.datos.whatsapp = "";
+      pagina.borrador.whatsapp = "";
+      cambio = true;
+    } else {
+      const digWa = String(pagina.datos.whatsapp || "").replace(/\D/g, "");
+      const waValido = digWa.length >= 10 && digWa.length <= 15 ? digWa : "";
+      if (waValido !== (pagina.datos.whatsapp || "")) {
+        pagina.datos.whatsapp = waValido;
+        pagina.borrador.whatsapp = waValido;
+        cambio = true;
+      }
+    }
+    if (typeof gen.formatearNombrePropio === "function") {
+      const nom = gen.formatearNombrePropio(pagina.datos.nombre, "nombre");
+      const ciu = gen.formatearNombrePropio(pagina.datos.ciudad, "ciudad");
+      if (nom && nom !== pagina.datos.nombre) {
+        pagina.datos.nombre = nom;
+        cambio = true;
+      }
+      if (ciu && ciu !== pagina.datos.ciudad) {
+        pagina.datos.ciudad = ciu;
+        cambio = true;
+      }
+    }
+    if (typeof gen.sanearBorradorLegado === "function" && gen.sanearBorradorLegado(pagina)) {
+      cambio = true;
+    }
+    return cambio;
+  }
+
   function buscarPaginaPublicada(slug) {
     const clave = String(slug || "").trim();
     if (!clave) {
@@ -117,6 +154,13 @@
           p.borradorId === clave)
     );
     if (exacta && exacta.datos && exacta.borrador) {
+      if (
+        sanearPaginaPublicadaAlCargar(exacta) &&
+        window.dmdAlmacen &&
+        typeof window.dmdAlmacen.guardar === "function"
+      ) {
+        window.dmdAlmacen.guardar("dmd_paginas_publicadas_v1", publicadas);
+      }
       return exacta;
     }
 
@@ -129,7 +173,14 @@
             b.publicadaSlug.toLowerCase() === claveMin) ||
           b.id === clave)
     );
-    return borradorMatch ? construirPaginaDesdeBorrador(borradorMatch, clave) : null;
+    if (!borradorMatch) {
+      return null;
+    }
+    const desdeBorrador = construirPaginaDesdeBorrador(borradorMatch, clave);
+    if (desdeBorrador) {
+      sanearPaginaPublicadaAlCargar(desdeBorrador);
+    }
+    return desdeBorrador;
   }
 
   function construirEnlaceCompartible(slug) {
@@ -667,7 +718,9 @@
           pLoc.textContent = datos.nombre;
           const pDesc = document.createElement("p");
           pDesc.className = "biz-location-sub";
-          pDesc.textContent = `Atención directa en ${datos.ciudad}.`;
+          pDesc.textContent =
+            (estructura && estructura.notaContactoSinWhatsapp) ||
+            `Atención directa en ${datos.ciudad}.`;
           cardInfo.appendChild(pLoc);
           cardInfo.appendChild(pDesc);
           bloque.appendChild(cardInfo);

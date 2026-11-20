@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="robots" content="noindex, nofollow">
-  <title>Panel interno | dmd</title>
+  <title>Acceso restringido | dmd</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -23,7 +23,7 @@
         <span>dmd</span>
       </a>
 
-      <nav class="site-nav" aria-label="Navegación interna">
+      <nav class="site-nav" aria-label="Navegación principal">
         <a class="nav-link" href="app.html">Creador</a>
         <a class="nav-link" href="login.html">Cuenta</a>
       </nav>
@@ -33,24 +33,24 @@
   <main id="contenido" tabindex="-1">
     <div class="container container-plans">
       <section class="page-intro" aria-labelledby="titulo-admin">
-        <h1 id="titulo-admin">Panel de operación</h1>
-        <p class="lead">Vista privada para consultar usuarios, suscripciones, pagos y cancelaciones reales.</p>
+        <h1 id="titulo-admin">Acceso restringido</h1>
+        <p id="subtitulo-admin" class="lead">Esta página requiere una sesión autorizada.</p>
       </section>
 
       <!-- Estado de carga -->
       <section id="admin-cargando" class="card admin-guard-card" role="status" aria-live="polite">
         <div class="loading-inline">
           <span class="spinner spinner-accent" aria-hidden="true"></span>
-          <span>Verificando sesión autorizada...</span>
+          <span>Verificando acceso...</span>
         </div>
       </section>
 
       <!-- Acceso bloqueado (sin sesión o servicio fuera de línea) -->
       <section id="admin-bloqueado" class="card admin-guard-card" aria-labelledby="titulo-admin-bloqueado" hidden>
         <span id="admin-bloqueado-badge" class="status-pill status-pill-muted">Acceso restringido</span>
-        <h2 id="titulo-admin-bloqueado">Se requiere sesión del propietario</h2>
+        <h2 id="titulo-admin-bloqueado">Inicia sesión para continuar</h2>
         <p id="admin-bloqueado-msg" class="field-hint">
-          Inicia sesión con tu cuenta para consultar los registros reales de operación.
+          El contenido permanece oculto hasta confirmar una cuenta con permisos.
         </p>
         <div class="service-alert-actions">
           <a class="btn btn-primary btn-sm" href="login.html">Ir a iniciar sesión</a>

@@ -466,6 +466,8 @@
         ) {
           b.borrador = gen.generarBorrador(b.datos, b.borrador.variante || 0);
           huboAjuste = true;
+        } else if (typeof gen.sanearBorradorLegado === "function" && gen.sanearBorradorLegado(b)) {
+          huboAjuste = true;
         }
         if (
           b.seo &&
@@ -496,6 +498,21 @@
         }
         if (window.dmdEditor && typeof window.dmdEditor.asegurarEstructuraBorrador === "function") {
           window.dmdEditor.asegurarEstructuraBorrador(b);
+        }
+      });
+
+      todasPublicadas.forEach((p) => {
+        if (!p || !p.datos || !p.borrador) {
+          return;
+        }
+        const waPub = limpiarDigitosWhatsappValidos(p.datos.whatsapp);
+        if (waPub !== (p.datos.whatsapp || "")) {
+          p.datos.whatsapp = waPub;
+          p.borrador.whatsapp = waPub;
+          huboAjuste = true;
+        }
+        if (typeof gen.sanearBorradorLegado === "function" && gen.sanearBorradorLegado(p)) {
+          huboAjuste = true;
         }
       });
 
@@ -1824,7 +1841,9 @@
             pLoc.textContent = datos.nombre;
             const pSub = document.createElement("p");
             pSub.className = "biz-location-sub";
-            pSub.textContent = `Atención directa en ${datos.ciudad}.`;
+            pSub.textContent =
+              (estructura && estructura.notaContactoSinWhatsapp) ||
+              `Atención directa en ${datos.ciudad}.`;
             cardLoc.appendChild(pLoc);
             cardLoc.appendChild(pSub);
             bWa.appendChild(cardLoc);
