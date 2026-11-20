@@ -48,7 +48,7 @@
     {
       campo: "whatsapp",
       etiqueta: "WhatsApp (opcional)",
-      pregunta: "¿Cuál es tu WhatsApp? (con lada, ej. 528112345678)",
+      pregunta: "¿Cuál es tu WhatsApp? (opcional, con lada ej. 528112345678, o toca Continuar sin teléfono)",
       chips: ["Continuar sin teléfono"]
     }
   ];
@@ -499,6 +499,36 @@
         }
       });
 
+      function normalizarClaveTexto(valor) {
+        return String(valor || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9\s]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function capitalizarPrimeraLetra(valor) {
+        const limpio = String(valor || "").trim();
+        if (!limpio) {
+          return "";
+        }
+        if (/^[a-záéíóúñü]/.test(limpio)) {
+          return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+        }
+        return limpio;
+      }
+
+      function esMsgBorradorListo(msg) {
+        return Boolean(
+          msg &&
+            msg.rol === "asistente" &&
+            typeof msg.texto === "string" &&
+            /^borrador\s+listo\b/i.test(msg.texto.trim())
+        );
+      }
+
       todasConversaciones.forEach((c) => {
         if (!c || !c.datos) {
           return;
@@ -531,6 +561,10 @@
           }
         }
         const esEspiga = /panader[ií]a\s+la\s+espiga/i.test(c.datos.nombre || "");
+        const nomNorm = normalizarClaveTexto(c.datos.nombre);
+        const ciuNorm = normalizarClaveTexto(c.datos.ciudad);
+        const ofNorm = normalizarClaveTexto(c.datos.oferta);
+
         if (Array.isArray(c.mensajes)) {
           const antesLen = c.mensajes.length;
           c.mensajes = c.mensajes
@@ -542,10 +576,11 @@
               if (m.rol === "usuario" && esTextoOmision(m.texto)) {
                 return false;
               }
+              // Eliminar mensajes del asistente que solo registraban "Agregado: Omitir" si no son la tarjeta activa
               if (
                 m.rol === "asistente" &&
                 m.tipo !== "borrador" &&
-                /^(?:se\s+)?agreg(?:ado|ó):\s*["“”']?(?:omitir|sin\s+whats?app|ninguno|pendiente|saltar)["“”']?\.?$/i.test(
+                /(?:^|\.\s*)(?:se\s+)?(?:agreg(?:ado|ó)|oferta):\s*["“”']?(?:omitir|sin\s+whats?app|ninguno|pendiente|saltar)["“”']?\.?$/i.test(
                   m.texto.trim()
                 )
               ) {
@@ -555,19 +590,90 @@
             })
             .map((m) => {
               let textoMsg = m.texto;
-              if (
-                m.rol === "asistente" &&
-                /(?:agregado|se agregó|oferta):\s*["“”']?(?:omitir|sin\s+whats?app)["“”']?/i.test(textoMsg)
-              ) {
-                huboAjuste = true;
-                textoMsg = `Borrador listo para ${c.datos.nombre || "tu negocio"}.`;
+
+              // Capitalizar respuestas antiguas del usuario en el historial sin borrar la conversación
+              if (m.rol === "usuario") {
+                const msgNorm = normalizarClaveTexto(textoMsg);
+                if (m.campo === "nombre" || (nomNorm && msgNorm === nomNorm)) {
+                  const nomForm = c.datos.nombre || formatearNombre(textoMsg, "nombre");
+                  if (nomForm && nomForm !== textoMsg) {
+                    textoMsg = nomForm;
+                    huboAjuste = true;
+                  }
+                } else if (m.campo === "ciudad" || (ciuNorm && msgNorm === ciuNorm)) {
+                  const ciuForm = c.datos.ciudad || formatearNombre(textoMsg, "ciudad");
+                  if (ciuForm && ciuForm !== textoMsg) {
+                    textoMsg = ciuForm;
+                    huboAjuste = true;
+                  }
+                } else if (m.campo === "oferta" || (ofNorm && msgNorm === ofNorm)) {
+                  const ofForm = capitalizarPrimeraLetra(textoMsg);
+                  if (ofForm && ofForm !== textoMsg) {
+                    textoMsg = ofForm;
+                    huboAjuste = true;
+                  }
+                }
               }
+
+              if (m.rol === "asistente") {
+                if (
+                  /(?:agregado|se agregó|oferta):\s*["“”']?(?:omitir|sin\s+whats?app)["“”']?/i.test(textoMsg)
+                ) {
+                  huboAjuste = true;
+                  textoMsg = `Borrador listo para ${c.datos.nombre || "tu negocio"}. Puedes revisarlo aquí, pedir ajustes o abrir el Editor visual.`;
+                } else if (/^borrador\s+listo\s+para\b/i.test(textoMsg.trim()) && c.datos.nombre) {
+                  const corregido = textoMsg.replace(
+                    /^borrador\s+listo\s+para\s+[^.!\n]+/i,
+                    `Borrador listo para ${c.datos.nombre}`
+                  );
+                  if (corregido !== textoMsg) {
+                    textoMsg = corregido;
+                    huboAjuste = true;
+                  }
+                }
+              }
+
               if (esEspiga && /mexicali/i.test(textoMsg)) {
                 huboAjuste = true;
                 textoMsg = textoMsg.replace(/mexicali/gi, "Guadalajara");
               }
               return textoMsg !== m.texto ? { ...m, texto: textoMsg } : m;
             });
+
+          // Asegurar a lo sumo 1 tarjeta tipo "borrador" (la última)
+          let ultimoIdxBorrador = -1;
+          c.mensajes.forEach((m, idx) => {
+            if (m && m.tipo === "borrador") {
+              ultimoIdxBorrador = idx;
+            }
+          });
+          if (ultimoIdxBorrador !== -1) {
+            c.mensajes.forEach((m, idx) => {
+              if (m && m.tipo === "borrador" && idx !== ultimoIdxBorrador) {
+                m.tipo = "texto";
+                delete m.borradorId;
+                huboAjuste = true;
+              }
+            });
+          }
+
+          // Deduplicar mensajes repetidos de "Borrador listo..." dejando solo 1 (priorizando la tarjeta activa)
+          const indicesListo = [];
+          c.mensajes.forEach((m, idx) => {
+            if (esMsgBorradorListo(m)) {
+              indicesListo.push(idx);
+            }
+          });
+          if (indicesListo.length > 1) {
+            const mantenerIdx = indicesListo.includes(ultimoIdxBorrador)
+              ? ultimoIdxBorrador
+              : indicesListo[indicesListo.length - 1];
+            c.mensajes = c.mensajes.filter(
+              (m, idx) => !esMsgBorradorListo(m) || idx === mantenerIdx
+            );
+            huboAjuste = true;
+          }
+
           if (c.mensajes.length !== antesLen) {
             huboAjuste = true;
           }
@@ -1265,14 +1371,18 @@
         // Si en el paso de WhatsApp se omite, tratarlo como VACÍO sin guardar ni mostrar "Omitir" en el chat
         const omitioWhatsapp = paso.campo === "whatsapp" && validacion.ok && validacion.omitido;
         if (!omitioWhatsapp) {
+          let textoBurbuja = texto;
+          if (validacion.ok && (paso.campo === "nombre" || paso.campo === "ciudad")) {
+            textoBurbuja = validacion.valor;
+          } else if (validacion.ok && paso.campo === "oferta" && /^[a-záéíóúñü]/.test(texto)) {
+            textoBurbuja = texto.charAt(0).toUpperCase() + texto.slice(1);
+          }
           conv.mensajes.push({
             id: crearId("msg"),
             rol: "usuario",
             tipo: "texto",
             campo: paso.campo,
-            texto: validacion.ok && (paso.campo === "nombre" || paso.campo === "ciudad")
-              ? validacion.valor
-              : texto
+            texto: textoBurbuja
           });
         }
 
