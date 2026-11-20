@@ -535,7 +535,7 @@
         }
         if (c.datos.nombre) {
           const n = formatearNombre(c.datos.nombre, "nombre");
-          if (n !== c.datos.nombre) {
+          if (n && (n !== c.datos.nombre || c.titulo !== n)) {
             c.datos.nombre = n;
             c.titulo = n;
             huboAjuste = true;
@@ -1757,7 +1757,7 @@
           hb.textContent = titulosSec.beneficios || "Beneficios";
           const ulB = document.createElement("ul");
           ulB.className = "preview-benefits";
-          borrador.beneficios.forEach((b) => {
+          (Array.isArray(borrador.beneficios) ? borrador.beneficios : []).forEach((b) => {
             const li = document.createElement("li");
             li.className = "preview-benefit-item";
             li.appendChild(crearIconoCheck());
@@ -1779,7 +1779,7 @@
           hf.textContent = titulosSec.preguntas || "Preguntas frecuentes";
           const listF = document.createElement("div");
           listF.className = "faq-list";
-          borrador.preguntasFrecuentes.forEach((f, idx) => {
+          (Array.isArray(borrador.preguntasFrecuentes) ? borrador.preguntasFrecuentes : []).forEach((f, idx) => {
             const d = document.createElement("details");
             d.className = "faq-item";
             if (idx === 0) {
