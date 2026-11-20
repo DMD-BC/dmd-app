@@ -5,21 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Tu cuenta | dmd</title>
-  <meta name="description" content="Inicia sesión o crea tu cuenta en dmd con tu acceso compartido de DMD.">
+  <meta name="description" content="Inicia sesión o crea tu cuenta en dmd para consultar tu suscripción y gestionar tus páginas web.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido principal</a>
 
   <header class="site-header">
-    <div class="container header-inner">
+    <div class="container container-wide header-inner">
       <a class="brand" href="index.html" aria-label="dmd, ir al inicio">
+        <span class="brand-squares" aria-hidden="true">
+          <span class="brand-sq brand-sq-1"></span>
+          <span class="brand-sq brand-sq-2"></span>
+          <span class="brand-sq brand-sq-3"></span>
+          <span class="brand-sq brand-sq-4"></span>
+        </span>
         <span>dmd</span>
       </a>
 
       <nav class="site-nav" aria-label="Navegación principal">
-        <a class="nav-link" href="index.html">Inicio</a>
-        <a class="nav-link" href="app.html">Crear páginas web</a>
+        <a class="nav-link nav-link-desktop" href="index.html">Inicio</a>
+        <a class="nav-link" href="pago.html">Planes</a>
+        <a class="nav-link nav-link-cta" href="app.html">Crear mi página</a>
       </nav>
     </div>
   </header>
@@ -28,24 +35,32 @@
     <div class="container">
       <section class="page-intro" aria-labelledby="titulo-cuenta">
         <h1 id="titulo-cuenta">Tu cuenta</h1>
+        <p class="lead">Inicia sesión para consultar tu suscripción o activar un plan mensual.</p>
       </section>
 
       <section id="seccion-cuenta" class="card account-card" aria-label="Acceso a tu cuenta">
-        <p id="cuenta-cargando" class="field-hint" role="status" aria-live="polite">
-          Verificando sesión...
-        </p>
+        <div id="cuenta-cargando" class="loading-inline" role="status" aria-live="polite">
+          <span class="spinner spinner-accent" aria-hidden="true"></span>
+          <span>Verificando tu sesión...</span>
+        </div>
 
-        <div id="cuenta-error-servicio" class="form-error-summary" role="alert" hidden>
-          <p id="cuenta-error-servicio-msg"></p>
-          <div class="confirm-actions">
-            <button id="btn-reintentar-auth" class="btn btn-secondary btn-sm" type="button">
-              Reintentar
+        <div id="cuenta-error-servicio" class="service-alert" role="alert" hidden>
+          <p id="cuenta-error-servicio-msg" class="service-alert-title"></p>
+          <p class="service-alert-hint">
+            Puedes reintentar ahora o seguir creando y guardando tus borradores directamente en la app sin iniciar sesión.
+          </p>
+          <div class="service-alert-actions">
+            <button id="btn-reintentar-auth" class="btn btn-primary btn-sm" type="button">
+              Reintentar conexión
             </button>
+            <a class="btn btn-secondary btn-sm" href="app.html">
+              Seguir creando borradores
+            </a>
           </div>
         </div>
 
         <div id="cuenta-invitado" hidden>
-          <div class="auth-tabs" role="tablist" aria-label="Acceso a tu cuenta">
+          <div class="auth-tabs" role="tablist" aria-label="Tipo de acceso">
             <button
               id="tab-login"
               class="auth-tab auth-tab-active"
@@ -73,7 +88,7 @@
 
             <div class="field">
               <label class="field-label" for="login-correo">
-                Correo <span class="required-mark" aria-hidden="true">*</span>
+                Correo electrónico <span class="required-mark" aria-hidden="true">*</span>
               </label>
               <input
                 id="login-correo"
@@ -89,20 +104,63 @@
             </div>
 
             <div class="field">
-              <label class="field-label" for="login-password">
-                Contraseña <span class="required-mark" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="login-password"
-                name="login_password"
-                class="input"
-                type="password"
-                required
-                autocomplete="current-password"
-                placeholder="Tu contraseña"
-                aria-describedby="error-login-password"
-              >
+              <div class="field-label-row">
+                <label class="field-label" for="login-password">
+                  Contraseña <span class="required-mark" aria-hidden="true">*</span>
+                </label>
+                <button
+                  id="btn-abrir-recuperar"
+                  class="text-link-btn"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="bloque-recuperar-password"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+              <div class="password-field">
+                <input
+                  id="login-password"
+                  name="login_password"
+                  class="input password-input"
+                  type="password"
+                  required
+                  autocomplete="current-password"
+                  placeholder="Tu contraseña"
+                  aria-describedby="error-login-password"
+                >
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  data-toggle-password="login-password"
+                  aria-label="Mostrar contraseña"
+                  aria-pressed="false"
+                >
+                  Mostrar
+                </button>
+              </div>
               <p id="error-login-password" class="field-error" aria-live="polite"></p>
+            </div>
+
+            <div id="bloque-recuperar-password" class="recovery-box" hidden>
+              <p class="recovery-title">Recuperar contraseña</p>
+              <p class="field-hint">
+                Si no recuerdas tu clave, puedes restablecer el acceso desde el portal seguro de cuenta de dmd con tu correo registrado.
+              </p>
+              <div class="recovery-actions">
+                <a
+                  id="btn-ir-recuperar"
+                  class="btn btn-secondary btn-sm"
+                  href="https://login.dmdmx.dev/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ir a recuperar acceso
+                </a>
+                <button id="btn-cerrar-recuperar" class="btn btn-secondary btn-sm" type="button">
+                  Cerrar
+                </button>
+              </div>
             </div>
 
             <div>
@@ -135,7 +193,7 @@
 
             <div class="field">
               <label class="field-label" for="reg-correo">
-                Correo <span class="required-mark" aria-hidden="true">*</span>
+                Correo electrónico <span class="required-mark" aria-hidden="true">*</span>
               </label>
               <input
                 id="reg-correo"
@@ -155,17 +213,28 @@
               <label class="field-label" for="reg-password">
                 Contraseña <span class="required-mark" aria-hidden="true">*</span>
               </label>
-              <input
-                id="reg-password"
-                name="reg_password"
-                class="input"
-                type="password"
-                required
-                minlength="6"
-                autocomplete="new-password"
-                placeholder="Mínimo 6 caracteres"
-                aria-describedby="error-reg-password"
-              >
+              <div class="password-field">
+                <input
+                  id="reg-password"
+                  name="reg_password"
+                  class="input password-input"
+                  type="password"
+                  required
+                  minlength="6"
+                  autocomplete="new-password"
+                  placeholder="Mínimo 6 caracteres"
+                  aria-describedby="error-reg-password"
+                >
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  data-toggle-password="reg-password"
+                  aria-label="Mostrar contraseña"
+                  aria-pressed="false"
+                >
+                  Mostrar
+                </button>
+              </div>
               <p id="error-reg-password" class="field-error" aria-live="polite"></p>
             </div>
 
@@ -186,10 +255,13 @@
               class="btn btn-secondary btn-full"
               href="https://login.dmdmx.dev/"
             >
-              Continuar con Google en login.dmdmx.dev
+              <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M21.35 11.1h-9.18v2.98h5.27c-.23 1.46-1.74 4.28-5.27 4.28-3.17 0-5.76-2.63-5.76-5.86s2.59-5.86 5.76-5.86c1.81 0 3.02.77 3.71 1.43l2.53-2.44C16.79 4.1 14.69 3.2 12.17 3.2 7.21 3.2 3.2 7.21 3.2 12.17s4.01 8.97 8.97 8.97c5.18 0 8.61-3.64 8.61-8.77 0-.59-.06-1.04-.14-1.27Z"></path>
+              </svg>
+              <span>Continuar con Google</span>
             </a>
             <p class="field-hint">
-              Tu sesión se comparte en .dmdmx.dev. Al iniciar sesión con Google allá, vuelve a esta página.
+              Se abrirá el acceso seguro de tu cuenta dmd. Al terminar, regresa a esta pestaña.
             </p>
           </div>
         </div>
@@ -201,12 +273,12 @@
               <p id="sesion-correo" class="session-email"></p>
               <p id="sesion-cuota" class="session-quota" hidden></p>
             </div>
-            <span class="status-pill">Activa</span>
+            <span class="status-pill">Sesión activa</span>
           </div>
 
           <div class="account-primary-cta">
             <a id="btn-ir-chat" class="btn btn-primary btn-full" href="app.html">
-              Ir al chat
+              Ir al creador de páginas
             </a>
           </div>
 
@@ -224,22 +296,30 @@
       </section>
 
       <div class="subpage-back-row">
-        <a class="btn btn-secondary btn-full" href="app.html">Volver al chat</a>
+        <a class="btn btn-secondary btn-full" href="app.html">Volver al creador de páginas</a>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-inner">
+    <div class="container container-wide footer-inner">
       <div class="footer-top">
-        <span class="footer-brand">
+        <a class="footer-brand" href="index.html" aria-label="dmd, ir al inicio">
+          <span class="brand-squares brand-squares-sm" aria-hidden="true">
+            <span class="brand-sq brand-sq-1"></span>
+            <span class="brand-sq brand-sq-2"></span>
+            <span class="brand-sq brand-sq-3"></span>
+            <span class="brand-sq brand-sq-4"></span>
+          </span>
           <span>dmd</span>
-        </span>
+        </a>
         <nav class="footer-nav" aria-label="Navegación del pie de página">
           <a class="footer-link" href="index.html">Inicio</a>
           <a class="footer-link" href="app.html">Crear páginas web</a>
+          <a class="footer-link" href="pago.html">Planes</a>
         </nav>
       </div>
+      <p class="footer-note">dmd · Constructor de páginas web para negocios.</p>
     </div>
   </footer>
 

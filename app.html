@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>chat de dmd | Crear páginas web</title>
-  <meta name="description" content="Crea, edita, guarda y publica la página web de tu negocio conversando en el chat de dmd.">
+  <title>Creador de páginas | dmd</title>
+  <meta name="description" content="Crea, edita, guarda y publica la página web de tu negocio desde el chat y el editor visual de dmd.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="app-body">
@@ -14,10 +14,16 @@
   <div class="app-shell">
     <div id="sidebar-backdrop" class="sidebar-backdrop" hidden></div>
 
-    <!-- Barra lateral: historial de conversaciones, borradores/páginas y cuenta -->
-    <aside id="app-sidebar" class="app-sidebar" aria-label="Menú del chat de dmd">
+    <!-- Barra lateral: siempre visible en escritorio, deslizable en celular -->
+    <aside id="app-sidebar" class="app-sidebar" aria-label="Menú de conversaciones y borradores">
       <div class="sidebar-head">
         <a class="brand brand-compact" href="index.html" aria-label="dmd, ir al inicio">
+          <span class="brand-squares" aria-hidden="true">
+            <span class="brand-sq brand-sq-1"></span>
+            <span class="brand-sq brand-sq-2"></span>
+            <span class="brand-sq brand-sq-3"></span>
+            <span class="brand-sq brand-sq-4"></span>
+          </span>
           <span>dmd</span>
         </a>
         <button id="btn-cerrar-sidebar" class="icon-btn sidebar-close-only" type="button" aria-label="Cerrar menú lateral">
@@ -39,26 +45,36 @@
       </div>
 
       <div class="sidebar-scroll">
-        <section class="sidebar-section" aria-labelledby="titulo-hist-conv">
-          <div class="sidebar-section-head">
-            <h2 id="titulo-hist-conv">Conversaciones</h2>
-            <span id="contador-conversaciones" class="count-badge">0</span>
-          </div>
-          <p id="conversaciones-vacio" class="sidebar-empty">Sin conversaciones.</p>
-          <ul id="lista-conversaciones" class="sidebar-list" hidden></ul>
-        </section>
+        <div id="sidebar-storage-note" class="sidebar-storage-box">
+          <p class="sidebar-storage-title">
+            <span class="storage-dot" aria-hidden="true"></span>
+            <span id="sidebar-storage-label">Guardado en este navegador</span>
+          </p>
+          <p class="sidebar-storage-hint">
+            Tus cambios se conservan al recargar. Descarga un respaldo para llevarlos a otro dispositivo.
+          </p>
+        </div>
 
         <section class="sidebar-section" aria-labelledby="titulo-hist-borradores">
           <div class="sidebar-section-head">
             <h2 id="titulo-hist-borradores">Páginas y borradores</h2>
             <span id="contador-borradores" class="count-badge">0</span>
           </div>
-          <p id="borradores-vacio" class="sidebar-empty">Sin páginas aún.</p>
+          <p id="borradores-vacio" class="sidebar-empty">Aún no tienes borradores guardados.</p>
           <ul id="lista-borradores" class="sidebar-drafts" hidden></ul>
         </section>
 
+        <section class="sidebar-section" aria-labelledby="titulo-hist-conv">
+          <div class="sidebar-section-head">
+            <h2 id="titulo-hist-conv">Conversaciones</h2>
+            <span id="contador-conversaciones" class="count-badge">0</span>
+          </div>
+          <p id="conversaciones-vacio" class="sidebar-empty">Sin conversaciones guardadas.</p>
+          <ul id="lista-conversaciones" class="sidebar-list" hidden></ul>
+        </section>
+
         <section class="sidebar-section" aria-labelledby="titulo-respaldo-sidebar">
-          <h2 id="titulo-respaldo-sidebar">Respaldo</h2>
+          <h2 id="titulo-respaldo-sidebar">Respaldo (.json)</h2>
           <div class="sidebar-backup-actions">
             <button id="btn-descargar-respaldo-sidebar" class="btn btn-secondary btn-sm" type="button">
               Descargar
@@ -77,7 +93,7 @@
         <nav class="sidebar-links" aria-label="Accesos rápidos">
           <a class="sidebar-link" href="index.html">Inicio</a>
           <a class="sidebar-link" href="login.html">Cuenta</a>
-          <a class="sidebar-link" href="pago.html">Activar</a>
+          <a class="sidebar-link" href="pago.html">Planes</a>
         </nav>
       </div>
     </aside>
@@ -85,40 +101,60 @@
     <!-- Área principal: barra superior + chat / editor visual -->
     <div id="app-principal" class="app-main" tabindex="-1">
       <header class="app-topbar">
-        <button id="btn-abrir-sidebar" class="icon-btn" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="app-sidebar">
+        <button id="btn-abrir-sidebar" class="icon-btn topbar-menu-btn" type="button" aria-label="Abrir menú y borradores" aria-expanded="false" aria-controls="app-sidebar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <path d="M4 6h16"></path>
             <path d="M4 12h16"></path>
             <path d="M4 18h16"></path>
           </svg>
+          <span id="badge-borradores-mobile" class="menu-count-pill" hidden>0</span>
         </button>
 
-        <div class="app-topbar-center">
-          <h1 class="app-title">chat de dmd</h1>
+        <div class="app-topbar-brand">
+          <a class="brand brand-topbar-mobile" href="index.html" aria-label="dmd, ir al inicio">
+            <span class="brand-squares brand-squares-sm" aria-hidden="true">
+              <span class="brand-sq brand-sq-1"></span>
+              <span class="brand-sq brand-sq-2"></span>
+              <span class="brand-sq brand-sq-3"></span>
+              <span class="brand-sq brand-sq-4"></span>
+            </span>
+            <span>dmd</span>
+          </a>
+          <h1 class="app-title">Creador de páginas</h1>
         </div>
 
-        <button id="btn-nueva-conv-top" class="icon-btn" type="button" aria-label="Nueva conversación">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <path d="M12 5v14"></path>
-            <path d="M5 12h14"></path>
-          </svg>
-        </button>
+        <div class="app-mode-bar" role="tablist" aria-label="Modo de trabajo">
+          <button id="tab-modo-chat" class="mode-tab mode-tab-active" type="button" role="tab" aria-selected="true" aria-controls="vista-chat">
+            Chat
+          </button>
+          <button id="tab-modo-editor" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="vista-editor">
+            Editor visual
+          </button>
+        </div>
       </header>
 
-      <div class="app-mode-bar" role="tablist" aria-label="Modo de trabajo">
-        <button id="tab-modo-chat" class="mode-tab mode-tab-active" type="button" role="tab" aria-selected="true" aria-controls="vista-chat">
-          Chat
-        </button>
-        <button id="tab-modo-editor" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="vista-editor">
-          Editor visual
-        </button>
-      </div>
-
-      <!-- Vista 1: Chat -->
+      <!-- Vista 1: Chat guiado -->
       <section id="vista-chat" class="chat-view" aria-label="Chat de dmd">
+        <div id="chat-progreso" class="chat-progress-bar-wrap" aria-live="polite">
+          <div class="chat-progress-meta">
+            <span id="chat-progreso-texto" class="chat-progress-label">Paso 1 de 6 · Nombre del negocio</span>
+            <span id="chat-progreso-porcentaje" class="chat-progress-step">1/6</span>
+          </div>
+          <div class="chat-progress-track" aria-hidden="true">
+            <div id="chat-progreso-barra" class="chat-progress-fill" style="width: 16%;"></div>
+          </div>
+        </div>
+
         <div id="chat-mensajes" class="chat-thread" role="log" aria-live="polite" aria-relevant="additions"></div>
 
         <div class="chat-composer-shell">
+          <div id="chat-error-banner" class="chat-error-box" role="alert" hidden>
+            <p id="chat-error-texto"></p>
+            <button id="btn-chat-reintentar" class="btn btn-secondary btn-sm" type="button">
+              Reintentar
+            </button>
+          </div>
+
           <div id="chat-sugerencias" class="chat-chips" aria-label="Respuestas rápidas" hidden></div>
 
           <p id="chat-estado" class="chat-status" role="status" aria-live="polite"></p>
@@ -129,10 +165,10 @@
               id="chat-entrada"
               class="chat-input"
               rows="1"
-              placeholder="Escribe aquí..."
+              placeholder="Escribe tu respuesta aquí..."
               maxlength="400"
             ></textarea>
-            <button id="btn-chat-enviar" class="btn btn-primary chat-send-btn" type="button" aria-label="Enviar">
+            <button id="btn-chat-enviar" class="btn btn-primary chat-send-btn" type="button" aria-label="Enviar mensaje">
               <span>Enviar</span>
             </button>
           </form>
@@ -143,277 +179,417 @@
       <section id="vista-editor" class="editor-view" aria-label="Editor visual" hidden>
         <div id="editor-vacio" class="editor-empty-wrap">
           <div class="card">
-            <h2>Sin página abierta</h2>
+            <h2>Aún no hay una página abierta</h2>
+            <p class="lead">Responde las preguntas del chat para generar tu primer borrador o reabre una página desde el menú lateral.</p>
             <div class="hero-actions">
               <button id="btn-editor-ir-chat" class="btn btn-primary btn-full" type="button">
-                Ir al chat
+                Ir al chat para crear una página
               </button>
             </div>
           </div>
         </div>
 
         <div id="editor-espacio" class="editor-workspace" hidden>
-          <!-- Barra de herramientas del editor -->
+          <!-- Barra de herramientas superior -->
           <div class="editor-toolbar">
-            <div class="editor-history-btns">
-              <button id="btn-deshacer" class="btn btn-secondary btn-sm" type="button" disabled>
-                Deshacer
-              </button>
-              <button id="btn-rehacer" class="btn btn-secondary btn-sm" type="button" disabled>
-                Rehacer
-              </button>
+            <div class="editor-toolbar-group">
+              <div class="editor-history-btns">
+                <button id="btn-deshacer" class="btn btn-secondary btn-sm" type="button" disabled title="No hay cambios por deshacer en esta sesión">
+                  Deshacer
+                </button>
+                <button id="btn-rehacer" class="btn btn-secondary btn-sm" type="button" disabled title="No hay cambios por rehacer">
+                  Rehacer
+                </button>
+              </div>
+              <span id="estado-historial-ayuda" class="toolbar-hint">Sin cambios en esta sesión</span>
             </div>
 
-            <div class="viewport-switch" role="group" aria-label="Tamaño de vista previa">
-              <button id="btn-vista-movil" class="vp-btn vp-btn-active" type="button" aria-pressed="true">
-                Celular 360 px
-              </button>
-              <button id="btn-vista-escritorio" class="vp-btn" type="button" aria-pressed="false">
-                Escritorio
-              </button>
+            <div class="editor-toolbar-group editor-toolbar-right">
+              <div class="segmented-switch" role="group" aria-label="Modo del lienzo">
+                <button id="btn-modo-preview" class="seg-btn seg-btn-active" type="button" aria-pressed="true">
+                  Vista previa real
+                </button>
+                <button id="btn-modo-editar" class="seg-btn" type="button" aria-pressed="false">
+                  Editar página
+                </button>
+              </div>
+
+              <div class="viewport-switch" role="group" aria-label="Tamaño de vista previa">
+                <button id="btn-vista-movil" class="vp-btn vp-btn-active" type="button" aria-pressed="true">
+                  Celular 360 px
+                </button>
+                <button id="btn-vista-escritorio" class="vp-btn" type="button" aria-pressed="false">
+                  Escritorio
+                </button>
+              </div>
             </div>
           </div>
 
           <p id="estado-guardado-auto" class="autosave-bar" role="status" aria-live="polite">
-            Toca cualquier texto para editarlo.
+            Guardado automático activo en este navegador.
           </p>
 
-          <!-- Pestañas de herramientas manuales -->
-          <div class="editor-tabs" role="tablist" aria-label="Ajustes">
-            <button id="edtab-diseno" class="edtab edtab-active" type="button" role="tab" aria-selected="true" data-panel="panel-diseno">Diseño</button>
-            <button id="edtab-seo" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-seo">SEO</button>
-            <button id="edtab-publicar" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-publicar">Publicar</button>
-            <button id="edtab-analitica" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-analitica">Analítica</button>
-            <button id="edtab-historial" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-historial">Historial</button>
-          </div>
-
-          <!-- Panel 1: Diseño -->
-          <div id="panel-diseno" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-diseno">
-            <div class="form-grid">
-              <div class="field">
-                <span class="field-label">Plantilla</span>
-                <div class="template-picker" role="group" aria-label="Plantilla">
-                  <button type="button" class="tpl-btn" data-plantilla="clasica">Clásica</button>
-                  <button type="button" class="tpl-btn" data-plantilla="editorial">Editorial</button>
-                  <button type="button" class="tpl-btn" data-plantilla="directa">Directa</button>
-                </div>
+          <!-- Diseño de 2 columnas en escritorio: ajustes a la izquierda, vista previa a la derecha -->
+          <div class="editor-split">
+            <div class="editor-controls-col">
+              <!-- Pestañas compactas -->
+              <div class="editor-tabs" role="tablist" aria-label="Ajustes de la página">
+                <button id="edtab-diseno" class="edtab edtab-active" type="button" role="tab" aria-selected="true" data-panel="panel-diseno">Diseño</button>
+                <button id="edtab-seo" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-seo">SEO</button>
+                <button id="edtab-publicar" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-publicar">Publicar</button>
+                <button id="edtab-analitica" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-analitica">Analítica</button>
+                <button id="edtab-historial" class="edtab" type="button" role="tab" aria-selected="false" data-panel="panel-historial">Historial</button>
               </div>
 
-              <div class="field">
-                <label class="field-label" for="ed-color-marca">Color</label>
-                <div class="color-controls">
-                  <div class="color-swatches" role="group" aria-label="Colores">
-                    <button type="button" class="swatch-btn" data-color="#0f5c4d" aria-label="Verde sobrio" style="background-color:#0f5c4d"></button>
-                    <button type="button" class="swatch-btn" data-color="#1e3a5f" aria-label="Azul marino" style="background-color:#1e3a5f"></button>
-                    <button type="button" class="swatch-btn" data-color="#7c2d12" aria-label="Terracota" style="background-color:#7c2d12"></button>
-                    <button type="button" class="swatch-btn" data-color="#374151" aria-label="Gris pizarra" style="background-color:#374151"></button>
-                    <button type="button" class="swatch-btn" data-color="#4c1d4b" aria-label="Ciruela oscuro" style="background-color:#4c1d4b"></button>
+              <!-- Panel 1: Diseño -->
+              <div id="panel-diseno" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-diseno">
+                <div class="form-grid">
+                  <div class="field">
+                    <span class="field-label">Plantilla visual</span>
+                    <div class="template-picker" role="group" aria-label="Elegir plantilla">
+                      <button type="button" class="tpl-btn" data-plantilla="clasica">
+                        <span class="tpl-thumb tpl-thumb-clasica" aria-hidden="true">
+                          <span class="tpl-thumb-bar"><span></span><span></span></span>
+                          <span class="tpl-thumb-hero">
+                            <span class="tpl-thumb-cover"></span>
+                            <span class="tpl-thumb-line w-80"></span>
+                            <span class="tpl-thumb-line w-55"></span>
+                          </span>
+                          <span class="tpl-thumb-cards">
+                            <span class="tpl-thumb-card"></span>
+                            <span class="tpl-thumb-card"></span>
+                          </span>
+                        </span>
+                        <span class="tpl-btn-name">Clásica</span>
+                        <span class="tpl-btn-sub">Equilibrada</span>
+                      </button>
+
+                      <button type="button" class="tpl-btn" data-plantilla="editorial">
+                        <span class="tpl-thumb tpl-thumb-editorial" aria-hidden="true">
+                          <span class="tpl-thumb-bar"><span></span><span></span></span>
+                          <span class="tpl-thumb-hero centered">
+                            <span class="tpl-thumb-cover"></span>
+                            <span class="tpl-thumb-line w-70"></span>
+                            <span class="tpl-thumb-line w-50"></span>
+                          </span>
+                          <span class="tpl-thumb-rule"></span>
+                          <span class="tpl-thumb-cards">
+                            <span class="tpl-thumb-card"></span>
+                            <span class="tpl-thumb-card"></span>
+                          </span>
+                        </span>
+                        <span class="tpl-btn-name">Editorial</span>
+                        <span class="tpl-btn-sub">Centrada</span>
+                      </button>
+
+                      <button type="button" class="tpl-btn" data-plantilla="directa">
+                        <span class="tpl-thumb tpl-thumb-directa" aria-hidden="true">
+                          <span class="tpl-thumb-bar filled"><span></span><span></span></span>
+                          <span class="tpl-thumb-hero">
+                            <span class="tpl-thumb-cover"></span>
+                            <span class="tpl-thumb-line w-85"></span>
+                            <span class="tpl-thumb-line w-60"></span>
+                          </span>
+                          <span class="tpl-thumb-cards">
+                            <span class="tpl-thumb-card"></span>
+                            <span class="tpl-thumb-card"></span>
+                          </span>
+                        </span>
+                        <span class="tpl-btn-name">Directa</span>
+                        <span class="tpl-btn-sub">Alto contraste</span>
+                      </button>
+                    </div>
                   </div>
-                  <input id="ed-color-marca" class="color-input" type="color" value="#0f5c4d" aria-label="Color personalizado">
-                </div>
-              </div>
 
-              <div class="field">
-                <label class="field-label" for="ed-fuente">Fuente</label>
-                <select id="ed-fuente" class="select">
-                  <option value="sistema">Sistema</option>
-                  <option value="editorial">Editorial</option>
-                  <option value="moderna">Moderna</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label class="field-label" for="ed-whatsapp">WhatsApp</label>
-                <input id="ed-whatsapp" class="input" type="tel" inputmode="numeric" maxlength="15" placeholder="528112345678">
-              </div>
-
-              <div class="field">
-                <span class="field-label">Logo</span>
-                <div class="upload-row">
-                  <label class="btn btn-secondary btn-sm upload-label" for="ed-subir-logo">Subir logo</label>
-                  <input id="ed-subir-logo" type="file" accept="image/*" hidden>
-                  <button id="ed-quitar-logo" class="btn btn-danger-ghost btn-sm" type="button" hidden>Quitar</button>
-                </div>
-                <input id="ed-logo-alt" class="input" type="text" maxlength="120" placeholder="Texto alternativo del logo">
-              </div>
-
-              <div class="field">
-                <span class="field-label">Portada</span>
-                <div class="upload-row">
-                  <button id="ed-cambiar-portada" class="btn btn-secondary btn-sm" type="button">Cambiar foto</button>
-                  <label class="btn btn-secondary btn-sm upload-label" for="ed-subir-portada">Subir imagen</label>
-                  <input id="ed-subir-portada" type="file" accept="image/*" hidden>
-                  <button id="ed-quitar-portada" class="btn btn-danger-ghost btn-sm" type="button" hidden>Quitar</button>
-                </div>
-                <p id="ed-portada-meta" class="field-hint"></p>
-                <div id="ed-portada-opciones" class="cover-options-grid" role="group" aria-label="Fotos sugeridas para tu giro"></div>
-                <input id="ed-portada-alt" class="input" type="text" maxlength="140" placeholder="Texto alternativo de la imagen">
-              </div>
-            </div>
-          </div>
-
-          <!-- Panel 2: SEO -->
-          <div id="panel-seo" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-seo" hidden>
-            <div class="form-grid">
-              <div class="field">
-                <label class="field-label" for="ed-seo-titulo">Título SEO</label>
-                <input id="ed-seo-titulo" class="input" type="text" maxlength="70" placeholder="Título">
-                <p id="ed-seo-titulo-cuenta" class="field-hint">0 / 70</p>
-              </div>
-
-              <div class="field">
-                <label class="field-label" for="ed-seo-desc">Descripción SEO</label>
-                <textarea id="ed-seo-desc" class="textarea" rows="3" maxlength="165" placeholder="Descripción breve"></textarea>
-                <p id="ed-seo-desc-cuenta" class="field-hint">0 / 165</p>
-              </div>
-
-              <div class="field">
-                <span class="field-label">Vista en buscadores</span>
-                <div class="seo-snippet" aria-label="Vista en buscador">
-                  <p id="seo-preview-url" class="seo-snippet-url"></p>
-                  <p id="seo-preview-titulo" class="seo-snippet-title"></p>
-                  <p id="seo-preview-desc" class="seo-snippet-desc"></p>
-                </div>
-              </div>
-
-              <div class="seo-files-note">
-                <p class="field-hint">
-                  <a href="robots.txt" target="_blank" rel="noopener noreferrer">robots.txt</a> ·
-                  <a href="sitemap.xml" target="_blank" rel="noopener noreferrer">sitemap.xml</a>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Panel 3: Publicar -->
-          <div id="panel-publicar" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-publicar" hidden>
-            <div class="form-grid">
-              <div class="publish-head">
-                <h3 class="panel-subtitle">Publicar</h3>
-                <span id="ed-estado-pub-pill" class="status-pill">Borrador</span>
-              </div>
-
-              <button id="btn-ed-publicar" class="btn btn-primary btn-full" type="button">
-                Publicar página
-              </button>
-
-              <div id="ed-bloque-publicada" class="published-box" hidden>
-                <p class="field-label">Enlace</p>
-                <p id="ed-url-publicada" class="published-url-text"></p>
-                <div class="published-actions-grid">
-                  <a id="btn-ed-ver-publicada" class="btn btn-primary btn-sm" href="ver.html">
-                    Ver página
-                  </a>
-                  <button id="btn-ed-copiar-enlace" class="btn btn-secondary btn-sm" type="button">
-                    Copiar enlace
-                  </button>
-                  <a id="btn-ed-compartir-wa" class="btn btn-secondary btn-sm" href="https://wa.me/" target="_blank" rel="noopener noreferrer">
-                    Compartir WhatsApp
-                  </a>
-                </div>
-              </div>
-
-              <div class="domain-block">
-                <h3 class="panel-subtitle">Dominio y SSL</h3>
-                <div class="field">
-                  <label class="field-label" for="ed-dominio-propio">Dominio propio (opcional)</label>
-                  <input id="ed-dominio-propio" class="input" type="text" maxlength="100" placeholder="tunegocio.mx">
-                </div>
-                <ul class="status-checklist">
-                  <li>
-                    <span>Alojamiento y SSL</span>
-                    <span class="status-tag-pending">Pendiente</span>
-                  </li>
-                  <li>
-                    <span>Dominio propio</span>
-                    <span id="ed-estado-dominio-tag" class="status-tag-pending">Pendiente</span>
-                  </li>
-                </ul>
-                <a id="btn-ed-ir-pago" class="btn btn-secondary btn-full btn-sm" href="pago.html">
-                  Activar página
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Panel 4: Analítica -->
-          <div id="panel-analitica" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-analitica" hidden>
-            <div class="form-grid">
-              <div>
-                <h3 class="panel-subtitle">Actividad</h3>
-                <div class="metrics-grid">
-                  <div class="metric-card">
-                    <span id="met-visitas" class="metric-val">0</span>
-                    <span class="metric-lbl">Visitas</span>
+                  <div class="field">
+                    <span class="field-label">Color principal</span>
+                    <div class="brand-palette-readonly">
+                      <span class="palette-dot" aria-hidden="true"></span>
+                      <div class="palette-info">
+                        <span class="palette-name">Verde profundo (#0f5c4d)</span>
+                        <span class="field-hint">Combinado con blanco y neutros para legibilidad en modo claro y oscuro.</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="metric-card">
-                    <span id="met-wa" class="metric-val">0</span>
-                    <span class="metric-lbl">WhatsApp</span>
+
+                  <div class="field">
+                    <label class="field-label" for="ed-fuente">Tipografía</label>
+                    <select id="ed-fuente" class="select">
+                      <option value="sistema">Sistema (limpia y rápida)</option>
+                      <option value="editorial">Editorial (clásica con serifas)</option>
+                      <option value="moderna">Moderna (geométrica)</option>
+                    </select>
                   </div>
-                  <div class="metric-card">
-                    <span id="met-form" class="metric-val">0</span>
-                    <span class="metric-lbl">Consultas</span>
+
+                  <div class="field">
+                    <label class="field-label" for="ed-whatsapp">WhatsApp del negocio</label>
+                    <input id="ed-whatsapp" class="input" type="tel" inputmode="numeric" maxlength="15" placeholder="Ej. 528112345678">
+                    <p id="ed-whatsapp-hint" class="field-hint">Incluye código de país y lada (10 a 15 dígitos) para activar el botón y formulario de contacto.</p>
+                  </div>
+
+                  <div class="field">
+                    <span class="field-label">Logo del negocio</span>
+                    <div class="upload-row">
+                      <label class="btn btn-secondary btn-sm upload-label" for="ed-subir-logo">Subir logo</label>
+                      <input id="ed-subir-logo" type="file" accept="image/*" hidden>
+                      <button id="ed-quitar-logo" class="btn btn-danger-ghost btn-sm" type="button" hidden>Quitar</button>
+                    </div>
+                    <label class="sr-only" for="ed-logo-alt">Texto alternativo del logo</label>
+                    <input id="ed-logo-alt" class="input" type="text" maxlength="120" placeholder="Descripción corta del logo (accesibilidad)">
+                  </div>
+
+                  <div class="field">
+                    <span class="field-label">Imagen de portada</span>
+                    <div class="upload-row">
+                      <button id="ed-cambiar-portada" class="btn btn-secondary btn-sm" type="button">Cambiar foto</button>
+                      <label class="btn btn-secondary btn-sm upload-label" for="ed-subir-portada">Subir imagen</label>
+                      <input id="ed-subir-portada" type="file" accept="image/*" hidden>
+                      <button id="ed-quitar-portada" class="btn btn-danger-ghost btn-sm" type="button" hidden>Quitar</button>
+                    </div>
+                    <p id="ed-portada-meta" class="field-hint"></p>
+                    <div id="ed-portada-opciones" class="cover-options-grid" role="group" aria-label="Fotos sugeridas para tu giro"></div>
+                    <label class="sr-only" for="ed-portada-alt">Texto alternativo de la imagen de portada</label>
+                    <input id="ed-portada-alt" class="input" type="text" maxlength="140" placeholder="Descripción corta de la imagen de portada">
                   </div>
                 </div>
-                <div class="metrics-reset-row">
-                  <button id="btn-reiniciar-analitica" class="btn btn-secondary btn-sm" type="button">
-                    Reiniciar
-                  </button>
+              </div>
+
+              <!-- Panel 2: SEO -->
+              <div id="panel-seo" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-seo" hidden>
+                <div class="form-grid">
+                  <div class="field">
+                    <div class="field-label-row">
+                      <label class="field-label" for="ed-seo-titulo">Título SEO</label>
+                      <span id="ed-seo-titulo-cuenta" class="char-counter">0 / 70</span>
+                    </div>
+                    <input id="ed-seo-titulo" class="input" type="text" maxlength="70" placeholder="Ej. Tacos El Inge en Ciudad de México">
+                    <p id="ed-seo-titulo-estado" class="field-hint">Recomendado: entre 30 y 60 caracteres con el nombre de tu negocio y ciudad.</p>
+                  </div>
+
+                  <div class="field">
+                    <div class="field-label-row">
+                      <label class="field-label" for="ed-seo-desc">Descripción SEO</label>
+                      <span id="ed-seo-desc-cuenta" class="char-counter">0 / 165</span>
+                    </div>
+                    <textarea id="ed-seo-desc" class="textarea" rows="3" maxlength="165" placeholder="Resumen breve de lo que ofreces y cómo contactarte."></textarea>
+                    <p id="ed-seo-desc-estado" class="field-hint">Recomendado: entre 110 y 155 caracteres que inviten a abrir tu página.</p>
+                  </div>
+
+                  <div class="field">
+                    <div class="field-label-row">
+                      <label class="field-label" for="ed-seo-keywords">Palabras clave</label>
+                      <span id="ed-seo-keywords-cuenta" class="char-counter">0 / 160</span>
+                    </div>
+                    <input id="ed-seo-keywords" class="input" type="text" maxlength="160" placeholder="Ej. tacos, comida en Monterrey, pedidos por WhatsApp">
+                    <p class="field-hint">Separa con comas los términos con los que tus clientes buscan tu negocio.</p>
+                  </div>
+
+                  <div class="field">
+                    <span class="field-label">Vista previa en buscador</span>
+                    <div class="seo-snippet" aria-label="Vista previa en resultado de búsqueda">
+                      <p id="seo-preview-url" class="seo-snippet-url"></p>
+                      <p id="seo-preview-titulo" class="seo-snippet-title"></p>
+                      <p id="seo-preview-desc" class="seo-snippet-desc"></p>
+                    </div>
+                  </div>
+
+                  <div class="seo-files-note">
+                    <p class="field-hint">
+                      Archivos técnicos incluidos:
+                      <a href="robots.txt" target="_blank" rel="noopener noreferrer">robots.txt</a> ·
+                      <a href="sitemap.xml" target="_blank" rel="noopener noreferrer">sitemap.xml</a>
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div class="field">
-                <label class="field-label" for="ed-analytics-id">ID de analítica</label>
-                <input id="ed-analytics-id" class="input" type="text" maxlength="60" placeholder="Pendiente">
-              </div>
+              <!-- Panel 3: Publicar -->
+              <div id="panel-publicar" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-publicar" hidden>
+                <div class="form-grid">
+                  <div class="publish-head">
+                    <h3 class="panel-subtitle">Publicación y dirección</h3>
+                    <span id="ed-estado-pub-pill" class="status-pill">Borrador</span>
+                  </div>
 
-              <div class="field">
-                <label class="field-label" for="ed-pixel-id">ID de píxel</label>
-                <input id="ed-pixel-id" class="input" type="text" maxlength="60" placeholder="Pendiente">
-              </div>
-            </div>
-          </div>
+                  <div class="field">
+                    <label class="field-label" for="ed-subdominio">Subdominio en dmd</label>
+                    <div class="subdomain-input-group">
+                      <input
+                        id="ed-subdominio"
+                        class="input subdomain-input"
+                        type="text"
+                        maxlength="40"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="ej. mi-negocio"
+                        aria-describedby="ed-subdominio-estado"
+                      >
+                      <span class="subdomain-suffix">.dmd.dmdmx.dev</span>
+                    </div>
+                    <p id="ed-subdominio-estado" class="field-hint" aria-live="polite">
+                      Tu dirección será un subdominio de dmd, por ejemplo: el-inge.dmd.dmdmx.dev.
+                    </p>
+                  </div>
 
-          <!-- Panel 5: Historial -->
-          <div id="panel-historial" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-historial" hidden>
-            <div class="form-grid">
-              <div>
-                <h3 class="panel-subtitle">Versiones</h3>
-                <p id="versiones-vacio" class="field-hint">Sin versiones anteriores.</p>
-                <ul id="lista-versiones" class="versions-list" hidden></ul>
-              </div>
-
-              <div>
-                <h3 class="panel-subtitle">Respaldo</h3>
-                <div class="backup-panel-actions">
-                  <button id="btn-descargar-respaldo-panel" class="btn btn-secondary btn-sm" type="button">
-                    Descargar (.json)
+                  <button id="btn-ed-publicar" class="btn btn-primary btn-full" type="button">
+                    Publicar página
                   </button>
-                  <button id="btn-importar-respaldo-panel" class="btn btn-secondary btn-sm" type="button">
-                    Importar (.json)
-                  </button>
+
+                  <div id="ed-bloque-publicada" class="published-box" hidden>
+                    <p class="published-label">Enlace compartible listo</p>
+                    <p id="ed-url-publicada" class="published-url-text"></p>
+                    <div class="published-actions-grid">
+                      <a id="btn-ed-ver-publicada" class="btn btn-primary btn-sm" href="ver.html">
+                        Ver página
+                      </a>
+                      <button id="btn-ed-copiar-enlace" class="btn btn-secondary btn-sm" type="button">
+                        Copiar enlace
+                      </button>
+                      <a id="btn-ed-compartir-wa" class="btn btn-secondary btn-sm" href="https://wa.me/" target="_blank" rel="noopener noreferrer">
+                        Compartir WhatsApp
+                      </a>
+                      <a id="btn-ed-ir-pago" class="btn btn-secondary btn-sm" href="pago.html">
+                        Activar plan
+                      </a>
+                    </div>
+                  </div>
+
+                  <div class="domain-block">
+                    <h3 class="panel-subtitle">Estado de activación</h3>
+                    <ul id="lista-estado-publicar" class="actionable-checklist"></ul>
+
+                    <div class="field">
+                      <label class="field-label" for="ed-dominio-propio">Dominio propio (opcional)</label>
+                      <input id="ed-dominio-propio" class="input" type="text" maxlength="100" placeholder="Ej. minegocio.com">
+                      <p class="field-hint">Si ya tienes dominio propio, anótalo aquí para configurarlo al activar tu plan Negocio.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <h3 class="panel-subtitle">Estado</h3>
-                <ul id="lista-seguridad" class="security-checklist"></ul>
+              <!-- Panel 4: Analítica -->
+              <div id="panel-analitica" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-analitica" hidden>
+                <div class="form-grid">
+                  <div>
+                    <h3 class="panel-subtitle">Actividad registrada</h3>
+                    <p class="field-hint analytics-intro">
+                      Estos contadores registran en este navegador las interacciones reales sobre tu página publicada.
+                    </p>
+
+                    <div class="metrics-grid">
+                      <div class="metric-card">
+                        <span id="met-visitas" class="metric-val">0</span>
+                        <span class="metric-lbl">Visitas</span>
+                        <span class="metric-help">Aperturas de tu página</span>
+                      </div>
+                      <div class="metric-card">
+                        <span id="met-wa" class="metric-val">0</span>
+                        <span class="metric-lbl">WhatsApp</span>
+                        <span class="metric-help">Clics al botón directo</span>
+                      </div>
+                      <div class="metric-card">
+                        <span id="met-form" class="metric-val">0</span>
+                        <span class="metric-lbl">Consultas</span>
+                        <span class="metric-help">Envíos del formulario</span>
+                      </div>
+                    </div>
+
+                    <div class="metrics-reset-row">
+                      <button id="btn-reiniciar-analitica" class="btn btn-secondary btn-sm" type="button">
+                        Reiniciar contadores
+                      </button>
+                    </div>
+
+                    <div id="confirmar-reiniciar-analitica" class="confirm-box" role="alert" hidden>
+                      <p>¿Reiniciar a cero las visitas, clics de WhatsApp y consultas de esta página?</p>
+                      <div class="confirm-actions">
+                        <button id="btn-confirmar-reinicio-analitica" class="btn btn-danger-ghost btn-sm" type="button">
+                          Sí, reiniciar
+                        </button>
+                        <button id="btn-cancelar-reinicio-analitica" class="btn btn-secondary btn-sm" type="button">
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="field-label" for="ed-analytics-id">ID de medición de analítica (opcional)</label>
+                    <input id="ed-analytics-id" class="input" type="text" maxlength="60" placeholder="Ej. G-XXXXXXXXXX">
+                    <p class="field-hint">Guarda tu identificador para vincular estadísticas externas al activar tu plan.</p>
+                  </div>
+
+                  <div class="field">
+                    <label class="field-label" for="ed-pixel-id">ID de píxel de seguimiento (opcional)</label>
+                    <input id="ed-pixel-id" class="input" type="text" maxlength="60" placeholder="Ej. 123456789012345">
+                    <p class="field-hint">Opcional si utilizas campañas publicitarias en redes sociales.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panel 5: Historial -->
+              <div id="panel-historial" class="editor-panel card" role="tabpanel" aria-labelledby="edtab-historial" hidden>
+                <div class="form-grid">
+                  <div>
+                    <h3 class="panel-subtitle">Historial de versiones</h3>
+                    <p class="field-hint">Cada cambio importante guarda un punto de restauración con su resumen.</p>
+                    <p id="versiones-vacio" class="field-hint">Sin versiones anteriores.</p>
+                    <ul id="lista-versiones" class="versions-list" hidden></ul>
+                  </div>
+
+                  <div>
+                    <h3 class="panel-subtitle">Respaldo de archivos</h3>
+                    <div class="backup-panel-actions">
+                      <button id="btn-descargar-respaldo-panel" class="btn btn-secondary btn-sm" type="button">
+                        Descargar (.json)
+                      </button>
+                      <button id="btn-importar-respaldo-panel" class="btn btn-secondary btn-sm" type="button">
+                        Importar (.json)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 class="panel-subtitle">Lista de verificación</h3>
+                    <ul id="lista-seguridad" class="actionable-checklist"></ul>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Lienzo editable -->
-          <section class="editor-preview-section" aria-label="Vista previa">
-            <div class="editor-preview-head">
-              <h2 class="section-title">Vista previa</h2>
-              <span id="etiqueta-viewport" class="status-pill">Celular 360 px</span>
-            </div>
-            <div id="editor-preview-stage" class="editor-preview-stage mode-mobile">
-              <div id="lienzo-editor" class="editor-canvas"></div>
-            </div>
-          </section>
+            <!-- Columna derecha: Vista previa real / Modo edición -->
+            <section class="editor-preview-col" aria-label="Vista previa de la página">
+              <div class="editor-preview-head">
+                <div class="editor-preview-title-wrap">
+                  <h2 class="section-title preview-col-title">Vista previa</h2>
+                  <span id="etiqueta-modo-lienzo" class="status-pill">Vista previa real</span>
+                </div>
+                <span id="etiqueta-viewport" class="viewport-pill">Celular 360 px</span>
+              </div>
+
+              <div id="editor-modo-aviso" class="edit-mode-banner" hidden>
+                <span>Modo edición activo: haz clic en cualquier texto para modificarlo o usa Subir y Bajar para ordenar las secciones.</span>
+                <button id="btn-salir-modo-editar" class="btn btn-primary btn-sm" type="button">
+                  Ver vista previa real
+                </button>
+              </div>
+
+              <div id="editor-preview-stage" class="editor-preview-stage mode-mobile">
+                <div id="lienzo-editor" class="editor-canvas"></div>
+              </div>
+            </section>
+          </div>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- Aviso flotante con Deshacer al borrar -->
+  <div id="app-undo-toast" class="undo-toast" role="status" aria-live="polite" hidden>
+    <span id="app-undo-texto" class="undo-toast-text"></span>
+    <div class="undo-toast-actions">
+      <button id="btn-app-undo" class="btn btn-primary btn-sm" type="button">Deshacer</button>
+      <button id="btn-app-undo-cerrar" class="btn btn-secondary btn-sm" type="button" aria-label="Cerrar aviso">Cerrar</button>
     </div>
   </div>
 

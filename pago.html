@@ -5,35 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Planes y suscripción | dmd</title>
-  <meta name="description" content="Consulta tu suscripción real de dmd y activa un plan con pago seguro en Mercado Pago.">
+  <meta name="description" content="Compara los planes mensuales de dmd (Básico, Emprendedor y Negocio) y activa tu suscripción con pago seguro en Mercado Pago.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido principal</a>
 
   <header class="site-header">
-    <div class="container header-inner">
+    <div class="container container-wide header-inner">
       <a class="brand" href="index.html" aria-label="dmd, ir al inicio">
+        <span class="brand-squares" aria-hidden="true">
+          <span class="brand-sq brand-sq-1"></span>
+          <span class="brand-sq brand-sq-2"></span>
+          <span class="brand-sq brand-sq-3"></span>
+          <span class="brand-sq brand-sq-4"></span>
+        </span>
         <span>dmd</span>
       </a>
 
       <nav class="site-nav" aria-label="Navegación principal">
-        <a class="nav-link" href="index.html">Inicio</a>
-        <a class="nav-link" href="app.html">Crear páginas web</a>
+        <a class="nav-link nav-link-desktop" href="index.html">Inicio</a>
+        <a class="nav-link" href="login.html">Cuenta</a>
+        <a class="nav-link nav-link-cta" href="app.html">Crear mi página</a>
       </nav>
     </div>
   </header>
 
   <main id="contenido" tabindex="-1">
-    <div class="container">
+    <div class="container container-plans">
       <section class="page-intro" aria-labelledby="titulo-pago">
-        <h1 id="titulo-pago">Planes y suscripción</h1>
+        <h1 id="titulo-pago">Planes mensuales de dmd</h1>
+        <p class="lead">
+          Elige el plan que mejor se adapta a tu negocio. Todos los cobros se autorizan directamente en la pasarela segura de Mercado Pago.
+        </p>
       </section>
 
+      <!-- Resumen del borrador seleccionado si viene desde la app -->
       <section id="pago-resumen-borrador" class="card payment-context-card" aria-labelledby="titulo-resumen-pagina" hidden>
         <div class="session-header">
           <div>
-            <p class="field-hint">Página</p>
+            <p class="field-hint">Página seleccionada</p>
             <h2 id="titulo-resumen-pagina" class="payment-biz-name"></h2>
             <p id="pago-meta-borrador" class="session-email"></p>
           </div>
@@ -41,33 +52,34 @@
         </div>
       </section>
 
-      <section id="pago-cargando-sesion" class="card payment-context-card" aria-live="polite">
-        <p class="field-hint">Verificando sesión...</p>
-      </section>
+      <!-- Estado de sesión no bloqueante -->
+      <section id="pago-estado-sesion-bar" class="session-bar-card" aria-live="polite">
+        <div id="pago-cargando-sesion" class="loading-inline">
+          <span class="spinner spinner-accent" aria-hidden="true"></span>
+          <span>Verificando estado de tu cuenta...</span>
+        </div>
 
-      <section id="pago-requiere-sesion" class="card payment-context-card" aria-labelledby="titulo-requiere-sesion" hidden>
-        <h2 id="titulo-requiere-sesion">Inicia sesión primero</h2>
-        <p id="pago-requiere-sesion-msg" class="payment-security-note">
-          Necesitas iniciar sesión con tu cuenta de DMD para consultar tu suscripción o activar un plan.
-        </p>
-        <div class="payment-auth-actions">
-          <a id="btn-pago-ir-login" class="btn btn-primary btn-full" href="login.html">
-            Iniciar sesión
-          </a>
-          <a
-            id="btn-pago-google-sso"
-            class="btn btn-secondary btn-full"
-            href="https://login.dmdmx.dev/"
-          >
-            Continuar con Google en login.dmdmx.dev
-          </a>
+        <div id="pago-sesion-aviso" class="session-bar-content" hidden>
+          <div>
+            <p id="pago-sesion-titulo" class="session-bar-title"></p>
+            <p id="pago-sesion-sub" class="field-hint"></p>
+          </div>
+          <div class="session-bar-actions">
+            <button id="btn-pago-reintentar-sesion" class="btn btn-secondary btn-sm" type="button" hidden>
+              Reintentar
+            </button>
+            <a id="btn-pago-ir-login-top" class="btn btn-secondary btn-sm" href="login.html">
+              Iniciar sesión
+            </a>
+          </div>
         </div>
       </section>
 
+      <!-- Tarjeta de suscripción activa (cuando hay sesión) -->
       <section id="pago-suscripcion-card" class="card payment-context-card" aria-labelledby="titulo-suscripcion" hidden>
         <div class="payment-secure-head">
           <div>
-            <p class="field-hint">Tu suscripción</p>
+            <p class="field-hint">Tu suscripción actual</p>
             <h2 id="titulo-suscripcion" class="payment-biz-name">Consultando...</h2>
           </div>
           <span id="pago-suscripcion-badge" class="status-pill" hidden></span>
@@ -95,40 +107,101 @@
         </div>
       </section>
 
-      <section class="card payment-secure-card" aria-labelledby="titulo-planes">
+      <!-- Catálogo de planes siempre visible -->
+      <section class="plans-section" aria-labelledby="titulo-planes">
         <div class="payment-secure-head">
-          <h2 id="titulo-planes">Planes mensuales</h2>
-          <span class="status-pill">Mercado Pago</span>
+          <h2 id="titulo-planes">Compara los 3 planes</h2>
+          <span class="status-pill">Pasarela segura · Mercado Pago</span>
         </div>
 
         <div id="pago-error-general" class="form-error-summary" role="alert" hidden></div>
 
-        <div id="lista-planes-pago" class="plans-grid" aria-label="Lista de planes disponibles"></div>
+        <div id="lista-planes-pago" class="plans-grid plans-grid-3" aria-label="Lista de planes disponibles"></div>
 
         <p id="estado-pago" class="status-banner" role="status" aria-live="polite"></p>
+      </section>
+
+      <!-- Pasos claros de pago -->
+      <section id="pago-checkout-pasos" class="card checkout-steps-card" aria-labelledby="titulo-pasos-pago">
+        <div class="checkout-head">
+          <div>
+            <h2 id="titulo-pasos-pago">Cómo activar tu plan</h2>
+            <p class="field-hint">Sigue estos 3 pasos para completar tu suscripción de forma segura.</p>
+          </div>
+          <div id="checkout-plan-resumen" class="checkout-selected-pill">
+            Plan elegido: <strong id="checkout-plan-nombre">Emprendedor</strong> · <span id="checkout-plan-precio">$189 MXN al mes</span>
+          </div>
+        </div>
+
+        <ol class="checkout-steps-list">
+          <li class="checkout-step is-done">
+            <span class="step-number" aria-hidden="true">1</span>
+            <div class="checkout-step-body">
+              <h3>Plan seleccionado</h3>
+              <p id="checkout-paso1-desc">Elegiste el plan Emprendedor ($189 MXN al mes). Puedes cambiarlo arriba cuando quieras.</p>
+            </div>
+          </li>
+
+          <li id="checkout-paso2-item" class="checkout-step">
+            <span class="step-number" aria-hidden="true">2</span>
+            <div class="checkout-step-body">
+              <h3>Confirma tu cuenta</h3>
+              <p id="checkout-paso2-desc">Inicia sesión para asociar tu suscripción a tu cuenta de dmd.</p>
+              <div id="checkout-auth-actions" class="checkout-inline-actions">
+                <a id="btn-pago-ir-login" class="btn btn-primary btn-sm" href="login.html">
+                  Iniciar sesión o crear cuenta
+                </a>
+                <a id="btn-pago-google-sso" class="btn btn-secondary btn-sm" href="https://login.dmdmx.dev/">
+                  Continuar con Google
+                </a>
+              </div>
+            </div>
+          </li>
+
+          <li class="checkout-step">
+            <span class="step-number" aria-hidden="true">3</span>
+            <div class="checkout-step-body">
+              <h3>Autoriza el pago en Mercado Pago</h3>
+              <p id="checkout-paso3-desc">Te llevaremos a la pasarela oficial de Mercado Pago para completar el pago mensual sin compartir tu tarjeta con dmd.</p>
+              <div class="checkout-inline-actions">
+                <button id="btn-continuar-mp" class="btn btn-primary" type="button">
+                  Ir al pago seguro en Mercado Pago
+                </button>
+              </div>
+            </div>
+          </li>
+        </ol>
 
         <p class="notice-box" role="note">
-          El cobro se autoriza directamente en la página segura de Mercado Pago. dmd nunca pide ni guarda datos de tu tarjeta.
+          Seguridad de pago: el cobro se autoriza exclusivamente en la página segura de Mercado Pago. dmd nunca pide ni guarda números de tarjeta ni datos bancarios en tu navegador o archivos locales.
         </p>
       </section>
 
       <div class="subpage-back-row">
-        <a class="btn btn-secondary btn-full" href="app.html">Volver al chat</a>
+        <a class="btn btn-secondary btn-full" href="app.html">Volver al creador de páginas</a>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-inner">
+    <div class="container container-wide footer-inner">
       <div class="footer-top">
-        <span class="footer-brand">
+        <a class="footer-brand" href="index.html" aria-label="dmd, ir al inicio">
+          <span class="brand-squares brand-squares-sm" aria-hidden="true">
+            <span class="brand-sq brand-sq-1"></span>
+            <span class="brand-sq brand-sq-2"></span>
+            <span class="brand-sq brand-sq-3"></span>
+            <span class="brand-sq brand-sq-4"></span>
+          </span>
           <span>dmd</span>
-        </span>
+        </a>
         <nav class="footer-nav" aria-label="Navegación del pie de página">
           <a class="footer-link" href="index.html">Inicio</a>
           <a class="footer-link" href="app.html">Crear páginas web</a>
+          <a class="footer-link" href="login.html">Tu cuenta</a>
         </nav>
       </div>
+      <p class="footer-note">dmd · Constructor de páginas web para negocios.</p>
     </div>
   </footer>
 

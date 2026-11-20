@@ -11,36 +11,56 @@
    Seguridad:
    - Nunca pide ni guarda números de tarjeta, vencimientos ni CVC en el navegador.
    - La autorización del cobro ocurre únicamente en la página de Mercado Pago.
-
-   BLOQUEO CONOCIDO (PENDIENTE EN OTRO REPOSITORIO):
-   - En DMD-BC/dmd-paginas-web-ia (api/mp.js), el parámetro back_url está fijo
-     a "https://crear.dmdmx.dev/app.html?sub=ok". Por ello, al terminar de
-     autorizar el pago en Mercado Pago, el usuario regresará a crear.dmdmx.dev
-     y no a dmd.dmdmx.dev. Resolver esto requiere modificar api/mp.js en ese
-     otro repositorio para aceptar el origen de retorno https://dmd.dmdmx.dev.
    ========================================================================== */
 
 const API_MP_BASE = "https://crear.dmdmx.dev/api/mp";
 
-// Planes reales definidos en DMD-BC/dmd-paginas-web-ia (api/_mp.js).
+// Planes reales con los precios vigentes ($79, $189 y $299 MXN al mes) y funciones existentes en dmd.
 const PLANES_DMD = [
   {
     id: "pro",
-    nombre: "Plan Emprendedor Pro - DMD",
+    nombre: "Básico",
+    subtitulo: "Ideal para publicar tu primera página web y recibir mensajes.",
     precioMxn: 79,
-    periodicidad: "al mes"
+    periodicidad: "al mes",
+    recomendado: false,
+    incluye: [
+      "Creación guiada desde el chat y edición manual de textos",
+      "Las 3 plantillas profesionales (Clásica, Editorial y Directa)",
+      "Foto de portada según tu giro o subida de tu logo e imagen",
+      "Botón y formulario conectados directo a tu WhatsApp",
+      "Publicación con enlace compartible para celular y escritorio"
+    ]
   },
   {
     id: "pyme",
-    nombre: "Plan Crecimiento PyME - DMD",
+    nombre: "Emprendedor",
+    subtitulo: "Para negocios que quieren cuidar su SEO y medir resultados.",
     precioMxn: 189,
-    periodicidad: "al mes"
+    periodicidad: "al mes",
+    recomendado: true,
+    incluye: [
+      "Todo lo incluido en el plan Básico",
+      "Configuración de SEO (título, descripción, palabras clave y vista en buscador)",
+      "Historial de versiones con restauración confirmada y respaldo (.json)",
+      "Panel de actividad con visitas, clics en WhatsApp y consultas",
+      "Campos listos para tu ID de analítica y tu ID de píxel"
+    ]
   },
   {
     id: "elite",
-    nombre: "Plan Corporativo Elite - DMD",
+    nombre: "Negocio",
+    subtitulo: "Para marcas con varias líneas, sucursales o dominio propio.",
     precioMxn: 299,
-    periodicidad: "al mes"
+    periodicidad: "al mes",
+    recomendado: false,
+    incluye: [
+      "Todo lo incluido en el plan Emprendedor",
+      "Gestión de múltiples borradores, páginas duplicadas y conversaciones",
+      "Configuración de subdominio en dmd y opción de dominio propio",
+      "Edición continua con vista previa real a 360 px y escritorio",
+      "Respaldo completo y control de cambios desde un solo lugar"
+    ]
   }
 ];
 
@@ -66,6 +86,7 @@ const PLANES_DMD = [
   let suscripcionActual = null;
   let consultandoSuscripcion = false;
   let procesandoAccion = false;
+  let planSeleccionadoId = "pyme";
 
   function obtenerPlanPorId(planId) {
     const clave = String(planId || "").trim().toLowerCase();
@@ -131,7 +152,7 @@ const PLANES_DMD = [
 
     return {
       plan: planId,
-      nombrePlan: planDef ? planDef.nombre : planId || "Plan DMD",
+      nombrePlan: planDef ? `Plan ${planDef.nombre}` : planId || "Plan dmd",
       montoMxn: Number.isFinite(monto) && monto > 0 ? monto : planDef ? planDef.precioMxn : null,
       status: status || "pending",
       creado: fecha
@@ -153,6 +174,12 @@ const PLANES_DMD = [
       fetchOpts.body = JSON.stringify(opciones.body);
     }
 
+    const controlador = typeof AbortController === "function" ? new AbortController() : null;
+    const temporizador = controlador ? window.setTimeout(() => controlador.abort(), 10000) : null;
+    if (controlador) {
+      fetchOpts.signal = controlador.signal;
+    }
+
     let resp;
     try {
       resp = await window.fetch(`${API_MP_BASE}${ruta}`, fetchOpts);
@@ -164,8 +191,12 @@ const PLANES_DMD = [
         noAutenticado: false,
         data: null,
         mensaje:
-          "No se pudo conectar con el servicio de suscripciones (crear.dmdmx.dev). Intenta de nuevo."
+          "No se pudo conectar con el servicio de suscripciones en este momento. Intenta de nuevo."
       };
+    } finally {
+      if (temporizador) {
+        window.clearTimeout(temporizador);
+      }
     }
 
     let data = null;
@@ -262,7 +293,7 @@ const PLANES_DMD = [
     if (borrador && borrador.datos) {
       tarjetaResumen.hidden = false;
       nombreEl.textContent = borrador.datos.nombre;
-      const giro = GIROS_ETIQUETAS[borrador.datos.giro] || borrador.datos.giro;
+      const giro = borrador.datos.giroTexto || GIROS_ETIQUETAS[borrador.datos.giro] || borrador.datos.giro;
       metaEl.textContent = `${giro} · ${borrador.datos.ciudad}`;
       estadoEl.textContent = borrador.publicadaSlug ? "Publicada" : "Borrador";
     } else {
@@ -298,23 +329,104 @@ const PLANES_DMD = [
     return null;
   }
 
-  function mostrarBloqueRequiereSesion(mensajePersonalizado) {
-    const cargandoEl = document.getElementById("pago-cargando-sesion");
-    const reqCard = document.getElementById("pago-requiere-sesion");
-    const reqMsg = document.getElementById("pago-requiere-sesion-msg");
-    const subCard = document.getElementById("pago-suscripcion-card");
+  function crearIconoCheckPlan() {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("class", "plan-check-icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2.4");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", "M20 6 9 17l-5-5");
+    svg.appendChild(path);
+    return svg;
+  }
 
-    if (cargandoEl) {
-      cargandoEl.hidden = true;
+  function renderizarPasosCheckout() {
+    const plan = obtenerPlanPorId(planSeleccionadoId) || PLANES_DMD[1];
+    const sesion = obtenerSesion();
+
+    const nombreEl = document.getElementById("checkout-plan-nombre");
+    const precioEl = document.getElementById("checkout-plan-precio");
+    const paso1Desc = document.getElementById("checkout-paso1-desc");
+    const paso2Item = document.getElementById("checkout-paso2-item");
+    const paso2Desc = document.getElementById("checkout-paso2-desc");
+    const authActions = document.getElementById("checkout-auth-actions");
+    const btnLogin = document.getElementById("btn-pago-ir-login");
+    const paso3Desc = document.getElementById("checkout-paso3-desc");
+    const btnMp = document.getElementById("btn-continuar-mp");
+
+    if (nombreEl) {
+      nombreEl.textContent = plan.nombre;
     }
-    if (subCard) {
-      subCard.hidden = true;
+    if (precioEl) {
+      precioEl.textContent = `$${plan.precioMxn} MXN ${plan.periodicidad}`;
     }
-    if (reqCard) {
-      reqCard.hidden = false;
+    if (paso1Desc) {
+      paso1Desc.textContent = `Elegiste el plan ${plan.nombre} ($${plan.precioMxn} MXN ${plan.periodicidad}). Puedes cambiarlo arriba en cualquier momento.`;
     }
-    if (reqMsg && mensajePersonalizado) {
-      reqMsg.textContent = mensajePersonalizado;
+    if (btnLogin) {
+      btnLogin.href = `login.html?plan=${encodeURIComponent(plan.id)}`;
+    }
+
+    if (sesion) {
+      if (paso2Item) {
+        paso2Item.classList.add("is-done");
+      }
+      if (paso2Desc) {
+        paso2Desc.textContent = `Sesión confirmada como ${sesion.nombre} (${sesion.correo}).`;
+      }
+      if (authActions) {
+        authActions.hidden = true;
+      }
+      if (paso3Desc) {
+        paso3Desc.textContent = `Haz clic abajo para autorizar tu plan ${plan.nombre} ($${plan.precioMxn} MXN al mes) directamente en Mercado Pago.`;
+      }
+      if (btnMp) {
+        btnMp.disabled = procesandoAccion;
+        btnMp.textContent = procesandoAccion
+          ? "Conectando con Mercado Pago..."
+          : `Pagar plan ${plan.nombre} en Mercado Pago`;
+      }
+    } else {
+      if (paso2Item) {
+        paso2Item.classList.remove("is-done");
+      }
+      if (paso2Desc) {
+        paso2Desc.textContent = "Inicia sesión o crea tu cuenta para asociar tu suscripción antes de pasar a Mercado Pago.";
+      }
+      if (authActions) {
+        authActions.hidden = false;
+      }
+      if (paso3Desc) {
+        paso3Desc.textContent = "Cuando inicies sesión, este botón te llevará directo a la pasarela segura de Mercado Pago.";
+      }
+      if (btnMp) {
+        btnMp.disabled = false;
+        btnMp.textContent = `Continuar con plan ${plan.nombre}`;
+      }
+    }
+  }
+
+  function seleccionarPlan(planId, desplazar) {
+    const plan = obtenerPlanPorId(planId);
+    if (!plan) {
+      return;
+    }
+    planSeleccionadoId = plan.id;
+    renderizarPlanes();
+    renderizarPasosCheckout();
+    mostrarEstadoPago(`Plan ${plan.nombre} seleccionado ($${plan.precioMxn} MXN al mes).`);
+
+    if (desplazar) {
+      const seccionPasos = document.getElementById("pago-checkout-pasos");
+      if (seccionPasos && typeof seccionPasos.scrollIntoView === "function") {
+        seccionPasos.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
     }
   }
 
@@ -372,8 +484,8 @@ const PLANES_DMD = [
       ? `$${suscripcionActual.montoMxn} MXN al mes`
       : "";
     detalleEl.textContent = montoTxt
-      ? `Plan ${suscripcionActual.plan} · ${montoTxt}`
-      : `Plan ${suscripcionActual.plan}`;
+      ? `${suscripcionActual.nombrePlan} · ${montoTxt}`
+      : suscripcionActual.nombrePlan;
 
     if (suscripcionActual.creado) {
       fechaEl.textContent = `Creada: ${suscripcionActual.creado}`;
@@ -392,17 +504,22 @@ const PLANES_DMD = [
     }
     contenedor.textContent = "";
 
-    const sesion = obtenerSesion();
-
     PLANES_DMD.forEach((plan) => {
-      const card = document.createElement("article");
-      card.className = "plan-card";
-      card.dataset.planId = plan.id;
-
       const esActual =
         suscripcionActual &&
         suscripcionActual.plan === plan.id &&
         !esEstadoCancelado(suscripcionActual.status);
+      const esSeleccionado = planSeleccionadoId === plan.id;
+
+      const card = document.createElement("article");
+      card.className = "plan-card";
+      if (plan.recomendado) {
+        card.classList.add("plan-card-recommended");
+      }
+      if (esSeleccionado) {
+        card.classList.add("plan-card-selected");
+      }
+      card.dataset.planId = plan.id;
 
       const head = document.createElement("div");
       head.className = "plan-card-head";
@@ -417,7 +534,16 @@ const PLANES_DMD = [
         badge.className = "status-pill";
         badge.textContent = formatearEstadoSuscripcion(suscripcionActual.status);
         head.appendChild(badge);
+      } else if (plan.recomendado) {
+        const badgeRec = document.createElement("span");
+        badgeRec.className = "plan-badge-recommended";
+        badgeRec.textContent = "Recomendado";
+        head.appendChild(badgeRec);
       }
+
+      const desc = document.createElement("p");
+      desc.className = "plan-card-desc";
+      desc.textContent = plan.subtitulo;
 
       const precio = document.createElement("p");
       precio.className = "plan-card-price";
@@ -428,26 +554,41 @@ const PLANES_DMD = [
       periodo.textContent = ` ${plan.periodicidad}`;
       precio.appendChild(periodo);
 
-      card.appendChild(head);
-      card.appendChild(precio);
+      const ul = document.createElement("ul");
+      ul.className = "plan-features-list";
+      plan.incluye.forEach((itemTxt) => {
+        const li = document.createElement("li");
+        li.className = "plan-feature-item";
+        li.appendChild(crearIconoCheckPlan());
+        const sp = document.createElement("span");
+        sp.textContent = itemTxt;
+        li.appendChild(sp);
+        ul.appendChild(li);
+      });
 
-      if (sesion) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn btn-primary btn-full";
-        btn.dataset.planSubscribe = plan.id;
-        btn.disabled = procesandoAccion;
-        btn.textContent = "Suscribirme con Mercado Pago";
-        btn.addEventListener("click", () => iniciarSuscripcion(plan));
-        card.appendChild(btn);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className =
+        plan.recomendado || esSeleccionado
+          ? "btn btn-primary btn-full plan-select-btn"
+          : "btn btn-secondary btn-full plan-select-btn";
+      btn.dataset.planSelect = plan.id;
+      btn.setAttribute("aria-pressed", esSeleccionado ? "true" : "false");
+      btn.disabled = procesandoAccion;
+      if (esActual) {
+        btn.textContent = "Plan actual";
+      } else if (esSeleccionado) {
+        btn.textContent = `Plan ${plan.nombre} elegido`;
       } else {
-        const enlaceLogin = document.createElement("a");
-        enlaceLogin.className = "btn btn-secondary btn-full";
-        enlaceLogin.href = "login.html";
-        enlaceLogin.textContent = "Inicia sesión para suscribirte";
-        card.appendChild(enlaceLogin);
+        btn.textContent = `Elegir plan ${plan.nombre}`;
       }
+      btn.addEventListener("click", () => seleccionarPlan(plan.id, true));
 
+      card.appendChild(head);
+      card.appendChild(desc);
+      card.appendChild(precio);
+      card.appendChild(ul);
+      card.appendChild(btn);
       contenedor.appendChild(card);
     });
   }
@@ -468,8 +609,12 @@ const PLANES_DMD = [
 
     if (res.noAutenticado) {
       suscripcionActual = null;
-      mostrarBloqueRequiereSesion("Tu sesión no está activa. Inicia sesión para consultar o activar un plan.");
+      const subCard = document.getElementById("pago-suscripcion-card");
+      if (subCard) {
+        subCard.hidden = true;
+      }
       renderizarPlanes();
+      renderizarPasosCheckout();
       return;
     }
 
@@ -478,18 +623,21 @@ const PLANES_DMD = [
         suscripcionActual = null;
         renderizarTarjetaSuscripcion(null);
         renderizarPlanes();
+        renderizarPasosCheckout();
         return;
       }
       suscripcionActual = null;
       mostrarErrorGeneral(res.mensaje);
       renderizarTarjetaSuscripcion({ error: res.mensaje });
       renderizarPlanes();
+      renderizarPasosCheckout();
       return;
     }
 
     suscripcionActual = normalizarSuscripcion(res.data);
     renderizarTarjetaSuscripcion(null);
     renderizarPlanes();
+    renderizarPasosCheckout();
   }
 
   async function iniciarSuscripcion(plan) {
@@ -498,15 +646,23 @@ const PLANES_DMD = [
     }
     const sesion = obtenerSesion();
     if (!sesion) {
-      mostrarBloqueRequiereSesion("Inicia sesión primero para suscribirte a un plan.");
-      renderizarPlanes();
+      mostrarEstadoPago(`Inicia sesión para activar el plan ${plan.nombre}.`);
+      const paso2 = document.getElementById("checkout-paso2-item");
+      if (paso2 && typeof paso2.scrollIntoView === "function") {
+        paso2.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      const btnLogin = document.getElementById("btn-pago-ir-login");
+      if (btnLogin) {
+        btnLogin.focus();
+      }
       return;
     }
 
     procesandoAccion = true;
     mostrarErrorGeneral("");
-    mostrarEstadoPago(`Conectando ${plan.nombre} con Mercado Pago...`);
+    mostrarEstadoPago(`Conectando plan ${plan.nombre} con Mercado Pago...`);
     renderizarPlanes();
+    renderizarPasosCheckout();
 
     try {
       const res = await solicitarMp("/subscribe", {
@@ -516,7 +672,7 @@ const PLANES_DMD = [
 
       if (res.noAutenticado) {
         mostrarEstadoPago("");
-        mostrarBloqueRequiereSesion("Tu sesión expiró. Inicia sesión primero para suscribirte.");
+        mostrarErrorGeneral("Tu sesión expiró. Inicia sesión primero para continuar al pago.");
         if (window.dmdCuenta && typeof window.dmdCuenta.verificarSesion === "function") {
           window.dmdCuenta.verificarSesion();
         }
@@ -534,18 +690,19 @@ const PLANES_DMD = [
         (res.data.init_point || res.data.initPoint || res.data.url || "");
 
       if (typeof initPoint === "string" && /^https:\/\//i.test(initPoint.trim())) {
-        mostrarEstadoPago("Redirigiendo a Mercado Pago...");
+        mostrarEstadoPago("Redirigiendo a la pasarela segura de Mercado Pago...");
         window.location.assign(initPoint.trim());
         return;
       }
 
       mostrarEstadoPago("");
       mostrarErrorGeneral(
-        "El servidor no devolvió un enlace válido de Mercado Pago (init_point)."
+        "El servicio de pago no devolvió un enlace válido de Mercado Pago. Intenta de nuevo."
       );
     } finally {
       procesandoAccion = false;
       renderizarPlanes();
+      renderizarPasosCheckout();
     }
   }
 
@@ -569,7 +726,7 @@ const PLANES_DMD = [
 
       if (res.noAutenticado) {
         mostrarEstadoPago("");
-        mostrarBloqueRequiereSesion("Tu sesión expiró. Inicia sesión para gestionar tu suscripción.");
+        mostrarErrorGeneral("Tu sesión expiró. Inicia sesión para gestionar tu suscripción.");
         return;
       }
 
@@ -591,14 +748,21 @@ const PLANES_DMD = [
         btnConfirmar.textContent = "Sí, cancelar";
       }
       renderizarPlanes();
+      renderizarPasosCheckout();
     }
   }
 
   async function sincronizarVistaPago() {
     renderizarResumenBorrador();
+    renderizarPlanes();
+    renderizarPasosCheckout();
 
     const cargandoEl = document.getElementById("pago-cargando-sesion");
-    const reqCard = document.getElementById("pago-requiere-sesion");
+    const avisoBar = document.getElementById("pago-sesion-aviso");
+    const sesionTit = document.getElementById("pago-sesion-titulo");
+    const sesionSub = document.getElementById("pago-sesion-sub");
+    const btnReintentar = document.getElementById("btn-pago-reintentar-sesion");
+    const btnLoginTop = document.getElementById("btn-pago-ir-login-top");
     const subCard = document.getElementById("pago-suscripcion-card");
 
     const verificada =
@@ -610,13 +774,12 @@ const PLANES_DMD = [
       if (cargandoEl) {
         cargandoEl.hidden = false;
       }
-      if (reqCard) {
-        reqCard.hidden = true;
+      if (avisoBar) {
+        avisoBar.hidden = true;
       }
       if (subCard) {
         subCard.hidden = true;
       }
-      renderizarPlanes();
       return;
     }
 
@@ -632,20 +795,50 @@ const PLANES_DMD = [
 
     if (!sesion) {
       suscripcionActual = null;
-      mostrarErrorGeneral(errorAuth || "");
-      mostrarBloqueRequiereSesion(
-        errorAuth
-          ? "No se pudo verificar tu sesión con login.dmdmx.dev. Inicia sesión cuando el servicio responda."
-          : "Necesitas iniciar sesión con tu cuenta de DMD para consultar tu suscripción o activar un plan."
-      );
+      if (subCard) {
+        subCard.hidden = true;
+      }
+      if (avisoBar) {
+        avisoBar.hidden = false;
+      }
+      if (sesionTit) {
+        sesionTit.textContent = errorAuth
+          ? "No pudimos verificar tu sesión en este momento"
+          : "Puedes explorar y elegir tu plan ahora";
+      }
+      if (sesionSub) {
+        sesionSub.textContent = errorAuth
+          ? "Puedes revisar los planes abajo y reintentar la conexión cuando quieras."
+          : "Para finalizar el cobro en Mercado Pago solo te pediremos iniciar sesión en tu cuenta.";
+      }
+      if (btnReintentar) {
+        btnReintentar.hidden = !errorAuth;
+      }
+      if (btnLoginTop) {
+        btnLoginTop.hidden = false;
+        btnLoginTop.href = `login.html?plan=${encodeURIComponent(planSeleccionadoId)}`;
+      }
       renderizarPlanes();
+      renderizarPasosCheckout();
       return;
     }
 
-    if (reqCard) {
-      reqCard.hidden = true;
+    if (avisoBar) {
+      avisoBar.hidden = false;
     }
-    renderizarPlanes();
+    if (sesionTit) {
+      sesionTit.textContent = `Sesión iniciada: ${sesion.nombre}`;
+    }
+    if (sesionSub) {
+      sesionSub.textContent = sesion.correo;
+    }
+    if (btnReintentar) {
+      btnReintentar.hidden = true;
+    }
+    if (btnLoginTop) {
+      btnLoginTop.hidden = true;
+    }
+
     await cargarSuscripcionReal();
   }
 
@@ -656,10 +849,22 @@ const PLANES_DMD = [
   };
 
   function montar() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const planUrl = params.get("plan");
+      if (planUrl && obtenerPlanPorId(planUrl)) {
+        planSeleccionadoId = planUrl.trim().toLowerCase();
+      }
+    } catch (error) {
+      // Ignorar
+    }
+
     const btnPedirCancelar = document.getElementById("btn-cancelar-suscripcion");
     const confirmBox = document.getElementById("confirmar-cancelar-suscripcion");
     const btnConfirmarCancelar = document.getElementById("btn-confirmar-cancelar-sub");
     const btnMantener = document.getElementById("btn-mantener-sub");
+    const btnReintentarSesion = document.getElementById("btn-pago-reintentar-sesion");
+    const btnContinuarMp = document.getElementById("btn-continuar-mp");
 
     if (btnPedirCancelar && confirmBox) {
       btnPedirCancelar.addEventListener("click", () => {
@@ -681,6 +886,27 @@ const PLANES_DMD = [
 
     if (btnConfirmarCancelar) {
       btnConfirmarCancelar.addEventListener("click", cancelarSuscripcionReal);
+    }
+
+    if (btnReintentarSesion) {
+      btnReintentarSesion.addEventListener("click", async () => {
+        if (!window.dmdCuenta || typeof window.dmdCuenta.verificarSesion !== "function") {
+          return;
+        }
+        btnReintentarSesion.disabled = true;
+        btnReintentarSesion.textContent = "Verificando...";
+        await window.dmdCuenta.verificarSesion();
+        btnReintentarSesion.disabled = false;
+        btnReintentarSesion.textContent = "Reintentar";
+        sincronizarVistaPago();
+      });
+    }
+
+    if (btnContinuarMp) {
+      btnContinuarMp.addEventListener("click", () => {
+        const plan = obtenerPlanPorId(planSeleccionadoId) || PLANES_DMD[1];
+        iniciarSuscripcion(plan);
+      });
     }
 
     if (window.dmdAlmacen && typeof window.dmdAlmacen.alHidratar === "function") {

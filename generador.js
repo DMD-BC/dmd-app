@@ -1299,6 +1299,254 @@ function capitalizarGen(texto) {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+const CONECTORES_MINUSCULA = new Set([
+  "a", "al", "con", "de", "del", "e", "el", "en", "la", "las", "los", "o", "para", "por", "sin", "u", "y"
+]);
+
+const CIUDADES_CANONICAS = {
+  mexico: "México",
+  "ciudad de mexico": "Ciudad de México",
+  cdmx: "CDMX",
+  "edo mex": "Estado de México",
+  edomex: "Estado de México",
+  "estado de mexico": "Estado de México",
+  queretaro: "Querétaro",
+  merida: "Mérida",
+  cancun: "Cancún",
+  leon: "León",
+  "nuevo leon": "Nuevo León",
+  "san luis potosi": "San Luis Potosí",
+  michoacan: "Michoacán",
+  yucatan: "Yucatán",
+  mazatlan: "Mazatlán",
+  culiacan: "Culiacán",
+  tehuacan: "Tehuacán",
+  teotihuacan: "Teotihuacán",
+  "ciudad juarez": "Ciudad Juárez",
+  juarez: "Juárez",
+  "boca del rio": "Boca del Río",
+  "playa del carmen": "Playa del Carmen",
+  "puerto vallarta": "Puerto Vallarta",
+  "cabo san lucas": "Cabo San Lucas",
+  "san jose del cabo": "San José del Cabo",
+  "san miguel de allende": "San Miguel de Allende",
+  "san cristobal de las casas": "San Cristóbal de las Casas",
+  "san pedro garza garcia": "San Pedro Garza García",
+  "garza garcia": "Garza García",
+  "torreon": "Torreón",
+  "gomez palacio": "Gómez Palacio",
+  "poza rica": "Poza Rica",
+  "ciudad obregon": "Ciudad Obregón",
+  "obregon": "Obregón",
+  "los mochis": "Los Mochis",
+  "tepic": "Tepic",
+  "irapuato": "Irapuato",
+  "celaya": "Celaya",
+  "pachuca": "Pachuca",
+  "tuxtla gutierrez": "Tuxtla Gutiérrez",
+  "villahermosa": "Villahermosa",
+  "aguascalientes": "Aguascalientes",
+  "guadalajara": "Guadalajara",
+  "monterrey": "Monterrey",
+  "tijuana": "Tijuana",
+  "puebla": "Puebla",
+  "toluca": "Toluca",
+  "morelia": "Morelia",
+  "oaxaca": "Oaxaca",
+  "veracruz": "Veracruz",
+  "chihuahua": "Chihuahua",
+  "hermosillo": "Hermosillo",
+  "saltillo": "Saltillo",
+  "mexicali": "Mexicali",
+  "reynosa": "Reynosa",
+  "matamoros": "Matamoros",
+  "tampico": "Tampico",
+  "acapulco": "Acapulco",
+  "cuernavaca": "Cuernavaca",
+  "xalapa": "Xalapa",
+  "durango": "Durango",
+  "zacatecas": "Zacatecas",
+  "colima": "Colima",
+  "campeche": "Campeche",
+  "chetumal": "Chetumal",
+  "tlaxcala": "Tlaxcala",
+  "la paz": "La Paz"
+};
+
+const PALABRAS_RELLENO_SET = new Set([
+  "omitir",
+  "saltar",
+  "ninguno",
+  "ninguna",
+  "pendiente",
+  "nada",
+  "n/a",
+  "na",
+  "no",
+  "sin dato",
+  "sin datos",
+  "despues",
+  "después"
+]);
+
+function esTextoRellenoGen(texto) {
+  const limpio = limpiarTextoGen(texto).toLowerCase().replace(/[.!?¡¿,:;]+$/g, "").trim();
+  if (!limpio) {
+    return true;
+  }
+  return PALABRAS_RELLENO_SET.has(limpio);
+}
+
+function limpiarOfertaDeRelleno(texto) {
+  const crudo = limpiarTextoGen(texto).replace(/[\u2014\u2013]/g, ", ");
+  if (!crudo) {
+    return "";
+  }
+  const partes = crudo
+    .split(/[\n;,\u2022]+/)
+    .map((p) => limpiarTextoGen(p).replace(/^[-*]\s*/, ""))
+    .filter((p) => p.length >= 2 && !esTextoRellenoGen(p));
+
+  const unicas = [];
+  const vistas = new Set();
+  for (let i = 0; i < partes.length; i += 1) {
+    const clave = partes[i].toLowerCase();
+    if (!vistas.has(clave)) {
+      vistas.add(clave);
+      unicas.push(partes[i]);
+    }
+  }
+  return unicas.join(", ");
+}
+
+function quitarGuionesLargosGen(texto) {
+  return limpiarTextoGen(String(texto || "").replace(/[\u2014\u2013]/g, ", "));
+}
+
+function formatearNombrePropio(texto, tipo) {
+  const limpio = quitarGuionesLargosGen(texto);
+  if (!limpio) {
+    return "";
+  }
+  const normalizado = limpio
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (tipo === "ciudad" && CIUDADES_CANONICAS[normalizado]) {
+    return CIUDADES_CANONICAS[normalizado];
+  }
+
+  // Si el usuario ya usó mayúsculas intencionales (ej. iPhone, DMD, La Espiga), respetarlas
+  const tieneMayuscula = /[A-ZÁÉÍÓÚÑÜ]/.test(limpio);
+  const todoMinuscula = limpio === limpio.toLowerCase();
+
+  if (tieneMayuscula && !todoMinuscula) {
+    // Aun así corregir acento común si escribió "Mexico"
+    if (tipo === "ciudad" && CIUDADES_CANONICAS[normalizado]) {
+      return CIUDADES_CANONICAS[normalizado];
+    }
+    return limpio;
+  }
+
+  const palabras = limpio.split(" ");
+  return palabras
+    .map((pal, idx) => {
+      const baja = pal.toLowerCase();
+      if (baja === "mexico" || baja === "méxico") {
+        return "México";
+      }
+      if (baja === "cdmx") {
+        return "CDMX";
+      }
+      if (idx > 0 && CONECTORES_MINUSCULA.has(baja)) {
+        return baja;
+      }
+      return baja.charAt(0).toUpperCase() + baja.slice(1);
+    })
+    .join(" ");
+}
+
+function normalizarSubdominioGen(valor) {
+  return String(valor || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^https?:\/\//i, "")
+    .replace(/\.dmd\.dmdmx\.dev.*$/i, "")
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
+function validarSubdominio(valor) {
+  const crudo = String(valor || "").trim().toLowerCase();
+  if (!crudo) {
+    return {
+      ok: false,
+      vacio: true,
+      slug: "",
+      url: "",
+      mensaje: "Escribe el nombre de tu subdominio, por ejemplo: el-inge."
+    };
+  }
+  const limpioSinDominio = crudo
+    .replace(/^https?:\/\//i, "")
+    .replace(/\.dmd\.dmdmx\.dev.*$/i, "")
+    .trim();
+  const sugerido = normalizarSubdominioGen(limpioSinDominio);
+
+  if (!/^[a-z0-9-]+$/.test(limpioSinDominio)) {
+    return {
+      ok: false,
+      vacio: false,
+      slug: sugerido,
+      url: sugerido ? `https://${sugerido}.dmd.dmdmx.dev` : "",
+      mensaje: sugerido
+        ? `Usa solo letras minúsculas, números y guiones. Sugerencia: ${sugerido}`
+        : "Usa solo letras minúsculas, números y guiones."
+    };
+  }
+  if (/^-|-$/.test(limpioSinDominio) || /--/.test(limpioSinDominio)) {
+    return {
+      ok: false,
+      vacio: false,
+      slug: sugerido,
+      url: sugerido ? `https://${sugerido}.dmd.dmdmx.dev` : "",
+      mensaje: "No puede empezar ni terminar con guion ni llevar dos guiones seguidos."
+    };
+  }
+  if (limpioSinDominio.length < 3) {
+    return {
+      ok: false,
+      vacio: false,
+      slug: limpioSinDominio,
+      url: "",
+      mensaje: "Escribe al menos 3 caracteres para tu subdominio."
+    };
+  }
+  if (limpioSinDominio.length > 40) {
+    return {
+      ok: false,
+      vacio: false,
+      slug: limpioSinDominio.slice(0, 40),
+      url: "",
+      mensaje: "El subdominio debe tener máximo 40 caracteres."
+    };
+  }
+  return {
+    ok: true,
+    vacio: false,
+    slug: limpioSinDominio,
+    url: `https://${limpioSinDominio}.dmd.dmdmx.dev`,
+    mensaje: `Dirección válida: https://${limpioSinDominio}.dmd.dmdmx.dev`
+  };
+}
+
 function aplicarPlantillaGen(texto, variables) {
   return texto
     .replace(/\{nombre\}/g, variables.nombre)
@@ -1364,18 +1612,18 @@ function normalizarTono(texto) {
 
 function extraerServiciosGen(oferta, giro, tono, variante) {
   const perfil = PERFILES_GIRO[giro] || PERFILES_GIRO.otro;
-  const textoLimpio = limpiarTextoGen(oferta).replace(/[.]+$/, "");
+  const textoLimpio = limpiarOfertaDeRelleno(oferta).replace(/[.]+$/, "");
 
   let partes = textoLimpio
     .split(/[\n;,\u2022]+/)
     .map((parte) => limpiarTextoGen(parte).replace(/^[-*]\s*/, ""))
-    .filter((parte) => parte.length >= 2);
+    .filter((parte) => parte.length >= 2 && !esTextoRellenoGen(parte));
 
   if (partes.length === 1 && /\s+y\s+/i.test(partes[0])) {
     const divididas = partes[0]
       .split(/\s+y\s+/i)
       .map((parte) => limpiarTextoGen(parte))
-      .filter((parte) => parte.length >= 4);
+      .filter((parte) => parte.length >= 4 && !esTextoRellenoGen(parte));
     if (divididas.length >= 2) {
       partes = divididas;
     }
@@ -1745,12 +1993,12 @@ function comprimirImagenArchivoLocal(archivo, maxAncho) {
 
 function generarBorradorNegocio(datos, variante) {
   const v = Math.abs(Number(variante) || 0);
-  const nombre = limpiarTextoGen(datos.nombre);
-  const giroTexto = limpiarTextoGen(datos.giroTexto || "");
+  const nombre = formatearNombrePropio(datos.nombre, "nombre") || "Mi negocio";
+  const giroTexto = quitarGuionesLargosGen(datos.giroTexto || "");
   const giroBase = PERFILES_GIRO[datos.giro] ? datos.giro : normalizarGiro(giroTexto || datos.giro) || "otro";
   const giro = PERFILES_GIRO[giroBase] ? giroBase : "otro";
-  const ciudad = limpiarTextoGen(datos.ciudad);
-  const oferta = limpiarTextoGen(datos.oferta);
+  const ciudad = formatearNombrePropio(datos.ciudad, "ciudad") || "tu ciudad";
+  const oferta = limpiarOfertaDeRelleno(datos.oferta) || "nuestros productos y servicios";
   const tono = TONOS_ETIQUETAS[datos.tono] ? datos.tono : "cercano";
   const whatsapp = limpiarDigitosGen(datos.whatsapp);
 
@@ -1765,12 +2013,12 @@ function generarBorradorNegocio(datos, variante) {
   const listaIntros = perfil.introduccion[tono] || perfil.introduccion.cercano;
   const plantillaIntro = listaIntros[v % listaIntros.length];
 
-  const titulo = construirTituloGen(nombre, ciudad, ofertaLimpia, giro, tono, v);
-  const presentacion = aplicarPlantillaGen(plantillaIntro, variables);
+  const titulo = quitarGuionesLargosGen(construirTituloGen(nombre, ciudad, ofertaLimpia, giro, tono, v));
+  const presentacion = quitarGuionesLargosGen(aplicarPlantillaGen(plantillaIntro, variables));
   const servicios = extraerServiciosGen(ofertaLimpia, giro, tono, v);
 
   const beneficiosBase = perfil.beneficios[tono].map((texto) =>
-    aplicarPlantillaGen(texto, variables)
+    quitarGuionesLargosGen(aplicarPlantillaGen(texto, variables))
   );
   const beneficios =
     v % 2 === 1 && beneficiosBase.length > 1
@@ -1778,8 +2026,8 @@ function generarBorradorNegocio(datos, variante) {
       : beneficiosBase;
 
   const preguntasFrecuentes = perfil.faqs[tono].map((item) => ({
-    pregunta: aplicarPlantillaGen(item.q, variables),
-    respuesta: aplicarPlantillaGen(item.a, variables)
+    pregunta: quitarGuionesLargosGen(aplicarPlantillaGen(item.q, variables)),
+    respuesta: quitarGuionesLargosGen(aplicarPlantillaGen(item.a, variables))
   }));
 
   const mensajeWhatsapp = construirMensajeWhatsappNegocioGen(nombre, tono);
@@ -1811,6 +2059,16 @@ async function generarBorradorConServicio(datos, variante) {
     if (typeof fetch !== "function") {
       return null;
     }
+    const nombreFormateado = formatearNombrePropio(datos.nombre, "nombre");
+    const ciudadFormateada = formatearNombrePropio(datos.ciudad, "ciudad");
+    const ofertaLimpia = limpiarOfertaDeRelleno(datos.oferta);
+    const datosLimpios = {
+      ...datos,
+      nombre: nombreFormateado || limpiarTextoGen(datos.nombre),
+      ciudad: ciudadFormateada || limpiarTextoGen(datos.ciudad),
+      oferta: ofertaLimpia || limpiarTextoGen(datos.oferta)
+    };
+
     const controlador = new AbortController();
     const temporizador = setTimeout(() => controlador.abort(), 15000);
     let respuesta;
@@ -1819,12 +2077,12 @@ async function generarBorradorConServicio(datos, variante) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre: datos.nombre || "",
-          giro: datos.giroTexto || datos.giro || "",
-          ciudad: datos.ciudad || "",
-          oferta: datos.oferta || "",
-          tono: datos.tono || "cercano",
-          whatsapp: datos.whatsapp || "",
+          nombre: datosLimpios.nombre || "",
+          giro: datosLimpios.giroTexto || datosLimpios.giro || "",
+          ciudad: datosLimpios.ciudad || "",
+          oferta: datosLimpios.oferta || "",
+          tono: datosLimpios.tono || "cercano",
+          whatsapp: datosLimpios.whatsapp || "",
           variante: variante || 0
         }),
         signal: controlador.signal
@@ -1856,12 +2114,17 @@ async function generarBorradorConServicio(datos, variante) {
       .slice(0, 6)
       .map((s) => {
         if (typeof s === "string") {
-          return { titulo: limpiarTextoGen(s), descripcion: "" };
+          const tit = quitarGuionesLargosGen(s);
+          return tit && !esTextoRellenoGen(tit) ? { titulo: tit, descripcion: "" } : null;
         }
         if (s && typeof s === "object") {
+          const tit = quitarGuionesLargosGen(s.titulo);
+          if (!tit || esTextoRellenoGen(tit)) {
+            return null;
+          }
           return {
-            titulo: limpiarTextoGen(s.titulo),
-            descripcion: limpiarTextoGen(s.descripcion)
+            titulo: tit,
+            descripcion: quitarGuionesLargosGen(s.descripcion)
           };
         }
         return null;
@@ -1872,36 +2135,50 @@ async function generarBorradorConServicio(datos, variante) {
     }
     const v = Math.abs(Number(variante) || 0);
     return {
-      titulo: limpiarTextoGen(b.titulo),
-      presentacion: limpiarTextoGen(b.presentacion),
+      titulo: quitarGuionesLargosGen(b.titulo),
+      presentacion: quitarGuionesLargosGen(b.presentacion),
       servicios,
       beneficios: b.beneficios
         .filter((x) => typeof x === "string" && x.trim())
         .slice(0, 6)
-        .map((x) => limpiarTextoGen(x)),
+        .map((x) => quitarGuionesLargosGen(x)),
       preguntasFrecuentes: b.preguntasFrecuentes
         .slice(0, 6)
         .map((f) => {
           if (!f || typeof f !== "object") {
             return null;
           }
-          const pregunta = limpiarTextoGen(f.pregunta);
-          const respuesta = limpiarTextoGen(f.respuesta);
-          return pregunta && respuesta ? { pregunta, respuesta } : null;
+          const pregunta = quitarGuionesLargosGen(f.pregunta);
+          const respuestaTexto = quitarGuionesLargosGen(f.respuesta);
+          return pregunta && respuestaTexto ? { pregunta, respuesta: respuestaTexto } : null;
         })
         .filter(Boolean),
       mensajeWhatsapp: construirMensajeWhatsappNegocioGen(
-        limpiarTextoGen(datos.nombre),
-        TONOS_ETIQUETAS[datos.tono] ? datos.tono : "cercano"
+        datosLimpios.nombre,
+        TONOS_ETIQUETAS[datosLimpios.tono] ? datosLimpios.tono : "cercano"
       ),
-      whatsapp: limpiarDigitosGen(datos.whatsapp),
-      portada: seleccionarPortadaNegocio(datos, v),
-      estructura: obtenerEstructuraNegocio(datos),
+      whatsapp: limpiarDigitosGen(datosLimpios.whatsapp),
+      portada: seleccionarPortadaNegocio(datosLimpios, v),
+      estructura: obtenerEstructuraNegocio(datosLimpios),
       variante: v
     };
   } catch (error) {
     return null;
   }
+}
+
+async function generarBorradorConDetalle(datos, variante) {
+  const desdeServidor = await generarBorradorConServicio(datos, variante);
+  if (desdeServidor) {
+    return {
+      borrador: desdeServidor,
+      origen: "servidor"
+    };
+  }
+  return {
+    borrador: generarBorradorNegocio(datos, variante),
+    origen: "local"
+  };
 }
 
 function formatearBorradorTextoPlano(datos, borrador) {
@@ -1930,7 +2207,7 @@ function formatearBorradorTextoPlano(datos, borrador) {
   if (wa) {
     lineas.push(`WhatsApp: https://wa.me/${wa}?text=${encodeURIComponent(borrador.mensajeWhatsapp)}`);
   } else {
-    lineas.push("WhatsApp: pendiente de agregar.");
+    lineas.push("WhatsApp: aún sin configurar.");
   }
   return lineas.join("\n").trim();
 }
@@ -1969,6 +2246,12 @@ window.dmdGenerador = {
   ESTRUCTURAS_POR_TIPO_NEGOCIO,
   limpiarTexto: limpiarTextoGen,
   limpiarDigitos: limpiarDigitosGen,
+  quitarGuionesLargos: quitarGuionesLargosGen,
+  esTextoRelleno: esTextoRellenoGen,
+  limpiarOfertaDeRelleno,
+  formatearNombrePropio,
+  normalizarSubdominio: normalizarSubdominioGen,
+  validarSubdominio,
   normalizarGiro,
   normalizarTono,
   resolverTemaPortada,
@@ -1980,6 +2263,7 @@ window.dmdGenerador = {
   comprimirImagenArchivo: comprimirImagenArchivoLocal,
   generarBorrador: generarBorradorNegocio,
   generarBorradorConServicio,
+  generarBorradorConDetalle,
   formatearTextoPlano: formatearBorradorTextoPlano,
   construirUrlPublicada,
   crearSlugPublicacion,

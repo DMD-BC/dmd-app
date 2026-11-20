@@ -158,6 +158,11 @@ async function solicitarAuth(ruta, opciones) {
   }
 
   let resp;
+  const controlador = typeof AbortController === "function" ? new AbortController() : null;
+  const temporizador = controlador ? window.setTimeout(() => controlador.abort(), 8000) : null;
+  if (controlador) {
+    fetchOpts.signal = controlador.signal;
+  }
   try {
     resp = await window.fetch(`${API_AUTH_BASE}${ruta}`, fetchOpts);
   } catch (error) {
@@ -167,8 +172,12 @@ async function solicitarAuth(ruta, opciones) {
       sinConexion: true,
       data: null,
       mensaje:
-        "No se pudo conectar con el servicio de inicio de sesión (login.dmdmx.dev). Intenta de nuevo."
+        "No se pudo conectar con el servicio de cuenta en este momento. Comprueba tu conexión o intenta de nuevo."
     };
+  } finally {
+    if (temporizador) {
+      window.clearTimeout(temporizador);
+    }
   }
 
   let data = null;
@@ -726,19 +735,64 @@ async function solicitarAuth(ruta, opciones) {
     if (btnReintentarAuth) {
       btnReintentarAuth.addEventListener("click", async () => {
         btnReintentarAuth.disabled = true;
+        btnReintentarAuth.textContent = "Verificando...";
         estadoCuenta.textContent = "Consultando servicio de cuenta...";
         await dmdCuenta.verificarSesion();
         estadoCuenta.textContent = "";
         btnReintentarAuth.disabled = false;
+        btnReintentarAuth.textContent = "Reintentar conexión";
         actualizarVistaCuenta();
       });
     }
 
-    // Abrir pestaña de registro si viene ?modo=registro
+    // Mostrar u ocultar contraseña
+    const togglesPassword = Array.from(document.querySelectorAll("[data-toggle-password]"));
+    togglesPassword.forEach((btnToggle) => {
+      const targetId = btnToggle.getAttribute("data-toggle-password");
+      const campo = targetId ? document.getElementById(targetId) : null;
+      if (!campo) {
+        return;
+      }
+      btnToggle.addEventListener("click", () => {
+        const visible = campo.type === "text";
+        campo.type = visible ? "password" : "text";
+        btnToggle.textContent = visible ? "Mostrar" : "Ocultar";
+        btnToggle.setAttribute("aria-label", visible ? "Mostrar contraseña" : "Ocultar contraseña");
+        btnToggle.setAttribute("aria-pressed", visible ? "false" : "true");
+        campo.focus();
+      });
+    });
+
+    // Recuperar contraseña
+    const btnAbrirRecuperar = document.getElementById("btn-abrir-recuperar");
+    const bloqueRecuperar = document.getElementById("bloque-recuperar-password");
+    const btnCerrarRecuperar = document.getElementById("btn-cerrar-recuperar");
+    if (btnAbrirRecuperar && bloqueRecuperar) {
+      btnAbrirRecuperar.addEventListener("click", () => {
+        const abierto = !bloqueRecuperar.hidden;
+        bloqueRecuperar.hidden = abierto;
+        btnAbrirRecuperar.setAttribute("aria-expanded", abierto ? "false" : "true");
+      });
+    }
+    if (btnCerrarRecuperar && bloqueRecuperar && btnAbrirRecuperar) {
+      btnCerrarRecuperar.addEventListener("click", () => {
+        bloqueRecuperar.hidden = true;
+        btnAbrirRecuperar.setAttribute("aria-expanded", "false");
+        btnAbrirRecuperar.focus();
+      });
+    }
+
+    // Abrir pestaña de registro si viene ?modo=registro y conservar ?plan=
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("modo") === "registro") {
         cambiarPestana("registro");
+      }
+      const planParam = params.get("plan");
+      const btnIrPlanes = document.getElementById("btn-ir-planes");
+      if (planParam && btnIrPlanes) {
+        btnIrPlanes.href = `pago.html?plan=${encodeURIComponent(planParam)}`;
+        btnIrPlanes.textContent = "Continuar con tu plan";
       }
     } catch (error) {
       // Ignorar si URLSearchParams no está disponible

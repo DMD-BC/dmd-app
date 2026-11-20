@@ -333,7 +333,7 @@
     const diseno = pagina.diseno || {};
     const seo = pagina.seo || {};
     const plantilla = diseno.plantilla || "clasica";
-    const colorMarca = diseno.colorMarca || "#0f5c4d";
+    const colorMarca = "#0f5c4d";
     const fuente = FUENTES_MAPA[diseno.fuente] || FUENTES_MAPA.sistema;
     const estructura =
       (borrador && borrador.estructura) ||
@@ -376,6 +376,15 @@
     if (metaDesc) {
       metaDesc.setAttribute("content", seo.descripcion || borrador.presentacion || "");
     }
+    if (seo.palabrasClave) {
+      let metaKw = document.querySelector('meta[name="keywords"]');
+      if (!metaKw) {
+        metaKw = document.createElement("meta");
+        metaKw.setAttribute("name", "keywords");
+        document.head.appendChild(metaKw);
+      }
+      metaKw.setAttribute("content", seo.palabrasClave);
+    }
 
     if (!visitaContada) {
       visitaContada = true;
@@ -384,7 +393,7 @@
 
     raiz.textContent = "";
     const articulo = document.createElement("article");
-    articulo.className = `biz-page biz-template-${plantilla}`;
+    articulo.className = `biz-page biz-template-${plantilla} biz-is-live-preview`;
     articulo.style.setProperty("--biz-accent", colorMarca);
     articulo.style.setProperty("--biz-font", fuente);
 
@@ -436,6 +445,10 @@
           img.src = portadaSrc;
           img.alt = portadaAlt || `Imagen de ${datos.nombre}`;
           img.decoding = "async";
+          img.addEventListener("error", () => {
+            fig.classList.add("cover-fallback");
+            img.hidden = true;
+          });
           fig.appendChild(img);
           hero.appendChild(fig);
         }
@@ -561,107 +574,115 @@
             registrarEventoAnalitica(pagina.slug, pagina.borradorId, "clicsWhatsapp");
           });
           bloque.appendChild(enlace);
+
+          // Formulario de contacto a WhatsApp
+          const formBox = document.createElement("form");
+          formBox.className = "biz-contact-form";
+          formBox.noValidate = true;
+          formBox.setAttribute("onsubmit", "return false;");
+
+          const formTitle = document.createElement("h3");
+          formTitle.className = "biz-form-title";
+          formTitle.textContent = "Enviar mensaje directo";
+          formBox.appendChild(formTitle);
+
+          const campoNombre = document.createElement("div");
+          campoNombre.className = "field";
+          const lblNombre = document.createElement("label");
+          lblNombre.className = "field-label";
+          lblNombre.htmlFor = "pub-form-nombre";
+          lblNombre.textContent = "Tu nombre";
+          const inpNombre = document.createElement("input");
+          inpNombre.id = "pub-form-nombre";
+          inpNombre.className = "input";
+          inpNombre.type = "text";
+          inpNombre.placeholder = "Tu nombre";
+          campoNombre.appendChild(lblNombre);
+          campoNombre.appendChild(inpNombre);
+
+          const campoMsg = document.createElement("div");
+          campoMsg.className = "field";
+          const lblMsg = document.createElement("label");
+          lblMsg.className = "field-label";
+          lblMsg.htmlFor = "pub-form-mensaje";
+          lblMsg.textContent = "Mensaje";
+          const txtMsg = document.createElement("textarea");
+          txtMsg.id = "pub-form-mensaje";
+          txtMsg.className = "textarea";
+          txtMsg.rows = 3;
+          txtMsg.placeholder = "Escribe tu consulta";
+          campoMsg.appendChild(lblMsg);
+          campoMsg.appendChild(txtMsg);
+
+          const btnEnviarForm = document.createElement("button");
+          btnEnviarForm.id = "pub-form-enviar";
+          btnEnviarForm.type = "button";
+          btnEnviarForm.className = "btn btn-secondary btn-full";
+          btnEnviarForm.textContent = "Enviar por WhatsApp";
+
+          const estadoForm = document.createElement("p");
+          estadoForm.id = "pub-form-estado";
+          estadoForm.className = "status-banner";
+          estadoForm.setAttribute("role", "status");
+          estadoForm.setAttribute("aria-live", "polite");
+
+          const manejarEnvioForm = (ev) => {
+            if (ev) {
+              ev.preventDefault();
+              ev.stopPropagation();
+            }
+            const nom = inpNombre.value.trim();
+            const men = txtMsg.value.trim();
+            if (nom.length < 2 || men.length < 3) {
+              estadoForm.textContent = "Escribe tu nombre y mensaje.";
+              return;
+            }
+            const textoFinal = `Hola ${datos.nombre}, soy ${nom}. ${men}`;
+            const urlWa = `https://wa.me/${numeroWa}?text=${encodeURIComponent(textoFinal)}`;
+            registrarEventoAnalitica(pagina.slug, pagina.borradorId, "enviosFormulario");
+            estadoForm.textContent = "";
+            const enlaceWa = document.createElement("a");
+            enlaceWa.href = urlWa;
+            enlaceWa.target = "_blank";
+            enlaceWa.rel = "noopener noreferrer";
+            enlaceWa.className = "inline-action-link";
+            enlaceWa.textContent = "Abrir en WhatsApp";
+            estadoForm.appendChild(document.createTextNode("Listo: "));
+            estadoForm.appendChild(enlaceWa);
+          };
+
+          btnEnviarForm.addEventListener("click", manejarEnvioForm);
+          formBox.addEventListener("submit", manejarEnvioForm);
+
+          formBox.appendChild(campoNombre);
+          formBox.appendChild(campoMsg);
+          formBox.appendChild(btnEnviarForm);
+          formBox.appendChild(estadoForm);
+          bloque.appendChild(formBox);
         } else {
-          const aviso = document.createElement("p");
-          aviso.className = "notice-box";
-          aviso.textContent = "WhatsApp pendiente.";
-          bloque.appendChild(aviso);
+          const cardInfo = document.createElement("div");
+          cardInfo.className = "biz-location-card";
+          const pLoc = document.createElement("p");
+          pLoc.className = "biz-location-title";
+          pLoc.textContent = `${datos.nombre} · ${datos.ciudad}`;
+          const pDesc = document.createElement("p");
+          pDesc.className = "biz-location-sub";
+          pDesc.textContent = "Atención directa local. Próximamente enlace de WhatsApp disponible.";
+          cardInfo.appendChild(pLoc);
+          cardInfo.appendChild(pDesc);
+          bloque.appendChild(cardInfo);
         }
-
-        // Formulario de contacto a WhatsApp
-        const formBox = document.createElement("form");
-        formBox.className = "biz-contact-form";
-        formBox.noValidate = true;
-        formBox.setAttribute("onsubmit", "return false;");
-
-        const formTitle = document.createElement("h3");
-        formTitle.className = "biz-form-title";
-        formTitle.textContent = "Enviar mensaje";
-        formBox.appendChild(formTitle);
-
-        const campoNombre = document.createElement("div");
-        campoNombre.className = "field";
-        const lblNombre = document.createElement("label");
-        lblNombre.className = "field-label";
-        lblNombre.htmlFor = "pub-form-nombre";
-        lblNombre.textContent = "Tu nombre";
-        const inpNombre = document.createElement("input");
-        inpNombre.id = "pub-form-nombre";
-        inpNombre.className = "input";
-        inpNombre.type = "text";
-        inpNombre.placeholder = "Tu nombre";
-        campoNombre.appendChild(lblNombre);
-        campoNombre.appendChild(inpNombre);
-
-        const campoMsg = document.createElement("div");
-        campoMsg.className = "field";
-        const lblMsg = document.createElement("label");
-        lblMsg.className = "field-label";
-        lblMsg.htmlFor = "pub-form-mensaje";
-        lblMsg.textContent = "Mensaje";
-        const txtMsg = document.createElement("textarea");
-        txtMsg.id = "pub-form-mensaje";
-        txtMsg.className = "textarea";
-        txtMsg.rows = 3;
-        txtMsg.placeholder = "Escribe tu consulta";
-        campoMsg.appendChild(lblMsg);
-        campoMsg.appendChild(txtMsg);
-
-        const btnEnviarForm = document.createElement("button");
-        btnEnviarForm.id = "pub-form-enviar";
-        btnEnviarForm.type = "button";
-        btnEnviarForm.className = "btn btn-secondary btn-full";
-        btnEnviarForm.textContent = "Enviar por WhatsApp";
-
-        const estadoForm = document.createElement("p");
-        estadoForm.id = "pub-form-estado";
-        estadoForm.className = "status-banner";
-        estadoForm.setAttribute("role", "status");
-        estadoForm.setAttribute("aria-live", "polite");
-
-        const manejarEnvioForm = (ev) => {
-          if (ev) {
-            ev.preventDefault();
-            ev.stopPropagation();
-          }
-          const nom = inpNombre.value.trim();
-          const men = txtMsg.value.trim();
-          if (nom.length < 2 || men.length < 3) {
-            estadoForm.textContent = "Escribe tu nombre y mensaje.";
-            return;
-          }
-          if (!numeroWa) {
-            estadoForm.textContent = "Falta el WhatsApp del negocio.";
-            return;
-          }
-          const textoFinal = `Hola ${datos.nombre}, soy ${nom}. ${men}`;
-          const urlWa = `https://wa.me/${numeroWa}?text=${encodeURIComponent(textoFinal)}`;
-          registrarEventoAnalitica(pagina.slug, pagina.borradorId, "enviosFormulario");
-          estadoForm.textContent = "";
-          const enlaceWa = document.createElement("a");
-          enlaceWa.href = urlWa;
-          enlaceWa.target = "_blank";
-          enlaceWa.rel = "noopener noreferrer";
-          enlaceWa.className = "inline-action-link";
-          enlaceWa.textContent = "Abrir en WhatsApp";
-          estadoForm.appendChild(document.createTextNode("Listo: "));
-          estadoForm.appendChild(enlaceWa);
-        };
-
-        btnEnviarForm.addEventListener("click", manejarEnvioForm);
-        formBox.addEventListener("submit", manejarEnvioForm);
-
-        formBox.appendChild(campoNombre);
-        formBox.appendChild(campoMsg);
-        formBox.appendChild(btnEnviarForm);
-        formBox.appendChild(estadoForm);
-        bloque.appendChild(formBox);
 
         cuerpo.appendChild(bloque);
       }
     });
 
+    const footerBiz = document.createElement("footer");
+    footerBiz.className = "biz-footer";
+    footerBiz.textContent = `${datos.nombre} · ${datos.ciudad}`;
+
     articulo.appendChild(cuerpo);
+    articulo.appendChild(footerBiz);
     raiz.appendChild(articulo);
 
     // Barra inferior de compartir

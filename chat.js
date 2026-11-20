@@ -2,9 +2,9 @@
 
 /* ==========================================================================
    dmd - Controlador de chat de dmd (app.html)
-   Conversación guiada paso a paso para armar la página web de un negocio,
-   historial de conversaciones, páginas y borradores, duplicar, publicar,
-   respaldo JSON y conexión con el editor visual.
+   Conversación guiada paso a paso con indicador de progreso, estado de carga,
+   un solo borrador agrupado por conversación, sanitización de rellenos y
+   capitalización de nombres propios, confirmación y Deshacer al borrar.
    ========================================================================== */
 
 (function inicializarChatDmd() {
@@ -17,35 +17,62 @@
   const PASOS = [
     {
       campo: "nombre",
+      etiqueta: "Nombre del negocio",
       pregunta: "¿Cómo se llama tu negocio?",
       chips: []
     },
     {
       campo: "giro",
+      etiqueta: "Giro del negocio",
       pregunta: "¿Cuál es el giro?",
       chips: ["Tienda", "Comida", "Servicios", "Salud y belleza", "Taller u oficio", "Otro"]
     },
     {
       campo: "ciudad",
+      etiqueta: "Ciudad",
       pregunta: "¿En qué ciudad estás?",
       chips: []
     },
     {
       campo: "oferta",
+      etiqueta: "Productos o servicios",
       pregunta: "¿Qué vendes o qué servicios ofreces?",
       chips: []
     },
     {
       campo: "tono",
+      etiqueta: "Tono del texto",
       pregunta: "¿Qué tono prefieres?",
       chips: ["Cercano", "Profesional", "Formal"]
     },
     {
       campo: "whatsapp",
+      etiqueta: "WhatsApp (opcional)",
       pregunta: "¿Cuál es tu WhatsApp? (con lada, ej. 528112345678)",
       chips: ["Omitir"]
     }
   ];
+
+  const RESPUESTAS_NO_OFERTA = new Set([
+    "omitir",
+    "saltar",
+    "ok",
+    "listo",
+    "gracias",
+    "muchas gracias",
+    "ninguno",
+    "ninguna",
+    "nada",
+    "no",
+    "si",
+    "sí",
+    "cancelar",
+    "pendiente",
+    "despues",
+    "después",
+    "hola",
+    "buenas"
+  ]);
 
   function leer(clave, defecto) {
     if (window.dmdAlmacen && typeof window.dmdAlmacen.leer === "function") {
@@ -95,6 +122,17 @@
       return new Intl.DateTimeFormat("es-MX", {
         day: "numeric",
         month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(iso));
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function formatearHoraCorta(iso) {
+    try {
+      return new Intl.DateTimeFormat("es-MX", {
         hour: "2-digit",
         minute: "2-digit"
       }).format(new Date(iso));
@@ -187,7 +225,8 @@
     const btnAbrirSidebar = document.getElementById("btn-abrir-sidebar");
     const btnCerrarSidebar = document.getElementById("btn-cerrar-sidebar");
     const btnNuevaSidebar = document.getElementById("btn-nueva-conv-sidebar");
-    const btnNuevaTop = document.getElementById("btn-nueva-conv-top");
+    const badgeBorradoresMobile = document.getElementById("badge-borradores-mobile");
+    const sidebarStorageLabel = document.getElementById("sidebar-storage-label");
 
     const tabModoChat = document.getElementById("tab-modo-chat");
     const tabModoEditor = document.getElementById("tab-modo-editor");
@@ -208,11 +247,24 @@
     const inputImportar = document.getElementById("input-importar-respaldo");
     const estadoRespaldo = document.getElementById("estado-respaldo-sidebar");
 
+    const progresoTexto = document.getElementById("chat-progreso-texto");
+    const progresoPaso = document.getElementById("chat-progreso-porcentaje");
+    const progresoBarra = document.getElementById("chat-progreso-barra");
+
+    const chatErrorBanner = document.getElementById("chat-error-banner");
+    const chatErrorTexto = document.getElementById("chat-error-texto");
+    const btnChatReintentar = document.getElementById("btn-chat-reintentar");
+
     const sugerenciasEl = document.getElementById("chat-sugerencias");
     const estadoChatEl = document.getElementById("chat-estado");
     const formChat = document.getElementById("form-chat");
     const entradaChat = document.getElementById("chat-entrada");
     const btnEnviar = document.getElementById("btn-chat-enviar");
+
+    const undoToast = document.getElementById("app-undo-toast");
+    const undoTexto = document.getElementById("app-undo-texto");
+    const btnUndo = document.getElementById("btn-app-undo");
+    const btnUndoCerrar = document.getElementById("btn-app-undo-cerrar");
 
     let todasConversaciones = [];
     let todosBorradores = [];
@@ -222,6 +274,165 @@
     let borradorActivoId = null;
     let editandoMsgId = null;
     let modoActual = "chat";
+    let generandoAhora = false;
+    let ultimaAccionFallida = null;
+
+    let confirmandoBorrarDraftId = null;
+    let confirmandoBorrarConvId = null;
+    let ultimoEliminado = null;
+    let timerUndoToast = null;
+
+    let plantillaInicialUrl = "";
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const p = (params.get("plantilla") || "").trim().toLowerCase();
+      if (["clasica", "editorial", "directa"].includes(p)) {
+        plantillaInicialUrl = p;
+      }
+    } catch (error) {
+      plantillaInicialUrl = "";
+    }
+
+    function actualizarIndicadorGuardado() {
+      if (!sidebarStorageLabel) {
+        return;
+      }
+      const hora = formatearHoraCorta(new Date().toISOString());
+      sidebarStorageLabel.textContent = hora
+        ? `Guardado en este navegador · ${hora}`
+        : "Guardado en este navegador";
+    }
+
+    function mostrarErrorChat(mensaje, accionReintentar) {
+      ultimaAccionFallida = typeof accionReintentar === "function" ? accionReintentar : null;
+      if (!chatErrorBanner || !chatErrorTexto) {
+        return;
+      }
+      if (mensaje) {
+        chatErrorTexto.textContent = mensaje;
+        chatErrorBanner.hidden = false;
+        if (btnChatReintentar) {
+          btnChatReintentar.hidden = !ultimaAccionFallida;
+        }
+      } else {
+        chatErrorTexto.textContent = "";
+        chatErrorBanner.hidden = true;
+      }
+    }
+
+    function fijarEstadoGeneracion(activo, mensaje) {
+      generandoAhora = Boolean(activo);
+      if (btnEnviar) {
+        btnEnviar.disabled = generandoAhora;
+        btnEnviar.textContent = generandoAhora ? "Generando..." : "Enviar";
+      }
+      if (entradaChat) {
+        entradaChat.disabled = generandoAhora;
+      }
+      if (hilo) {
+        hilo.setAttribute("aria-busy", generandoAhora ? "true" : "false");
+      }
+      if (mensaje !== undefined) {
+        estadoChatEl.textContent = mensaje;
+      }
+      renderizarHilo();
+    }
+
+    function ocultarUndoToast() {
+      if (timerUndoToast) {
+        window.clearTimeout(timerUndoToast);
+        timerUndoToast = null;
+      }
+      ultimoEliminado = null;
+      if (undoToast) {
+        undoToast.hidden = true;
+      }
+    }
+
+    function mostrarUndoToast(mensaje, restaurarDatos) {
+      if (timerUndoToast) {
+        window.clearTimeout(timerUndoToast);
+        timerUndoToast = null;
+      }
+      ultimoEliminado = restaurarDatos;
+      if (undoTexto) {
+        undoTexto.textContent = mensaje;
+      }
+      if (undoToast) {
+        undoToast.hidden = false;
+      }
+      timerUndoToast = window.setTimeout(() => {
+        ocultarUndoToast();
+      }, 10000);
+    }
+
+    function sanearColeccionesCargadas() {
+      let huboAjuste = false;
+      const formatearNombre =
+        typeof gen.formatearNombrePropio === "function" ? gen.formatearNombrePropio : (v) => v;
+      const limpiarOferta =
+        typeof gen.limpiarOfertaDeRelleno === "function" ? gen.limpiarOfertaDeRelleno : (v) => v;
+
+      todosBorradores.forEach((b) => {
+        if (!b || !b.datos) {
+          return;
+        }
+        const nomNuevo = formatearNombre(b.datos.nombre, "nombre");
+        const ciuNueva = formatearNombre(b.datos.ciudad, "ciudad");
+        const ofNueva = limpiarOferta(b.datos.oferta);
+        if (nomNuevo && nomNuevo !== b.datos.nombre) {
+          b.datos.nombre = nomNuevo;
+          huboAjuste = true;
+        }
+        if (ciuNueva && ciuNueva !== b.datos.ciudad) {
+          b.datos.ciudad = ciuNueva;
+          huboAjuste = true;
+        }
+        if (ofNueva && ofNueva !== b.datos.oferta) {
+          b.datos.oferta = ofNueva;
+          // Si el borrador tenía relleno "Omitir", regenerarlo limpio
+          if (b.borrador && /\bomitir\b/i.test(JSON.stringify(b.borrador))) {
+            b.borrador = gen.generarBorrador(b.datos, b.borrador.variante || 0);
+          }
+          huboAjuste = true;
+        }
+        if (window.dmdEditor && typeof window.dmdEditor.asegurarEstructuraBorrador === "function") {
+          window.dmdEditor.asegurarEstructuraBorrador(b);
+        }
+      });
+
+      todasConversaciones.forEach((c) => {
+        if (!c || !c.datos) {
+          return;
+        }
+        if (c.datos.nombre) {
+          const n = formatearNombre(c.datos.nombre, "nombre");
+          if (n !== c.datos.nombre) {
+            c.datos.nombre = n;
+            c.titulo = n;
+            huboAjuste = true;
+          }
+        }
+        if (c.datos.ciudad) {
+          const ci = formatearNombre(c.datos.ciudad, "ciudad");
+          if (ci !== c.datos.ciudad) {
+            c.datos.ciudad = ci;
+            huboAjuste = true;
+          }
+        }
+        if (c.datos.oferta) {
+          const of = limpiarOferta(c.datos.oferta);
+          if (of && of !== c.datos.oferta) {
+            c.datos.oferta = of;
+            huboAjuste = true;
+          }
+        }
+      });
+
+      if (huboAjuste) {
+        guardarColecciones();
+      }
+    }
 
     function cargarColecciones() {
       const c = leer(KEY_CONVERSACIONES, []);
@@ -230,6 +441,7 @@
       todasConversaciones = Array.isArray(c) ? c : [];
       todosBorradores = Array.isArray(b) ? b : [];
       todasPublicadas = Array.isArray(p) ? p : [];
+      sanearColeccionesCargadas();
     }
 
     function guardarColecciones(opciones) {
@@ -247,6 +459,7 @@
       } else {
         Object.keys(lote).forEach((k) => guardar(k, lote[k], opciones));
       }
+      actualizarIndicadorGuardado();
     }
 
     function convsDelPropietario() {
@@ -339,11 +552,10 @@
     }
 
     function crearNuevaConversacion() {
-      // Mantener en memoria hasta que el usuario envíe su primer mensaje para nunca
-      // sobrescribir estado guardado con una conversación vacía.
       convActivaId = null;
       convBorradorMemoria = crearObjetoConversacionVacia();
       editandoMsgId = null;
+      mostrarErrorChat("");
       estadoChatEl.textContent = "";
       renderizarTodo();
       cambiarModo("chat");
@@ -405,7 +617,11 @@
         window.dmdEditor.asegurarEstructuraBorrador(registro);
       }
       if (!registro.publicadaSlug) {
-        registro.publicadaSlug = gen.crearSlugPublicacion(registro.datos.nombre);
+        const sub = registro.dominio && registro.dominio.subdominio;
+        const valSub =
+          sub && typeof gen.validarSubdominio === "function" ? gen.validarSubdominio(sub) : null;
+        registro.publicadaSlug =
+          valSub && valSub.ok ? valSub.slug : gen.crearSlugPublicacion(registro.datos.nombre);
         registro.publicadaEn = new Date().toISOString();
       }
       registro.actualizadoEn = new Date().toISOString();
@@ -419,16 +635,33 @@
       return gen.construirUrlPublicada(registro.publicadaSlug);
     }
 
-    async function guardarOActualizarBorradorDesdeConv(conv, variante, etiquetaVersion) {
+    async function guardarOActualizarBorradorDesdeConv(conv, variante, etiquetaVersion, detalleVersion) {
       const datos = clonar(conv.datos);
-      const borrador =
-        (gen.generarBorradorConServicio
-          ? await gen.generarBorradorConServicio(datos, variante)
-          : null) || gen.generarBorrador(datos, variante);
+      if (typeof gen.formatearNombrePropio === "function") {
+        datos.nombre = gen.formatearNombrePropio(datos.nombre, "nombre");
+        datos.ciudad = gen.formatearNombrePropio(datos.ciudad, "ciudad");
+      }
+      if (typeof gen.limpiarOfertaDeRelleno === "function") {
+        datos.oferta = gen.limpiarOfertaDeRelleno(datos.oferta) || datos.oferta;
+      }
+      conv.datos = clonar(datos);
+
+      const resultado =
+        typeof gen.generarBorradorConDetalle === "function"
+          ? await gen.generarBorradorConDetalle(datos, variante)
+          : {
+              borrador:
+                (gen.generarBorradorConServicio
+                  ? await gen.generarBorradorConServicio(datos, variante)
+                  : null) || gen.generarBorrador(datos, variante),
+              origen: "local"
+            };
+      const borrador = resultado.borrador;
+
       let registro = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
 
       if (registro) {
-        const esRegeneracion = etiquetaVersion === "Regenerado";
+        const esRegeneracion = String(etiquetaVersion || "").startsWith("Regenerado");
         const portadaPrevia = registro.diseno && registro.diseno.portadaOrigen;
         const giroPortadaPrevio = (registro.diseno && registro.diseno.portadaGiro) || "";
         const giroPortadaNuevo = (borrador.portada && borrador.portada.giro) || "";
@@ -456,7 +689,11 @@
               window.dmdEditor.aplicarPortadaEnRegistro(registro, nuevaPortada);
             }
           }
-          window.dmdEditor.registrarVersion(registro, etiquetaVersion || "Actualizado desde chat");
+          window.dmdEditor.registrarVersion(
+            registro,
+            etiquetaVersion || "Actualización por chat",
+            detalleVersion || ""
+          );
         }
         sincronizarPublicada(registro);
       } else {
@@ -468,6 +705,7 @@
           actualizadoEn: new Date().toISOString(),
           datos,
           borrador,
+          diseno: plantillaInicialUrl ? { plantilla: plantillaInicialUrl } : {},
           publicadaSlug: "",
           publicadaEn: ""
         };
@@ -476,7 +714,11 @@
           if (borrador.portada && typeof window.dmdEditor.aplicarPortadaEnRegistro === "function") {
             window.dmdEditor.aplicarPortadaEnRegistro(registro, borrador.portada);
           }
-          window.dmdEditor.registrarVersion(registro, "Versión inicial");
+          window.dmdEditor.registrarVersion(
+            registro,
+            "Versión inicial",
+            `Borrador creado para ${datos.nombre}`
+          );
         }
         todosBorradores.unshift(registro);
         conv.borradorId = registro.id;
@@ -486,7 +728,7 @@
       conv.actualizadaEn = new Date().toISOString();
       guardarColecciones();
       fijarBorradorActivo(registro.id);
-      return registro;
+      return { registro, origen: resultado.origen };
     }
 
     function duplicarBorrador(registro) {
@@ -509,7 +751,7 @@
         idPixel: (registro.analitica && registro.analitica.idPixel) || ""
       };
       todosBorradores.unshift(copia);
-      guardar(KEY_BORRADORES, todosBorradores);
+      guardarColecciones();
       fijarBorradorActivo(copia.id);
       renderizarListaBorradores();
       estadoChatEl.textContent = `Se duplicó ${registro.datos.nombre}.`;
@@ -520,7 +762,18 @@
       if (!reg) {
         return;
       }
+
+      // Capturar copia completa antes de borrar para permitir Deshacer
+      const respaldoUndo = {
+        tipo: "borrador",
+        registro: clonar(reg),
+        publicadas: todasPublicadas.filter((p) => p && p.slug === reg.publicadaSlug).map(clonar),
+        conversacionesPrevias: clonar(todasConversaciones),
+        borradorActivoPrevio: borradorActivoId
+      };
+
       const nombre = reg.datos.nombre;
+      confirmandoBorrarDraftId = null;
       if (reg.publicadaSlug) {
         todasPublicadas = todasPublicadas.filter((p) => p && p.slug !== reg.publicadaSlug);
       }
@@ -532,17 +785,30 @@
         }
       });
       if (borradorActivoId === id) {
-        borradorActivoId = null;
+        const siguiente = borradoresDelPropietario()[0];
+        borradorActivoId = siguiente ? siguiente.id : null;
         if (window.dmdEditor) {
-          window.dmdEditor.cargarBorrador(null, false);
+          window.dmdEditor.cargarBorrador(siguiente || null, false);
         }
       }
       guardarColecciones({ permitirVacio: true });
       renderizarTodo();
-      estadoChatEl.textContent = `Se borró ${nombre}.`;
+      mostrarUndoToast(`Se borró "${nombre}".`, respaldoUndo);
     }
 
     function borrarConversacion(id) {
+      const conv = convsDelPropietario().find((c) => c.id === id);
+      if (!conv) {
+        return;
+      }
+      const respaldoUndo = {
+        tipo: "conversacion",
+        conversacion: clonar(conv),
+        convActivaPrevia: convActivaId
+      };
+      const titulo = conv.titulo || "conversación";
+      confirmandoBorrarConvId = null;
+
       todasConversaciones = todasConversaciones.filter((c) => c && c.id !== id);
       if (convActivaId === id) {
         convActivaId = null;
@@ -550,6 +816,47 @@
       }
       guardarColecciones({ permitirVacio: true });
       renderizarTodo();
+      mostrarUndoToast(`Se borró la conversación "${titulo}".`, respaldoUndo);
+    }
+
+    function deshacerUltimoBorrado() {
+      if (!ultimoEliminado) {
+        return;
+      }
+      const snap = ultimoEliminado;
+      ocultarUndoToast();
+
+      if (snap.tipo === "borrador" && snap.registro) {
+        if (!todosBorradores.some((b) => b && b.id === snap.registro.id)) {
+          todosBorradores.unshift(snap.registro);
+        }
+        if (Array.isArray(snap.publicadas)) {
+          snap.publicadas.forEach((p) => {
+            if (p && !todasPublicadas.some((x) => x && x.slug === p.slug)) {
+              todasPublicadas.unshift(p);
+            }
+          });
+        }
+        if (Array.isArray(snap.conversacionesPrevias)) {
+          todasConversaciones = snap.conversacionesPrevias;
+        }
+        borradorActivoId = snap.borradorActivoPrevio || snap.registro.id;
+        if (window.dmdEditor) {
+          window.dmdEditor.cargarBorrador(obtenerBorradorPorId(borradorActivoId), false);
+        }
+        guardarColecciones();
+        renderizarTodo();
+        estadoChatEl.textContent = `Se restauró "${snap.registro.datos.nombre}".`;
+      } else if (snap.tipo === "conversacion" && snap.conversacion) {
+        if (!todasConversaciones.some((c) => c && c.id === snap.conversacion.id)) {
+          todasConversaciones.unshift(snap.conversacion);
+        }
+        convActivaId = snap.convActivaPrevia || snap.conversacion.id;
+        convBorradorMemoria = null;
+        guardarColecciones();
+        renderizarTodo();
+        estadoChatEl.textContent = `Se restauró "${snap.conversacion.titulo}".`;
+      }
     }
 
     function validarRespuestaPaso(campo, texto) {
@@ -558,7 +865,11 @@
         if (limpio.length < 2) {
           return { ok: false, aviso: "Escribe el nombre de tu negocio." };
         }
-        return { ok: true, valor: limpio };
+        const formateado =
+          typeof gen.formatearNombrePropio === "function"
+            ? gen.formatearNombrePropio(limpio, "nombre")
+            : limpio;
+        return { ok: true, valor: formateado };
       }
       if (campo === "giro") {
         if (limpio.length < 2) {
@@ -574,13 +885,21 @@
         if (limpio.length < 2) {
           return { ok: false, aviso: "Escribe la ciudad." };
         }
-        return { ok: true, valor: limpio };
+        const ciudadFormateada =
+          typeof gen.formatearNombrePropio === "function"
+            ? gen.formatearNombrePropio(limpio, "ciudad")
+            : limpio;
+        return { ok: true, valor: ciudadFormateada };
       }
       if (campo === "oferta") {
-        if (limpio.length < 4) {
+        const ofertaLimpia =
+          typeof gen.limpiarOfertaDeRelleno === "function"
+            ? gen.limpiarOfertaDeRelleno(limpio)
+            : limpio;
+        if (ofertaLimpia.length < 4) {
           return { ok: false, aviso: "Escribe qué productos o servicios ofreces." };
         }
-        return { ok: true, valor: limpio };
+        return { ok: true, valor: ofertaLimpia };
       }
       if (campo === "tono") {
         const t = gen.normalizarTono(limpio);
@@ -605,10 +924,40 @@
       return { ok: true, valor: limpio };
     }
 
+    function marcarBorradoresAnterioresComoTexto(conv) {
+      conv.mensajes.forEach((m) => {
+        if (m && m.tipo === "borrador") {
+          m.tipo = "texto";
+          delete m.borradorId;
+        }
+      });
+    }
+
     async function aplicarCambioSeguimiento(conv, texto) {
       const limpio = gen.limpiarTexto(texto);
-      const bajo = limpio.toLowerCase();
+      const bajo = limpio.toLowerCase().replace(/[.!?¡¿,:;]+$/g, "").trim();
+
+      // Nunca filtrar "Omitir" ni palabras de relleno como si fueran servicios/productos
+      if (
+        RESPUESTAS_NO_OFERTA.has(bajo) ||
+        (typeof gen.esTextoRelleno === "function" && gen.esTextoRelleno(limpio))
+      ) {
+        conv.mensajes.push({
+          id: crearId("msg"),
+          rol: "asistente",
+          tipo: "texto",
+          texto:
+            "Tu borrador ya está listo arriba. Puedes escribir un ajuste específico (por ejemplo: \"cambia a tono profesional\", \"agrega entregas a domicilio\" o \"WhatsApp 528112345678\"), o tocar Editar para abrir el editor visual."
+        });
+        conv.actualizadaEn = new Date().toISOString();
+        guardarColecciones();
+        renderizarTodo();
+        return;
+      }
+
       let cambio = "";
+      let etiquetaVersion = "Actualización por chat";
+      let detalleVersion = "";
 
       const tonoDetectado =
         /tono\s+(cercano|profesional|formal)/i.exec(limpio) ||
@@ -616,69 +965,145 @@
 
       if (tonoDetectado) {
         conv.datos.tono = gen.normalizarTono(tonoDetectado[1]);
-        cambio = `Tono cambiado a ${gen.TONOS_ETIQUETAS[conv.datos.tono]}.`;
+        const tonoEtq = gen.TONOS_ETIQUETAS[conv.datos.tono] || conv.datos.tono;
+        cambio = `Tono cambiado a ${tonoEtq}. Borrador actualizado.`;
+        etiquetaVersion = `Tono ${tonoEtq}`;
+        detalleVersion = `Se cambió el tono de la redacción a ${tonoEtq}`;
       } else if (/whatsapp|tel[eé]fono|n[uú]mero/i.test(bajo)) {
         const dig = gen.limpiarDigitos(limpio);
         if (dig.length >= 10 && dig.length <= 15) {
           conv.datos.whatsapp = dig;
-          cambio = `WhatsApp actualizado: ${dig}.`;
+          cambio = `WhatsApp actualizado: ${dig}. Borrador actualizado.`;
+          etiquetaVersion = "WhatsApp actualizado";
+          detalleVersion = `Número configurado: ${dig}`;
         } else if (/quita|borra|sin whatsapp/i.test(bajo)) {
           conv.datos.whatsapp = "";
-          cambio = "WhatsApp eliminado.";
+          cambio = "WhatsApp retirado del borrador.";
+          etiquetaVersion = "WhatsApp retirado";
+          detalleVersion = "Se quitó el número de WhatsApp";
+        } else {
+          conv.mensajes.push({
+            id: crearId("msg"),
+            rol: "asistente",
+            tipo: "texto",
+            texto: "Para actualizar tu WhatsApp escribe entre 10 y 15 dígitos con lada, por ejemplo: WhatsApp 528112345678."
+          });
+          conv.actualizadaEn = new Date().toISOString();
+          guardarColecciones();
+          renderizarTodo();
+          return;
         }
       } else if (/ciudad\s+(?:a|en|:)?\s*(.+)/i.test(limpio)) {
         const m = /ciudad\s+(?:a|en|:)?\s*(.+)/i.exec(limpio);
         if (m && m[1].trim().length >= 2) {
-          conv.datos.ciudad = gen.limpiarTexto(m[1]);
-          cambio = `Ciudad actualizada: ${conv.datos.ciudad}.`;
+          const ciudadNueva =
+            typeof gen.formatearNombrePropio === "function"
+              ? gen.formatearNombrePropio(m[1], "ciudad")
+              : gen.limpiarTexto(m[1]);
+          conv.datos.ciudad = ciudadNueva;
+          cambio = `Ciudad actualizada a ${ciudadNueva}. Borrador actualizado.`;
+          etiquetaVersion = `Ciudad: ${ciudadNueva}`;
+          detalleVersion = `Ubicación cambiada a ${ciudadNueva}`;
         }
       } else if (/agrega|añade|incluye|suma|tambi[eé]n/i.test(bajo)) {
-        const extra = limpio
+        const extraCrudo = limpio
           .replace(/^(agrega|añade|incluye|suma|pon|también|tambien)\s+/i, "")
           .trim();
+        const extra =
+          typeof gen.limpiarOfertaDeRelleno === "function"
+            ? gen.limpiarOfertaDeRelleno(extraCrudo)
+            : extraCrudo;
         if (extra.length >= 3) {
-          conv.datos.oferta = conv.datos.oferta
-            ? `${conv.datos.oferta}, ${extra}`
-            : extra;
-          cambio = `Agregado: "${extra}".`;
+          conv.datos.oferta = conv.datos.oferta ? `${conv.datos.oferta}, ${extra}` : extra;
+          cambio = `Se agregó "${extra}" a tu oferta. Borrador actualizado.`;
+          etiquetaVersion = `Agregó: ${extra.slice(0, 28)}`;
+          detalleVersion = `Se añadió "${extra}" a la lista de oferta`;
         }
       } else if (/nombre\s+(?:a|:)?\s*(.+)/i.test(limpio)) {
         const m = /nombre\s+(?:a|:)?\s*(.+)/i.exec(limpio);
         if (m && m[1].trim().length >= 2) {
-          conv.datos.nombre = gen.limpiarTexto(m[1]);
-          cambio = `Nombre actualizado: ${conv.datos.nombre}.`;
+          const nomNuevo =
+            typeof gen.formatearNombrePropio === "function"
+              ? gen.formatearNombrePropio(m[1], "nombre")
+              : gen.limpiarTexto(m[1]);
+          conv.datos.nombre = nomNuevo;
+          cambio = `Nombre actualizado a ${nomNuevo}. Borrador actualizado.`;
+          etiquetaVersion = `Nombre: ${nomNuevo}`;
+          detalleVersion = `Se cambió el nombre del negocio a ${nomNuevo}`;
         }
       }
 
       if (!cambio) {
-        // Tratar como actualización directa de oferta si escribe productos/servicios
-        conv.datos.oferta = conv.datos.oferta
-          ? `${conv.datos.oferta}, ${limpio}`
-          : limpio;
-        cambio = `Agregado: "${limpio}".`;
+        const ofertaNueva =
+          typeof gen.limpiarOfertaDeRelleno === "function"
+            ? gen.limpiarOfertaDeRelleno(limpio)
+            : limpio;
+        if (ofertaNueva.length < 3) {
+          conv.mensajes.push({
+            id: crearId("msg"),
+            rol: "asistente",
+            tipo: "texto",
+            texto: "Escribe un producto, servicio o ajuste claro para actualizar tu borrador."
+          });
+          conv.actualizadaEn = new Date().toISOString();
+          guardarColecciones();
+          renderizarTodo();
+          return;
+        }
+        conv.datos.oferta = conv.datos.oferta ? `${conv.datos.oferta}, ${ofertaNueva}` : ofertaNueva;
+        cambio = `Se agregó "${ofertaNueva}". Borrador actualizado.`;
+        etiquetaVersion = `Oferta: ${ofertaNueva.slice(0, 28)}`;
+        detalleVersion = `Se añadió "${ofertaNueva}"`;
       }
 
       const registroActual = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
-      const varianteActual = registroActual && registroActual.borrador ? registroActual.borrador.variante || 0 : 0;
-      const actualizado = await guardarOActualizarBorradorDesdeConv(conv, varianteActual, "Ajuste por chat");
+      const varianteActual =
+        registroActual && registroActual.borrador ? registroActual.borrador.variante || 0 : 0;
 
-      conv.mensajes.push({
-        id: crearId("msg"),
-        rol: "asistente",
-        tipo: "borrador",
-        texto: cambio,
-        borradorId: actualizado.id
-      });
+      fijarEstadoGeneracion(true, "Actualizando tu borrador...");
+      mostrarErrorChat("");
+      try {
+        const { registro: actualizado } = await guardarOActualizarBorradorDesdeConv(
+          conv,
+          varianteActual,
+          etiquetaVersion,
+          detalleVersion
+        );
+
+        // Agrupar en un solo borrador por conversación: mensajes previos pasan a texto simple
+        marcarBorradoresAnterioresComoTexto(conv);
+
+        conv.mensajes.push({
+          id: crearId("msg"),
+          rol: "asistente",
+          tipo: "borrador",
+          texto: cambio,
+          borradorId: actualizado.id
+        });
+        guardarColecciones();
+      } catch (error) {
+        mostrarErrorChat(
+          "No se pudo actualizar el borrador en este intento. Puedes reintentar ahora.",
+          () => aplicarCambioSeguimiento(conv, texto)
+        );
+      } finally {
+        fijarEstadoGeneracion(false, "");
+        renderizarTodo();
+      }
     }
 
     async function enviarMensajeUsuario(textoCrudo) {
+      if (generandoAhora) {
+        return;
+      }
       const conv = obtenerConvActiva() || asegurarConversacionActiva();
       const texto = gen.limpiarTexto(textoCrudo);
       if (!texto) {
         return;
       }
 
-      // Promover conversación en memoria a guardada al primer mensaje real del usuario
+      mostrarErrorChat("");
+
       if (!todasConversaciones.some((c) => c && c.id === conv.id)) {
         todasConversaciones.unshift(conv);
         convActivaId = conv.id;
@@ -736,17 +1161,40 @@
           return;
         }
 
-        // Completó las preguntas: armar el borrador
-        const registro = await guardarOActualizarBorradorDesdeConv(conv, 0, "Versión inicial");
-        conv.mensajes.push({
-          id: crearId("msg"),
-          rol: "asistente",
-          tipo: "borrador",
-          texto: `Borrador listo para ${registro.datos.nombre}.`,
-          borradorId: registro.id
-        });
-        guardarColecciones();
-        renderizarTodo();
+        // Completó los 6 pasos: generar borrador con estado de carga claro
+        fijarEstadoGeneracion(true, "Armando el borrador de tu página...");
+        try {
+          const { registro, origen } = await guardarOActualizarBorradorDesdeConv(
+            conv,
+            0,
+            "Versión inicial",
+            `Borrador inicial de ${conv.datos.nombre}`
+          );
+          marcarBorradoresAnterioresComoTexto(conv);
+          conv.mensajes.push({
+            id: crearId("msg"),
+            rol: "asistente",
+            tipo: "borrador",
+            texto: `Borrador listo para ${registro.datos.nombre}. Puedes revisarlo aquí, pedir ajustes o abrir el Editor visual.`,
+            borradorId: registro.id
+          });
+          guardarColecciones();
+          fijarEstadoGeneracion(
+            false,
+            origen === "local"
+              ? "Borrador listo y guardado en este navegador."
+              : "Borrador listo y guardado."
+          );
+          renderizarTodo();
+        } catch (error) {
+          conv.pasoIndice = PASOS.length - 1;
+          fijarEstadoGeneracion(false, "");
+          mostrarErrorChat(
+            "Hubo un problema al armar tu borrador. Intenta de nuevo.",
+            () => enviarMensajeUsuario(texto)
+          );
+          renderizarTodo();
+        }
         return;
       }
 
@@ -757,14 +1205,14 @@
         tipo: "texto",
         texto
       });
-      aplicarCambioSeguimiento(conv, texto).then(() => {
-        guardar(KEY_CONVERSACIONES, todasConversaciones);
-        renderizarTodo();
-      });
-      return;
+      renderizarHilo();
+      await aplicarCambioSeguimiento(conv, texto);
     }
 
     async function guardarEdicionMensajeUsuario(conv, msg, nuevoTexto) {
+      if (generandoAhora) {
+        return;
+      }
       const limpio = gen.limpiarTexto(nuevoTexto);
       if (!limpio) {
         return;
@@ -786,7 +1234,17 @@
         if (conv.borradorId) {
           const existente = obtenerBorradorPorId(conv.borradorId);
           const v = existente && existente.borrador ? existente.borrador.variante || 0 : 0;
-          await guardarOActualizarBorradorDesdeConv(conv, v, `Editó ${msg.campo} en chat`);
+          fijarEstadoGeneracion(true, "Actualizando borrador...");
+          try {
+            await guardarOActualizarBorradorDesdeConv(
+              conv,
+              v,
+              `Editó ${msg.campo} en chat`,
+              `${msg.campo}: ${String(val.valor || "").slice(0, 48)}`
+            );
+          } finally {
+            fijarEstadoGeneracion(false, "Actualizado.");
+          }
         }
       } else {
         msg.texto = limpio;
@@ -860,7 +1318,11 @@
         }
         registro.actualizadoEn = new Date().toISOString();
         if (window.dmdEditor && typeof window.dmdEditor.registrarVersion === "function") {
-          window.dmdEditor.registrarVersion(registro, etiquetaVer);
+          window.dmdEditor.registrarVersion(
+            registro,
+            etiquetaVer,
+            (nuevaPortada && nuevaPortada.etiqueta) || "Portada actualizada desde el chat"
+          );
         }
         sincronizarPublicada(registro);
         guardarColecciones();
@@ -884,6 +1346,10 @@
             img.src = portadaUrl;
             img.alt = portadaAlt;
             img.decoding = "async";
+            img.addEventListener("error", () => {
+              fig.classList.add("cover-fallback");
+              img.hidden = true;
+            });
             fig.appendChild(img);
             hero.appendChild(fig);
           }
@@ -1075,10 +1541,17 @@
             a.appendChild(sp);
             bWa.appendChild(a);
           } else {
-            const av = document.createElement("p");
-            av.className = "notice-box";
-            av.textContent = "Sin WhatsApp todavía.";
-            bWa.appendChild(av);
+            const cardLoc = document.createElement("div");
+            cardLoc.className = "biz-location-card";
+            const pLoc = document.createElement("p");
+            pLoc.className = "biz-location-title";
+            pLoc.textContent = `${datos.nombre} · ${datos.ciudad}`;
+            const pSub = document.createElement("p");
+            pSub.className = "biz-location-sub";
+            pSub.textContent = "Puedes agregar tu número de WhatsApp en cualquier momento desde el Editor visual.";
+            cardLoc.appendChild(pLoc);
+            cardLoc.appendChild(pSub);
+            bWa.appendChild(cardLoc);
           }
           body.appendChild(bWa);
         }
@@ -1086,7 +1559,7 @@
       frame.appendChild(body);
       card.appendChild(frame);
 
-      // Barra de acciones del borrador
+      // Barra de acciones del borrador (una sola vez por conversación)
       const acciones = document.createElement("div");
       acciones.className = "draft-chat-actions";
 
@@ -1104,16 +1577,31 @@
       btnRegenerar.type = "button";
       btnRegenerar.className = "btn btn-secondary btn-sm";
       btnRegenerar.dataset.chatAction = "regenerar";
+      btnRegenerar.disabled = generandoAhora;
       btnRegenerar.textContent = "Regenerar";
       btnRegenerar.addEventListener("click", async () => {
+        if (generandoAhora) {
+          return;
+        }
         const conv = obtenerConvActiva();
         if (!conv) {
           return;
         }
         const sigVar = ((registro.borrador && registro.borrador.variante) || 0) + 1;
         conv.datos = clonar(registro.datos);
-        await guardarOActualizarBorradorDesdeConv(conv, sigVar, "Regenerado");
-        estadoChatEl.textContent = "Borrador regenerado.";
+        fijarEstadoGeneracion(true, "Generando nueva versión del borrador...");
+        try {
+          await guardarOActualizarBorradorDesdeConv(
+            conv,
+            sigVar,
+            `Regenerado (opción ${sigVar + 1})`,
+            "Nueva variación de textos y portada"
+          );
+          fijarEstadoGeneracion(false, "Borrador regenerado.");
+        } catch (error) {
+          fijarEstadoGeneracion(false, "");
+          mostrarErrorChat("No se pudo regenerar el borrador. Intenta de nuevo.");
+        }
         renderizarTodo();
       });
 
@@ -1125,7 +1613,7 @@
       btnCopiar.addEventListener("click", () => {
         const plano = gen.formatearTextoPlano(registro.datos, registro.borrador);
         copiarTexto(plano).then((ok) => {
-          estadoChatEl.textContent = ok ? "Copiado." : "No se pudo copiar.";
+          estadoChatEl.textContent = ok ? "Texto copiado." : "No se pudo copiar.";
         });
       });
 
@@ -1144,7 +1632,7 @@
       btnPublicar.addEventListener("click", () => {
         const url = publicarBorrador(registro);
         if (url) {
-          estadoChatEl.textContent = "Página publicada.";
+          estadoChatEl.textContent = "Página publicada y lista para compartir.";
         }
       });
 
@@ -1155,7 +1643,6 @@
       acciones.appendChild(btnPublicar);
       card.appendChild(acciones);
 
-      // Si ya está publicada, mostrar enlace + compartir + activar
       if (registro.publicadaSlug) {
         const rutaVer = `ver.html?id=${encodeURIComponent(registro.publicadaSlug)}`;
         const urlPub = gen.construirUrlPublicada(registro.publicadaSlug);
@@ -1164,7 +1651,7 @@
 
         const lbl = document.createElement("p");
         lbl.className = "published-label";
-        lbl.textContent = "Publicada";
+        lbl.textContent = "Página publicada";
         const urlP = document.createElement("p");
         urlP.className = "published-url-text";
         urlP.textContent = urlPub;
@@ -1201,7 +1688,7 @@
         const aPago = document.createElement("a");
         aPago.className = "btn btn-secondary btn-sm";
         aPago.href = `pago.html?borrador=${encodeURIComponent(registro.id)}`;
-        aPago.textContent = "Activar";
+        aPago.textContent = "Activar plan";
 
         row.appendChild(aVer);
         row.appendChild(bCop);
@@ -1217,6 +1704,29 @@
       return card;
     }
 
+    function renderizarProgresoChat(conv) {
+      if (!progresoTexto || !progresoPaso || !progresoBarra) {
+        return;
+      }
+      if (!conv) {
+        return;
+      }
+      const total = PASOS.length;
+      if (conv.pasoIndice < total) {
+        const paso = PASOS[conv.pasoIndice];
+        const num = conv.pasoIndice + 1;
+        progresoTexto.textContent = `Paso ${num} de ${total} · ${paso.etiqueta}`;
+        progresoPaso.textContent = `${num}/${total}`;
+        progresoBarra.style.width = `${Math.round((num / total) * 100)}%`;
+      } else {
+        progresoTexto.textContent = conv.borradorId
+          ? "Borrador listo · Escribe un ajuste o ábrelo en el Editor visual"
+          : "Datos completos";
+        progresoPaso.textContent = "Listo";
+        progresoBarra.style.width = "100%";
+      }
+    }
+
     function renderizarHilo() {
       const conv = obtenerConvActiva();
       hilo.textContent = "";
@@ -1224,7 +1734,19 @@
         return;
       }
 
-      conv.mensajes.forEach((msg) => {
+      renderizarProgresoChat(conv);
+
+      // Encontrar el índice del ÚLTIMO mensaje de borrador para agrupar y nunca repetirlo 5 veces
+      let ultimoIdxBorrador = -1;
+      for (let i = conv.mensajes.length - 1; i >= 0; i -= 1) {
+        const m = conv.mensajes[i];
+        if (m && m.tipo === "borrador" && m.borradorId && obtenerBorradorPorId(m.borradorId)) {
+          ultimoIdxBorrador = i;
+          break;
+        }
+      }
+
+      conv.mensajes.forEach((msg, idx) => {
         const fila = document.createElement("div");
         fila.className = `chat-msg chat-msg-${msg.rol}`;
         fila.dataset.msgId = msg.id;
@@ -1286,7 +1808,8 @@
           fila.appendChild(bEdit);
         }
 
-        if (msg.tipo === "borrador" && msg.borradorId) {
+        // Mostrar tarjeta de borrador SOLO en el último mensaje de borrador de la conversación
+        if (idx === ultimoIdxBorrador && msg.borradorId) {
           const reg = obtenerBorradorPorId(msg.borradorId);
           if (reg) {
             fila.appendChild(construirTarjetaBorradorEnChat(reg));
@@ -1296,9 +1819,30 @@
         hilo.appendChild(fila);
       });
 
-      // Chips de sugerencia según paso actual
+      // Burbuja clara de carga mientras se genera o actualiza el borrador
+      if (generandoAhora) {
+        const filaCarga = document.createElement("div");
+        filaCarga.className = "chat-msg chat-msg-asistente";
+        const burbujaCarga = document.createElement("div");
+        burbujaCarga.className = "chat-bubble chat-loading-bubble";
+        const sp = document.createElement("span");
+        sp.className = "spinner spinner-accent";
+        sp.setAttribute("aria-hidden", "true");
+        const txt = document.createElement("span");
+        txt.textContent = "Armando el borrador de tu página...";
+        burbujaCarga.appendChild(sp);
+        burbujaCarga.appendChild(txt);
+        filaCarga.appendChild(burbujaCarga);
+        hilo.appendChild(filaCarga);
+      }
+
+      // Chips de sugerencia según paso actual (ocultos mientras se genera)
       sugerenciasEl.textContent = "";
-      if (conv.pasoIndice < PASOS.length && PASOS[conv.pasoIndice].chips.length > 0) {
+      if (
+        !generandoAhora &&
+        conv.pasoIndice < PASOS.length &&
+        PASOS[conv.pasoIndice].chips.length > 0
+      ) {
         sugerenciasEl.hidden = false;
         PASOS[conv.pasoIndice].chips.forEach((chipTexto) => {
           const b = document.createElement("button");
@@ -1310,6 +1854,13 @@
         });
       } else {
         sugerenciasEl.hidden = true;
+      }
+
+      if (entradaChat) {
+        entradaChat.placeholder =
+          conv.pasoIndice < PASOS.length
+            ? "Escribe tu respuesta aquí..."
+            : "Pide un ajuste (ej. cambia a tono profesional o agrega envíos)...";
       }
 
       hilo.scrollTop = hilo.scrollHeight;
@@ -1331,7 +1882,10 @@
 
       lista.forEach((conv) => {
         const li = document.createElement("li");
-        li.className =
+        li.className = "sidebar-item-wrap";
+
+        const row = document.createElement("div");
+        row.className =
           conv.id === convActivaId ? "sidebar-item sidebar-item-active" : "sidebar-item";
 
         const btnAbrir = document.createElement("button");
@@ -1346,6 +1900,7 @@
         btnAbrir.appendChild(t);
         btnAbrir.appendChild(f);
         btnAbrir.addEventListener("click", () => {
+          confirmandoBorrarConvId = null;
           fijarConvActiva(conv.id);
           if (conv.borradorId) {
             fijarBorradorActivo(conv.borradorId);
@@ -1360,10 +1915,48 @@
         btnDel.className = "sidebar-item-del";
         btnDel.setAttribute("aria-label", `Borrar conversación ${conv.titulo}`);
         btnDel.textContent = "Borrar";
-        btnDel.addEventListener("click", () => borrarConversacion(conv.id));
+        btnDel.addEventListener("click", () => {
+          confirmandoBorrarConvId = confirmandoBorrarConvId === conv.id ? null : conv.id;
+          renderizarListaConversaciones();
+        });
 
-        li.appendChild(btnAbrir);
-        li.appendChild(btnDel);
+        row.appendChild(btnAbrir);
+        row.appendChild(btnDel);
+        li.appendChild(row);
+
+        if (confirmandoBorrarConvId === conv.id) {
+          const confirmBox = document.createElement("div");
+          confirmBox.className = "confirm-box sidebar-confirm-box";
+          confirmBox.setAttribute("role", "alert");
+
+          const msg = document.createElement("p");
+          msg.textContent = `¿Borrar la conversación "${conv.titulo || "Nueva conversación"}"?`;
+
+          const actions = document.createElement("div");
+          actions.className = "confirm-actions";
+
+          const bSi = document.createElement("button");
+          bSi.type = "button";
+          bSi.className = "btn btn-danger-ghost btn-sm";
+          bSi.textContent = "Sí, borrar";
+          bSi.addEventListener("click", () => borrarConversacion(conv.id));
+
+          const bNo = document.createElement("button");
+          bNo.type = "button";
+          bNo.className = "btn btn-secondary btn-sm";
+          bNo.textContent = "Cancelar";
+          bNo.addEventListener("click", () => {
+            confirmandoBorrarConvId = null;
+            renderizarListaConversaciones();
+          });
+
+          actions.appendChild(bSi);
+          actions.appendChild(bNo);
+          confirmBox.appendChild(msg);
+          confirmBox.appendChild(actions);
+          li.appendChild(confirmBox);
+        }
+
         listaConvEl.appendChild(li);
       });
     }
@@ -1371,6 +1964,10 @@
     function renderizarListaBorradores() {
       const lista = borradoresDelPropietario();
       contadorBorradores.textContent = String(lista.length);
+      if (badgeBorradoresMobile) {
+        badgeBorradoresMobile.textContent = String(lista.length);
+        badgeBorradoresMobile.hidden = lista.length === 0;
+      }
       listaBorradoresEl.textContent = "";
 
       if (lista.length === 0) {
@@ -1414,6 +2011,7 @@
         bReabrir.dataset.id = reg.id;
         bReabrir.textContent = "Reabrir";
         bReabrir.addEventListener("click", () => {
+          confirmandoBorrarDraftId = null;
           fijarBorradorActivo(reg.id);
           const convVinculada = convsDelPropietario().find((c) => c.borradorId === reg.id);
           if (convVinculada) {
@@ -1438,7 +2036,10 @@
         bDel.dataset.draftAction = "borrar";
         bDel.dataset.id = reg.id;
         bDel.textContent = "Borrar";
-        bDel.addEventListener("click", () => borrarBorrador(reg.id));
+        bDel.addEventListener("click", () => {
+          confirmandoBorrarDraftId = confirmandoBorrarDraftId === reg.id ? null : reg.id;
+          renderizarListaBorradores();
+        });
 
         acciones.appendChild(bReabrir);
         acciones.appendChild(bDup);
@@ -1447,6 +2048,41 @@
         li.appendChild(head);
         li.appendChild(meta);
         li.appendChild(acciones);
+
+        if (confirmandoBorrarDraftId === reg.id) {
+          const confirmBox = document.createElement("div");
+          confirmBox.className = "confirm-box sidebar-confirm-box";
+          confirmBox.setAttribute("role", "alert");
+
+          const msg = document.createElement("p");
+          msg.textContent = `¿Borrar "${reg.datos.nombre}"?`;
+
+          const confActions = document.createElement("div");
+          confActions.className = "confirm-actions";
+
+          const bSi = document.createElement("button");
+          bSi.type = "button";
+          bSi.className = "btn btn-danger-ghost btn-sm";
+          bSi.dataset.draftConfirmDelete = reg.id;
+          bSi.textContent = "Sí, borrar";
+          bSi.addEventListener("click", () => borrarBorrador(reg.id));
+
+          const bNo = document.createElement("button");
+          bNo.type = "button";
+          bNo.className = "btn btn-secondary btn-sm";
+          bNo.textContent = "Cancelar";
+          bNo.addEventListener("click", () => {
+            confirmandoBorrarDraftId = null;
+            renderizarListaBorradores();
+          });
+
+          confActions.appendChild(bSi);
+          confActions.appendChild(bNo);
+          confirmBox.appendChild(msg);
+          confirmBox.appendChild(confActions);
+          li.appendChild(confirmBox);
+        }
+
         listaBorradoresEl.appendChild(li);
       });
     }
@@ -1527,7 +2163,7 @@
       a.click();
       document.body.removeChild(a);
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      estadoRespaldo.textContent = "Copia descargada.";
+      estadoRespaldo.textContent = "Respaldo descargado (.json).";
     }
 
     function importarRespaldoJson(archivo) {
@@ -1586,10 +2222,10 @@
           renderizarTodo();
           estadoRespaldo.textContent =
             importados > 0
-              ? `Importadas: ${importados}.`
-              : "Sin elementos nuevos.";
+              ? `Se importaron ${importados} página${importados === 1 ? "" : "s"}.`
+              : "Sin elementos nuevos por importar.";
         } catch (error) {
-          estadoRespaldo.textContent = "Archivo no válido.";
+          estadoRespaldo.textContent = "El archivo no es un respaldo válido (.json).";
         } finally {
           inputImportar.value = "";
         }
@@ -1697,9 +2333,23 @@
     btnNuevaSidebar.addEventListener("click", () =>
       ejecutarCuandoHidrate(crearNuevaConversacion)
     );
-    btnNuevaTop.addEventListener("click", () =>
-      ejecutarCuandoHidrate(crearNuevaConversacion)
-    );
+
+    if (btnChatReintentar) {
+      btnChatReintentar.addEventListener("click", () => {
+        const fn = ultimaAccionFallida;
+        mostrarErrorChat("");
+        if (typeof fn === "function") {
+          fn();
+        }
+      });
+    }
+
+    if (btnUndo) {
+      btnUndo.addEventListener("click", deshacerUltimoBorrado);
+    }
+    if (btnUndoCerrar) {
+      btnUndoCerrar.addEventListener("click", ocultarUndoToast);
+    }
 
     tabModoChat.addEventListener("click", () => cambiarModo("chat"));
     tabModoEditor.addEventListener("click", () => cambiarModo("editor"));
@@ -1747,7 +2397,6 @@
       });
     }
 
-    // No crear ni mostrar conversación vacía antes de terminar de hidratar todas las capas.
     if (window.dmdAlmacen && typeof window.dmdAlmacen.esperarHidratacion === "function") {
       cargarColecciones();
       if (convsDelPropietario().length > 0 || borradoresDelPropietario().length > 0) {
