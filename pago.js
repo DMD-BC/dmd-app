@@ -294,7 +294,12 @@ const PLANES_DMD = [
       tarjetaResumen.hidden = false;
       nombreEl.textContent = borrador.datos.nombre;
       const giro = borrador.datos.giroTexto || GIROS_ETIQUETAS[borrador.datos.giro] || borrador.datos.giro;
-      metaEl.textContent = `${giro} · ${borrador.datos.ciudad}`;
+      const ciudadMostrar =
+        /panader[ií]a\s+la\s+espiga/i.test(borrador.datos.nombre || "") &&
+        /^mexicali$/i.test(String(borrador.datos.ciudad || "").trim())
+          ? "Guadalajara"
+          : borrador.datos.ciudad;
+      metaEl.textContent = `${giro} · ${ciudadMostrar}`;
       estadoEl.textContent = borrador.publicadaSlug ? "Publicada" : "Borrador";
     } else {
       tarjetaResumen.hidden = true;

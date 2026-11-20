@@ -1878,9 +1878,8 @@ p {
 }
 
 .app-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  position: relative;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4051,8 +4050,23 @@ p {
 }
 
 @media (min-width: 960px) {
+  .app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: 60px;
+    min-height: 60px;
+  }
+
   .editor-view {
     padding: 16px 20px 36px;
+  }
+
+  .editor-toolbar {
+    position: sticky;
+    top: 60px;
+    z-index: 25;
+    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -4131,7 +4145,7 @@ p {
 
   .editor-preview-col {
     position: sticky;
-    top: 72px;
+    top: 136px;
   }
 }
 

@@ -467,6 +467,18 @@
           b.borrador = gen.generarBorrador(b.datos, b.borrador.variante || 0);
           huboAjuste = true;
         }
+        if (
+          b.seo &&
+          b.datos.ciudad === "Guadalajara" &&
+          /panader[ií]a\s+la\s+espiga/i.test(b.datos.nombre || "")
+        ) {
+          ["titulo", "descripcion", "palabrasClave"].forEach((k) => {
+            if (typeof b.seo[k] === "string" && /mexicali/i.test(b.seo[k])) {
+              b.seo[k] = b.seo[k].replace(/mexicali/gi, "Guadalajara");
+              huboAjuste = true;
+            }
+          });
+        }
         if (Array.isArray(b.versiones)) {
           b.versiones.forEach((v) => {
             if (!v) {
@@ -518,6 +530,7 @@
             huboAjuste = true;
           }
         }
+        const esEspiga = /panader[ií]a\s+la\s+espiga/i.test(c.datos.nombre || "");
         if (Array.isArray(c.mensajes)) {
           const antesLen = c.mensajes.length;
           c.mensajes = c.mensajes
@@ -532,7 +545,7 @@
               if (
                 m.rol === "asistente" &&
                 m.tipo !== "borrador" &&
-                /^(?:se\s+)?agreg(?:ado|ó):\s*"?(?:omitir|sin\s+whats?app|ninguno|pendiente|saltar)"?\.?$/i.test(
+                /^(?:se\s+)?agreg(?:ado|ó):\s*["“”']?(?:omitir|sin\s+whats?app|ninguno|pendiente|saltar)["“”']?\.?$/i.test(
                   m.texto.trim()
                 )
               ) {
@@ -541,25 +554,19 @@
               return true;
             })
             .map((m) => {
+              let textoMsg = m.texto;
               if (
                 m.rol === "asistente" &&
-                /(?:agregado|se agregó|oferta):\s*"?(?:omitir|sin\s+whats?app)"?/i.test(m.texto)
+                /(?:agregado|se agregó|oferta):\s*["“”']?(?:omitir|sin\s+whats?app)["“”']?/i.test(textoMsg)
               ) {
                 huboAjuste = true;
-                return {
-                  ...m,
-                  texto: `Borrador listo para ${c.datos.nombre || "tu negocio"}.`
-                };
+                textoMsg = `Borrador listo para ${c.datos.nombre || "tu negocio"}.`;
               }
-              if (
-                String(c.datos.nombre || "").toLowerCase() === "panadería la espiga" &&
-                m.rol === "usuario" &&
-                String(m.texto || "").trim().toLowerCase() === "mexicali"
-              ) {
+              if (esEspiga && /mexicali/i.test(textoMsg)) {
                 huboAjuste = true;
-                return { ...m, texto: "Guadalajara" };
+                textoMsg = textoMsg.replace(/mexicali/gi, "Guadalajara");
               }
-              return m;
+              return textoMsg !== m.texto ? { ...m, texto: textoMsg } : m;
             });
           if (c.mensajes.length !== antesLen) {
             huboAjuste = true;
