@@ -6661,14 +6661,14 @@ p {
 }
 
 .sticker-pos-bl {
-  bottom: -10px;
+  bottom: 8px;
   left: 10px;
   top: auto;
   right: auto;
 }
 
 .sticker-pos-br {
-  bottom: -10px;
+  bottom: 8px;
   right: 10px;
   top: auto;
   left: auto;
@@ -6804,8 +6804,26 @@ p {
 }
 
 /* Escala proporcional dentro de miniaturas de plantilla */
+.tpl-mini-photo-wrap {
+  width: 100%;
+}
+
+.tpl-mini-photo {
+  width: 100%;
+}
+
 .sticker-mini-scale .sticker-cutout {
   font-size: 0.63rem;
+}
+
+.sticker-mini-scale.sticker-pos-bl,
+.sticker-mini-scale.sticker-pos-br {
+  bottom: 8px;
+}
+
+.sticker-mini-scale.sticker-pos-tr {
+  top: -10px;
+  right: 8px;
 }
 
 .sticker-mini-scale .sticker-shape-seal {
