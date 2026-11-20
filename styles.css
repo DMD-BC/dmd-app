@@ -4666,6 +4666,7 @@ p {
   display: grid;
   gap: 12px;
   margin-bottom: 16px;
+  min-width: 0;
 }
 
 .legal-section h2 {
@@ -4684,6 +4685,11 @@ p {
   gap: 10px;
   font-size: var(--text-sm);
   color: var(--ink-secondary);
+}
+
+.legal-list code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .legal-list strong {

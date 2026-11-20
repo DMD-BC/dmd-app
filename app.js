@@ -117,6 +117,11 @@ function inicializarDemoPlantillasHome() {
     });
   };
 
+  Object.keys(DEMOS_PLANTILLAS_HOME).forEach((clave) => {
+    const imgPrecarga = new Image();
+    imgPrecarga.src = DEMOS_PLANTILLAS_HOME[clave].foto;
+  });
+
   tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
       aplicarPlantillaDemo(btn.dataset.demoTpl);
