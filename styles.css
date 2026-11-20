@@ -3573,6 +3573,18 @@ p {
   color: var(--ink-secondary);
 }
 
+.auth-forms-offline .input:disabled,
+.auth-forms-offline .btn:disabled,
+.auth-forms-offline .password-toggle-btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.auth-forms-offline .form-grid,
+.auth-forms-offline .auth-google-box {
+  opacity: 0.78;
+}
+
 .service-alert-title {
   font-size: var(--text-sm);
   font-weight: 700;
@@ -4051,10 +4063,9 @@ p {
 
 @media (min-width: 960px) {
   .app-topbar {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    height: 60px;
+    position: relative;
+    top: auto;
+    z-index: 20;
     min-height: 60px;
   }
 
@@ -4063,10 +4074,9 @@ p {
   }
 
   .editor-toolbar {
-    position: sticky;
-    top: 60px;
-    z-index: 25;
-    box-shadow: var(--shadow-sm);
+    position: relative;
+    top: auto;
+    z-index: 10;
   }
 }
 
@@ -4145,7 +4155,7 @@ p {
 
   .editor-preview-col {
     position: sticky;
-    top: 136px;
+    top: 16px;
   }
 }
 

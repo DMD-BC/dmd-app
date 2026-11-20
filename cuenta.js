@@ -575,17 +575,71 @@ async function solicitarAuth(ruta, opciones) {
       formRegistro.hidden = !esRegistro;
     }
 
+    function actualizarEstadoDisponibleFormularios(servicioCaido) {
+      const recCorreoEl = document.getElementById("rec-correo");
+      const btnEnviarRec = document.getElementById("btn-enviar-recuperacion");
+      const estadoRecEl = document.getElementById("estado-rec-password");
+      const btnGoogleEl = document.getElementById("btn-login-google-sso");
+      const estadoGoogleEl = document.getElementById("estado-google-sso");
+      const togglesPass = Array.from(document.querySelectorAll("[data-toggle-password]"));
+
+      if (vistaInvitado) {
+        vistaInvitado.classList.toggle("auth-forms-offline", servicioCaido);
+      }
+
+      [
+        loginCorreo,
+        loginPassword,
+        btnIniciarSesion,
+        regNombre,
+        regCorreo,
+        regPassword,
+        btnCrearCuenta,
+        recCorreoEl,
+        btnEnviarRec,
+        btnGoogleEl,
+        ...togglesPass
+      ].forEach((el) => {
+        if (el) {
+          el.disabled = Boolean(servicioCaido);
+        }
+      });
+
+      if (btnIniciarSesion && !enviando) {
+        btnIniciarSesion.textContent = servicioCaido
+          ? "Inicio de sesión no disponible ahora"
+          : "Iniciar sesión";
+      }
+      if (btnCrearCuenta && !enviando) {
+        btnCrearCuenta.textContent = servicioCaido
+          ? "Registro no disponible ahora"
+          : "Crear cuenta";
+      }
+      if (estadoGoogleEl) {
+        estadoGoogleEl.textContent = servicioCaido
+          ? "No disponible temporalmente mientras el servicio de cuentas está fuera de línea."
+          : "Acceso rápido con tu cuenta de Google a través del servicio de cuentas de dmd.";
+      }
+      if (estadoRecEl && servicioCaido) {
+        estadoRecEl.textContent =
+          "La recuperación de contraseña no está disponible mientras el servicio de cuentas esté fuera de línea.";
+      } else if (estadoRecEl && !servicioCaido && /fuera de línea/i.test(estadoRecEl.textContent || "")) {
+        estadoRecEl.textContent = "";
+      }
+    }
+
     function actualizarVistaCuenta() {
       const verificada = dmdCuenta.estaVerificada();
       const sesion = dmdCuenta.obtenerSesionActual();
       const errorSrv = dmdCuenta.obtenerUltimoErrorServicio();
+      const servicioCaido = Boolean(verificada && !sesion && errorSrv);
 
       if (cargandoEl) {
         cargandoEl.hidden = verificada;
       }
 
       if (errorServicioBox && errorServicioMsg) {
-        if (verificada && !sesion && errorSrv) {
+        if (servicioCaido) {
           errorServicioMsg.textContent = errorSrv;
           errorServicioBox.hidden = false;
         } else {
@@ -603,6 +657,7 @@ async function solicitarAuth(ruta, opciones) {
       if (sesion) {
         vistaInvitado.hidden = true;
         vistaActiva.hidden = false;
+        actualizarEstadoDisponibleFormularios(false);
         sesionNombreEl.textContent = sesion.nombre;
         sesionCorreoEl.textContent = sesion.correo;
         if (sesionCuotaEl) {
@@ -617,6 +672,7 @@ async function solicitarAuth(ruta, opciones) {
       } else {
         vistaInvitado.hidden = false;
         vistaActiva.hidden = true;
+        actualizarEstadoDisponibleFormularios(servicioCaido);
       }
     }
 
@@ -626,6 +682,12 @@ async function solicitarAuth(ruta, opciones) {
         evento.stopPropagation();
       }
       if (enviando) {
+        return;
+      }
+      if (dmdCuenta.obtenerUltimoErrorServicio()) {
+        regErrorGeneral.textContent =
+          "El servicio de cuentas no está disponible ahora. Puedes seguir creando borradores en la app sin registrarte.";
+        regErrorGeneral.hidden = false;
         return;
       }
       limpiarErroresAuth();
@@ -694,6 +756,12 @@ async function solicitarAuth(ruta, opciones) {
         evento.stopPropagation();
       }
       if (enviando) {
+        return;
+      }
+      if (dmdCuenta.obtenerUltimoErrorServicio()) {
+        loginErrorGeneral.textContent =
+          "El servicio de cuentas no está disponible ahora. Puedes seguir creando borradores en la app sin iniciar sesión.";
+        loginErrorGeneral.hidden = false;
         return;
       }
       limpiarErroresAuth();
