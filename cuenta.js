@@ -1014,6 +1014,306 @@ async function solicitarAuth(ruta, opciones) {
       });
     }
 
+    // Vista completa "Mi suscripción" dentro de login.html
+    const secMiSub = document.getElementById("seccion-mi-suscripcion");
+    const miSubBadge = document.getElementById("mi-sub-badge");
+    const miSubPlan = document.getElementById("mi-sub-plan");
+    const miSubEstadoTxt = document.getElementById("mi-sub-estado-texto");
+    const miSubFechaWrap = document.getElementById("mi-sub-fecha-wrap");
+    const miSubFecha = document.getElementById("mi-sub-fecha");
+    const miSubDetalle = document.getElementById("mi-sub-detalle");
+    const btnMiSubCambiar = document.getElementById("btn-mi-sub-cambiar");
+    const btnMiSubCancelar = document.getElementById("btn-mi-sub-cancelar");
+    const btnMiSubCerrarSesion = document.getElementById("btn-mi-sub-cerrar-sesion");
+    const btnMiSubReintentar = document.getElementById("btn-mi-sub-reintentar");
+    const miSubConfirmBox = document.getElementById("mi-sub-confirmar-cancelar");
+    const btnMiSubConfSi = document.getElementById("btn-mi-sub-confirmar-si");
+    const btnMiSubConfNo = document.getElementById("btn-mi-sub-confirmar-no");
+    const miSubAviso = document.getElementById("mi-sub-aviso");
+
+    const API_MP_CUENTA = "https://crear.dmdmx.dev/api/mp";
+    const NOMBRES_PLAN_MP = {
+      pro: { nombre: "Plan Básico", precio: 79 },
+      pyme: { nombre: "Plan Emprendedor", precio: 189 },
+      elite: { nombre: "Plan Negocio", precio: 299 }
+    };
+    const ESTADOS_SUB_MP = {
+      authorized: "Activa",
+      active: "Activa",
+      pending: "Pendiente",
+      paused: "Pausada",
+      cancelled: "Cancelada",
+      canceled: "Cancelada"
+    };
+    let subConsultadaParaId = "";
+
+    function renderizarMiSuscripcionEstado({ badge, muted, plan, estado, fecha, detalle, puedeCancelar, mostrarCerrar, mostrarReintentar, textoCambiar }) {
+      if (!secMiSub) return;
+      if (miSubBadge) {
+        miSubBadge.textContent = badge;
+        miSubBadge.classList.toggle("status-pill-muted", Boolean(muted));
+      }
+      if (miSubPlan) miSubPlan.textContent = plan;
+      if (miSubEstadoTxt) miSubEstadoTxt.textContent = estado;
+      if (miSubFechaWrap && miSubFecha) {
+        if (fecha) {
+          miSubFecha.textContent = fecha;
+          miSubFechaWrap.hidden = false;
+        } else {
+          miSubFecha.textContent = "";
+          miSubFechaWrap.hidden = true;
+        }
+      }
+      if (miSubDetalle) miSubDetalle.textContent = detalle || "";
+      if (btnMiSubCancelar) btnMiSubCancelar.hidden = !puedeCancelar;
+      if (btnMiSubCerrarSesion) btnMiSubCerrarSesion.hidden = !mostrarCerrar;
+      if (btnMiSubReintentar) btnMiSubReintentar.hidden = !mostrarReintentar;
+      if (btnMiSubCambiar && textoCambiar) btnMiSubCambiar.textContent = textoCambiar;
+      if (miSubConfirmBox && !puedeCancelar) miSubConfirmBox.hidden = true;
+    }
+
+    async function consultarSuscripcionCuenta(forzar) {
+      if (!secMiSub) return;
+      const verificada = dmdCuenta.estaVerificada();
+      const sesion = dmdCuenta.obtenerSesionActual();
+      const errorSrv = dmdCuenta.obtenerUltimoErrorServicio();
+
+      if (!verificada) {
+        renderizarMiSuscripcionEstado({
+          badge: "Consultando...",
+          muted: true,
+          plan: "Verificando...",
+          estado: "Verificando...",
+          fecha: "",
+          detalle: "Comprobando tu sesión y el estado de tu suscripción.",
+          puedeCancelar: false,
+          mostrarCerrar: false,
+          mostrarReintentar: false,
+          textoCambiar: "Ver planes"
+        });
+        return;
+      }
+
+      if (!sesion && errorSrv) {
+        subConsultadaParaId = "";
+        renderizarMiSuscripcionEstado({
+          badge: "No disponible",
+          muted: true,
+          plan: "No disponible ahora",
+          estado: "Servicio de cuentas fuera de línea",
+          fecha: "",
+          detalle:
+            "No podemos consultar tu suscripción mientras el servicio de cuentas no responda. Aquí no se muestra ningún plan inventado; puedes revisar los planes reales ($79, $189 y $299 MXN al mes) o comprobar de nuevo más tarde.",
+          puedeCancelar: false,
+          mostrarCerrar: false,
+          mostrarReintentar: true,
+          textoCambiar: "Ver planes"
+        });
+        return;
+      }
+
+      if (!sesion) {
+        subConsultadaParaId = "";
+        renderizarMiSuscripcionEstado({
+          badge: "Sin sesión",
+          muted: true,
+          plan: "Inicia sesión para consultar",
+          estado: "Sesión no iniciada",
+          fecha: "",
+          detalle:
+            "Al iniciar sesión podrás ver tu plan activo, cambiar de plan o cancelar tu suscripción de Mercado Pago desde aquí.",
+          puedeCancelar: false,
+          mostrarCerrar: false,
+          mostrarReintentar: false,
+          textoCambiar: "Ver planes"
+        });
+        return;
+      }
+
+      if (!forzar && subConsultadaParaId === sesion.id) {
+        return;
+      }
+      subConsultadaParaId = sesion.id;
+
+      renderizarMiSuscripcionEstado({
+        badge: "Consultando...",
+        muted: true,
+        plan: "Consultando...",
+        estado: "Conectando con Mercado Pago...",
+        fecha: "",
+        detalle: "",
+        puedeCancelar: false,
+        mostrarCerrar: true,
+        mostrarReintentar: false,
+        textoCambiar: "Cambiar plan"
+      });
+
+      const controlador = typeof AbortController === "function" ? new AbortController() : null;
+      const timer = controlador ? window.setTimeout(() => controlador.abort(), 9000) : null;
+      try {
+        const resp = await window.fetch(`${API_MP_CUENTA}/subscription`, {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+          signal: controlador ? controlador.signal : undefined
+        });
+        if (resp.status === 404) {
+          renderizarMiSuscripcionEstado({
+            badge: "Sin plan",
+            muted: true,
+            plan: "Sin suscripción activa",
+            estado: "Sin plan contratado",
+            fecha: "",
+            detalle: "Todavía no tienes un plan mensual activo en esta cuenta. Puedes elegir uno en la vista de planes.",
+            puedeCancelar: false,
+            mostrarCerrar: true,
+            mostrarReintentar: false,
+            textoCambiar: "Elegir un plan"
+          });
+          return;
+        }
+        let data = null;
+        try {
+          const txt = await resp.text();
+          data = txt ? JSON.parse(txt) : null;
+        } catch (e) {
+          data = null;
+        }
+        if (!resp.ok || !data) {
+          renderizarMiSuscripcionEstado({
+            badge: "No disponible",
+            muted: true,
+            plan: "No se pudo consultar",
+            estado: "Servicio de suscripciones no disponible",
+            fecha: "",
+            detalle: "No pudimos leer tu suscripción en este intento. Intenta comprobar de nuevo más tarde.",
+            puedeCancelar: false,
+            mostrarCerrar: true,
+            mostrarReintentar: true,
+            textoCambiar: "Ver planes"
+          });
+          return;
+        }
+        const sub = (data.subscription && typeof data.subscription === "object")
+          ? data.subscription
+          : (data.suscripcion && typeof data.suscripcion === "object")
+            ? data.suscripcion
+            : data;
+        const planId = String(sub.plan || sub.plan_id || sub.planId || "").trim().toLowerCase();
+        const statusRaw = String(sub.status || sub.estado || "").trim().toLowerCase();
+        if (!planId && !statusRaw) {
+          renderizarMiSuscripcionEstado({
+            badge: "Sin plan",
+            muted: true,
+            plan: "Sin suscripción activa",
+            estado: "Sin plan contratado",
+            fecha: "",
+            detalle: "Esta cuenta no tiene una suscripción activa en Mercado Pago.",
+            puedeCancelar: false,
+            mostrarCerrar: true,
+            mostrarReintentar: false,
+            textoCambiar: "Elegir un plan"
+          });
+          return;
+        }
+        const def = NOMBRES_PLAN_MP[planId];
+        const nombrePlan = def ? `${def.nombre} ($${def.precio} MXN al mes)` : planId || "Plan dmd";
+        const estadoLabel = ESTADOS_SUB_MP[statusRaw] || statusRaw || "Sin estado";
+        const cancelada = statusRaw === "cancelled" || statusRaw === "canceled";
+        const fechaCruda = String(sub.created_at || sub.createdAt || sub.date_created || "").trim();
+        const fechaLimpia = /^\d{4}-\d{2}-\d{2}/.test(fechaCruda) ? fechaCruda.slice(0, 10) : fechaCruda;
+
+        renderizarMiSuscripcionEstado({
+          badge: estadoLabel,
+          muted: cancelada,
+          plan: nombrePlan,
+          estado: estadoLabel,
+          fecha: fechaLimpia,
+          detalle: cancelada
+            ? "Tu suscripción figura como cancelada. Si deseas reactivarla, elige un plan en Mercado Pago."
+            : "Suscripción vinculada a tu cuenta con cobro en Mercado Pago.",
+          puedeCancelar: !cancelada,
+          mostrarCerrar: true,
+          mostrarReintentar: false,
+          textoCambiar: "Cambiar plan"
+        });
+      } catch (err) {
+        renderizarMiSuscripcionEstado({
+          badge: "No disponible",
+          muted: true,
+          plan: "No disponible ahora",
+          estado: "Sin conexión con suscripciones",
+          fecha: "",
+          detalle: "El servicio de suscripciones no respondió en este momento. No se muestra ningún plan inventado.",
+          puedeCancelar: false,
+          mostrarCerrar: true,
+          mostrarReintentar: true,
+          textoCambiar: "Ver planes"
+        });
+      } finally {
+        if (timer) window.clearTimeout(timer);
+      }
+    }
+
+    if (btnMiSubCancelar && miSubConfirmBox) {
+      btnMiSubCancelar.addEventListener("click", () => {
+        miSubConfirmBox.hidden = false;
+        if (btnMiSubConfSi) btnMiSubConfSi.focus();
+      });
+    }
+    if (btnMiSubConfNo && miSubConfirmBox) {
+      btnMiSubConfNo.addEventListener("click", () => {
+        miSubConfirmBox.hidden = true;
+        if (btnMiSubCancelar) btnMiSubCancelar.focus();
+      });
+    }
+    if (btnMiSubConfSi) {
+      btnMiSubConfSi.addEventListener("click", async () => {
+        if (enviando) return;
+        enviando = true;
+        btnMiSubConfSi.disabled = true;
+        btnMiSubConfSi.textContent = "Cancelando...";
+        if (miSubAviso) miSubAviso.textContent = "Enviando cancelación a Mercado Pago...";
+        try {
+          const resp = await window.fetch(`${API_MP_CUENTA}/cancel`, {
+            method: "POST",
+            credentials: "include",
+            headers: { Accept: "application/json" }
+          });
+          if (!resp.ok) {
+            if (miSubAviso) miSubAviso.textContent = "No se pudo cancelar la suscripción en este momento.";
+          } else {
+            if (miSubConfirmBox) miSubConfirmBox.hidden = true;
+            if (miSubAviso) miSubAviso.textContent = "Suscripción cancelada.";
+            await consultarSuscripcionCuenta(true);
+          }
+        } catch (err) {
+          if (miSubAviso) miSubAviso.textContent = "El servicio de suscripciones no respondió. Intenta más tarde.";
+        } finally {
+          enviando = false;
+          btnMiSubConfSi.disabled = false;
+          btnMiSubConfSi.textContent = "Sí, cancelar";
+        }
+      });
+    }
+    if (btnMiSubCerrarSesion && btnCerrarSesion) {
+      btnMiSubCerrarSesion.addEventListener("click", () => btnCerrarSesion.click());
+    }
+    if (btnMiSubReintentar) {
+      btnMiSubReintentar.addEventListener("click", async () => {
+        btnMiSubReintentar.disabled = true;
+        btnMiSubReintentar.textContent = "Comprobando...";
+        if (miSubAviso) miSubAviso.textContent = "";
+        const res = await dmdCuenta.verificarSesion();
+        await consultarSuscripcionCuenta(true);
+        btnMiSubReintentar.disabled = false;
+        btnMiSubReintentar.textContent = "Comprobar de nuevo";
+        if (res && res.sinConexion && miSubAviso) {
+          miSubAviso.textContent = "El servicio de cuentas sigue fuera de línea por el momento.";
+        }
+      });
+    }
+
     // Abrir pestaña de registro si viene ?modo=registro y conservar ?plan=
     try {
       const params = new URLSearchParams(window.location.search);
@@ -1030,8 +1330,12 @@ async function solicitarAuth(ruta, opciones) {
       // Ignorar si URLSearchParams no está disponible
     }
 
-    dmdCuenta.alCambiarSesion(actualizarVistaCuenta);
+    dmdCuenta.alCambiarSesion(() => {
+      actualizarVistaCuenta();
+      consultarSuscripcionCuenta(false);
+    });
     actualizarVistaCuenta();
+    consultarSuscripcionCuenta(false);
   }
 
   if (document.readyState === "loading") {

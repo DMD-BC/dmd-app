@@ -1908,7 +1908,7 @@
       btnPublicar.addEventListener("click", () => {
         const url = publicarBorrador(registro);
         if (url) {
-          estadoChatEl.textContent = "Página publicada y lista para compartir.";
+          estadoChatEl.textContent = "Página publicada. Ya puedes copiar el enlace.";
         }
       });
 

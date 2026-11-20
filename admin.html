@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel interno | dmd</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="container container-wide header-inner">
+      <a class="brand" href="index.html" aria-label="dmd, ir al inicio">
+        <span class="brand-squares" aria-hidden="true">
+          <span class="brand-sq brand-sq-1"></span>
+          <span class="brand-sq brand-sq-2"></span>
+          <span class="brand-sq brand-sq-3"></span>
+          <span class="brand-sq brand-sq-4"></span>
+        </span>
+        <span>dmd</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Navegación interna">
+        <a class="nav-link" href="app.html">Creador</a>
+        <a class="nav-link" href="login.html">Cuenta</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+    <div class="container container-plans">
+      <section class="page-intro" aria-labelledby="titulo-admin">
+        <h1 id="titulo-admin">Panel de operación</h1>
+        <p class="lead">Vista privada para consultar usuarios, suscripciones, pagos y cancelaciones reales.</p>
+      </section>
+
+      <!-- Estado de carga -->
+      <section id="admin-cargando" class="card admin-guard-card" role="status" aria-live="polite">
+        <div class="loading-inline">
+          <span class="spinner spinner-accent" aria-hidden="true"></span>
+          <span>Verificando sesión autorizada...</span>
+        </div>
+      </section>
+
+      <!-- Acceso bloqueado (sin sesión o servicio fuera de línea) -->
+      <section id="admin-bloqueado" class="card admin-guard-card" aria-labelledby="titulo-admin-bloqueado" hidden>
+        <span id="admin-bloqueado-badge" class="status-pill status-pill-muted">Acceso restringido</span>
+        <h2 id="titulo-admin-bloqueado">Se requiere sesión del propietario</h2>
+        <p id="admin-bloqueado-msg" class="field-hint">
+          Inicia sesión con tu cuenta para consultar los registros reales de operación.
+        </p>
+        <div class="service-alert-actions">
+          <a class="btn btn-primary btn-sm" href="login.html">Ir a iniciar sesión</a>
+          <button id="btn-admin-reintentar" class="btn btn-secondary btn-sm" type="button">
+            Comprobar de nuevo
+          </button>
+          <a class="btn btn-secondary btn-sm" href="index.html">Volver al inicio</a>
+        </div>
+        <p id="admin-bloqueado-estado" class="status-banner" role="status" aria-live="polite"></p>
+      </section>
+
+      <!-- Panel protegido (solo visible con sesión confirmada) -->
+      <div id="admin-contenido" hidden>
+        <section class="card admin-session-bar" aria-label="Sesión actual">
+          <div>
+            <p class="field-hint">Sesión activa</p>
+            <strong id="admin-usuario-nombre"></strong>
+            <span id="admin-usuario-correo" class="field-hint"></span>
+          </div>
+          <div class="session-actions">
+            <button id="btn-admin-actualizar" class="btn btn-secondary btn-sm" type="button">
+              Actualizar datos
+            </button>
+            <button id="btn-admin-cerrar-sesion" class="btn btn-secondary btn-sm" type="button">
+              Cerrar sesión
+            </button>
+          </div>
+        </section>
+
+        <p id="admin-estado-datos" class="notice-box" role="status" aria-live="polite">
+          Consultando registros reales...
+        </p>
+
+        <section class="admin-kpi-grid" aria-label="Resumen general">
+          <article class="card admin-kpi-card">
+            <span class="sub-summary-label">Usuarios</span>
+            <strong id="kpi-usuarios" class="admin-kpi-value">Sin datos</strong>
+          </article>
+          <article class="card admin-kpi-card">
+            <span class="sub-summary-label">Suscripciones</span>
+            <strong id="kpi-suscripciones" class="admin-kpi-value">Sin datos</strong>
+          </article>
+          <article class="card admin-kpi-card">
+            <span class="sub-summary-label">Pagos</span>
+            <strong id="kpi-pagos" class="admin-kpi-value">Sin datos</strong>
+          </article>
+          <article class="card admin-kpi-card">
+            <span class="sub-summary-label">Cancelaciones</span>
+            <strong id="kpi-cancelaciones" class="admin-kpi-value">Sin datos</strong>
+          </article>
+        </section>
+
+        <section class="card admin-tables-card" aria-label="Registros de operación">
+          <div class="admin-tabs" role="tablist" aria-label="Secciones de registros">
+            <button type="button" class="edtab edtab-active" role="tab" aria-selected="true" data-admin-tab="usuarios">Usuarios</button>
+            <button type="button" class="edtab" role="tab" aria-selected="false" data-admin-tab="suscripciones">Suscripciones</button>
+            <button type="button" class="edtab" role="tab" aria-selected="false" data-admin-tab="pagos">Pagos</button>
+            <button type="button" class="edtab" role="tab" aria-selected="false" data-admin-tab="cancelaciones">Cancelaciones</button>
+          </div>
+
+          <div id="admin-panel-usuarios" class="admin-panel" role="tabpanel">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Correo</th>
+                    <th scope="col">Alta</th>
+                    <th scope="col">Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-admin-usuarios"></tbody>
+              </table>
+            </div>
+            <p id="vacio-admin-usuarios" class="admin-empty-state">
+              Sin datos todavía. Los usuarios aparecerán cuando el servicio de administración esté conectado.
+            </p>
+          </div>
+
+          <div id="admin-panel-suscripciones" class="admin-panel" role="tabpanel" hidden>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Plan</th>
+                    <th scope="col">Monto</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-admin-suscripciones"></tbody>
+              </table>
+            </div>
+            <p id="vacio-admin-suscripciones" class="admin-empty-state">
+              Sin datos todavía. Las suscripciones reales de Mercado Pago aparecerán aquí al conectarse el servicio.
+            </p>
+          </div>
+
+          <div id="admin-panel-pagos" class="admin-panel" role="tabpanel" hidden>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Referencia</th>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Plan</th>
+                    <th scope="col">Monto</th>
+                    <th scope="col">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-admin-pagos"></tbody>
+              </table>
+            </div>
+            <p id="vacio-admin-pagos" class="admin-empty-state">
+              Sin datos todavía. No se muestran pagos simulados ni cifras inventadas.
+            </p>
+          </div>
+
+          <div id="admin-panel-cancelaciones" class="admin-panel" role="tabpanel" hidden>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Plan</th>
+                    <th scope="col">Fecha de baja</th>
+                    <th scope="col">Motivo</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-admin-cancelaciones"></tbody>
+              </table>
+            </div>
+            <p id="vacio-admin-cancelaciones" class="admin-empty-state">
+              Sin datos todavía. Las cancelaciones reales registradas aparecerán aquí.
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="cuenta.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

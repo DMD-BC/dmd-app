@@ -20,46 +20,46 @@ const PLANES_DMD = [
   {
     id: "pro",
     nombre: "Básico",
-    subtitulo: "Ideal para publicar tu primera página web y recibir mensajes.",
+    subtitulo: "Lo necesario para publicar tu primera página y recibir mensajes.",
     precioMxn: 79,
     periodicidad: "al mes",
     recomendado: false,
     incluye: [
-      "Creación guiada desde el chat y edición manual de textos",
-      "Las 3 plantillas profesionales (Clásica, Editorial y Directa)",
-      "Foto de portada según tu giro o subida de tu logo e imagen",
-      "Botón y formulario conectados directo a tu WhatsApp",
-      "Publicación con enlace compartible para celular y escritorio"
+      "Chat guiado y edición directa de cada texto en la página",
+      "Acceso a Clásica, Editorial y Directa",
+      "Foto de portada por giro o imagen propia desde tu celular",
+      "Botón y formulario directo a tu WhatsApp",
+      "Enlace público adaptado a pantalla de 360 px y escritorio"
     ]
   },
   {
     id: "pyme",
     nombre: "Emprendedor",
-    subtitulo: "Para negocios que quieren cuidar su SEO y medir resultados.",
+    subtitulo: "Suma ajustes de Google, historial de versiones y conteo de visitas.",
     precioMxn: 189,
     periodicidad: "al mes",
     recomendado: true,
     incluye: [
-      "Todo lo incluido en el plan Básico",
-      "Configuración de SEO (título, descripción, palabras clave y vista en buscador)",
-      "Historial de versiones con restauración confirmada y respaldo (.json)",
-      "Panel de actividad con visitas, clics en WhatsApp y consultas",
-      "Campos listos para tu ID de analítica y tu ID de píxel"
+      "Todo lo del plan Básico",
+      "SEO editable con vista previa de resultados en buscadores",
+      "Historial de versiones con restauración y copia JSON",
+      "Resumen de visitas, clics en WhatsApp y consultas",
+      "Campos para conectar tu ID de analítica y píxel"
     ]
   },
   {
     id: "elite",
     nombre: "Negocio",
-    subtitulo: "Para marcas con varias líneas, sucursales o dominio propio.",
+    subtitulo: "Cuando manejas varios borradores, sucursales o quieres dominio propio.",
     precioMxn: 299,
     periodicidad: "al mes",
     recomendado: false,
     incluye: [
-      "Todo lo incluido en el plan Emprendedor",
-      "Gestión de múltiples borradores, páginas duplicadas y conversaciones",
-      "Configuración de subdominio en dmd y opción de dominio propio",
-      "Edición continua con vista previa real a 360 px y escritorio",
-      "Respaldo completo y control de cambios desde un solo lugar"
+      "Todo lo del plan Emprendedor",
+      "Múltiples borradores, copias duplicadas y conversaciones aparte",
+      "Subdominio en dmd y preparación para dominio propio",
+      "Vista previa real a 360 px y escritorio en cualquier cambio",
+      "Respaldo completo y control de cambios desde un solo panel"
     ]
   }
 ];

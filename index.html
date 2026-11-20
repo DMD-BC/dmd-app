@@ -75,15 +75,16 @@
           <div id="hero-demo-page" class="biz-page biz-template-clasica hero-demo-card">
             <div class="biz-topbar">
               <div class="biz-identity">
-                <span class="biz-topbar-name">Café de Barrio</span>
+                <span class="biz-topbar-name" data-demo-field="nombre">Café de Barrio</span>
               </div>
-              <span class="biz-topbar-city">Puebla</span>
+              <span class="biz-topbar-city" data-demo-field="ciudad">Puebla</span>
             </div>
             <div class="biz-body hero-demo-body">
               <div class="biz-section biz-hero">
                 <div class="hero-demo-cover">
                   <img
                     class="hero-demo-photo"
+                    data-demo-field="foto"
                     src="img/ejemplo-cafeteria.jpg"
                     alt="Preparación de café de filtro en barra de Café de Barrio"
                     width="900"
@@ -91,19 +92,19 @@
                     decoding="async"
                   >
                 </div>
-                <p class="biz-title hero-demo-title">Café de grano tostado en Puebla</p>
-                <p class="biz-intro">Preparamos espresso, filtrado y pan salado desde las 7:30. Si pasas con prisa, aparta tu vaso antes de llegar.</p>
+                <p class="biz-title hero-demo-title" data-demo-field="titulo">Café de grano tostado en Puebla</p>
+                <p class="biz-intro" data-demo-field="intro">Preparamos espresso, filtrado y pan salado desde las 7:30. Si pasas con prisa, aparta tu vaso antes de llegar.</p>
               </div>
               <div class="biz-section">
-                <p class="biz-section-title">En barra</p>
+                <p class="biz-section-title" data-demo-field="seccion">En barra</p>
                 <div class="hero-demo-services">
                   <div class="biz-service-card">
-                    <p class="biz-service-title">Americano y capuchino</p>
-                    <p class="biz-service-desc">Grano de Veracruz molido al momento.</p>
+                    <p class="biz-service-title" data-demo-field="s1-titulo">Americano y capuchino</p>
+                    <p class="biz-service-desc" data-demo-field="s1-desc">Grano de Veracruz molido al momento.</p>
                   </div>
                   <div class="biz-service-card">
-                    <p class="biz-service-title">Panini de jamón serrano</p>
-                    <p class="biz-service-desc">Caliente al comal para llevar o comer aquí.</p>
+                    <p class="biz-service-title" data-demo-field="s2-titulo">Panini de jamón serrano</p>
+                    <p class="biz-service-desc" data-demo-field="s2-desc">Caliente al comal para llevar o comer aquí.</p>
                   </div>
                 </div>
               </div>
@@ -111,7 +112,7 @@
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5Z"></path>
                 </svg>
-                <span>Pedir para recoger</span>
+                <span data-demo-field="cta">Pedir para recoger</span>
               </div>
             </div>
           </div>
@@ -123,27 +124,27 @@
     <section id="como-funciona" class="landing-section" aria-labelledby="titulo-pasos">
       <div class="container container-wide">
         <div class="section-head">
-          <h2 id="titulo-pasos">Cómo funciona en 3 pasos</h2>
-          <p class="section-sub">De tus respuestas a una página clara y lista para compartir en minutos.</p>
+          <h2 id="titulo-pasos">Cómo se arma tu página</h2>
+          <p class="section-sub">Sin instalar programas ni pelearte con bloques vacíos.</p>
         </div>
 
         <ol class="steps-grid">
           <li class="step-card">
             <span class="step-number" aria-hidden="true">1</span>
-            <h3>Cuéntanos de tu negocio</h3>
-            <p>Escribe el nombre, giro, ciudad, lo que ofreces, el tono de tus textos y tu WhatsApp en un chat guiado.</p>
+            <h3>Responde seis preguntas</h3>
+            <p>Nombre, ciudad, giro, qué vendes y si quieres recibir mensajes por WhatsApp. Nada más.</p>
           </li>
 
           <li class="step-card">
             <span class="step-number" aria-hidden="true">2</span>
-            <h3>Personaliza en el editor visual</h3>
-            <p>Cambia de plantilla, sube tu logo o portada, edita textos directo en la página y ajusta tu SEO.</p>
+            <h3>Afina textos, foto y plantilla</h3>
+            <p>Cambia entre Clásica, Editorial o Directa, sube tu logo o elige una foto del catálogo y revisa cómo queda en pantalla de 360 px antes de enseñarla.</p>
           </li>
 
           <li class="step-card">
             <span class="step-number" aria-hidden="true">3</span>
-            <h3>Publica y comparte tu enlace</h3>
-            <p>Obtén tu enlace compartible al instante y recibe mensajes o consultas directo en tu WhatsApp.</p>
+            <h3>Publica y pega tu enlace</h3>
+            <p>Te queda un enlace para tu perfil de redes, tu ficha en mapas o tus mensajes de WhatsApp.</p>
           </li>
         </ol>
       </div>
@@ -153,8 +154,8 @@
     <section id="plantillas" class="landing-section landing-section-alt" aria-labelledby="titulo-plantillas">
       <div class="container container-wide">
         <div class="section-head">
-          <h2 id="titulo-plantillas">Tres plantillas sobrias, listas para tu negocio</h2>
-          <p class="section-sub">Ejemplos de cómo se adapta cada diseño a distintos giros. Puedes cambiar de plantilla en el editor cuando quieras sin perder tus textos.</p>
+          <h2 id="titulo-plantillas">Tres diseños que cambias con un clic</h2>
+          <p class="section-sub">Son ejemplos de plantilla en distintos giros. En el editor pruebas los tres sobre tus propios textos sin volver a escribir.</p>
         </div>
 
         <div class="home-templates-grid">
@@ -179,7 +180,7 @@
               </div>
             </div>
             <h3>Clásica</h3>
-            <p>Equilibrada y clara, con encabezados limpios y tarjetas bien separadas para cualquier giro.</p>
+            <p>Encabezado limpio con línea verde y tarjetas separadas. Funciona bien en cualquier comercio local.</p>
             <a class="btn btn-secondary btn-sm btn-full" href="app.html?plantilla=clasica">Usar Clásica</a>
           </article>
 
@@ -204,7 +205,7 @@
               </div>
             </div>
             <h3>Editorial</h3>
-            <p>Portada centrada y divisores finos, ideal para comercios detallistas, estudios y servicios técnicos.</p>
+            <p>Título centrado y divisiones delgadas para darle aire al texto y destacar tu catálogo.</p>
             <a class="btn btn-secondary btn-sm btn-full" href="app.html?plantilla=editorial">Usar Editorial</a>
           </article>
 
@@ -229,7 +230,7 @@
               </div>
             </div>
             <h3>Directa</h3>
-            <p>Encabezado de alto contraste en verde profundo para negocios que buscan pedidos y citas rápidas.</p>
+            <p>Barra superior en verde sólido. Pensada para comida, pedidos rápidos y servicios al momento.</p>
             <a class="btn btn-secondary btn-sm btn-full" href="app.html?plantilla=directa">Usar Directa</a>
           </article>
         </div>
@@ -240,8 +241,8 @@
     <section class="landing-section" aria-labelledby="titulo-incluye">
       <div class="container container-wide">
         <div class="section-head">
-          <h2 id="titulo-incluye">Todo lo que incluye cada página</h2>
-          <p class="section-sub">Estructura pensada para que tus clientes entiendan qué ofreces y te escriban sin fricción.</p>
+          <h2 id="titulo-incluye">Qué trae cada página</h2>
+          <p class="section-sub">Lo indispensable para que quien entre sepa qué haces y cómo escribirte.</p>
         </div>
 
         <ul class="features-grid">
@@ -250,8 +251,8 @@
               <rect x="3" y="4" width="18" height="16" rx="2"></rect>
               <path d="M3 10h18"></path>
             </svg>
-            <h3>Portada y presentación</h3>
-            <p>Foto sugerida según tu giro o imagen propia desde tu celular, más tu título y descripción principal.</p>
+            <h3>Portada real</h3>
+            <p>Sube una foto desde tu teléfono o escoge una del catálogo según tu giro.</p>
           </li>
 
           <li class="feature-card">
@@ -259,24 +260,24 @@
               <rect x="3" y="4" width="18" height="6" rx="2"></rect>
               <rect x="3" y="14" width="18" height="6" rx="2"></rect>
             </svg>
-            <h3>Servicios o menú ordenado</h3>
-            <p>Muestra tus productos o trabajos principales con descripciones claras y orden editable.</p>
+            <h3>Catálogo o menú</h3>
+            <p>Ordena tus productos o trabajos principales. Puedes subir, bajar, editar o quitar cada bloque.</p>
           </li>
 
           <li class="feature-card">
             <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20 6 9 17l-5-5"></path>
             </svg>
-            <h3>Beneficios y preguntas frecuentes</h3>
-            <p>Responde de entrada dudas comunes sobre pedidos, citas, ubicación y horarios.</p>
+            <h3>Dudas resueltas de entrada</h3>
+            <p>Agrega horarios, zona o forma de pedir para dejar de contestar siempre lo mismo.</p>
           </li>
 
           <li class="feature-card">
             <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5Z"></path>
             </svg>
-            <h3>Botón y formulario a WhatsApp</h3>
-            <p>Tus visitantes pueden abrir tu chat con un toque o enviarte una consulta ya redactada.</p>
+            <h3>Directo a tu WhatsApp</h3>
+            <p>Cuando pones tu número, el botón y el formulario abren el chat con el mensaje redactado.</p>
           </li>
 
           <li class="feature-card">
@@ -284,8 +285,8 @@
               <circle cx="11" cy="11" r="7"></circle>
               <path d="m21 21-4.3-4.3"></path>
             </svg>
-            <h3>SEO y vista en buscadores</h3>
-            <p>Edita el título, descripción y palabras clave viendo al momento cómo aparecería en resultados.</p>
+            <h3>Búsquedas en Google</h3>
+            <p>Ajusta título, descripción y palabras clave con vista previa del resultado.</p>
           </li>
 
           <li class="feature-card">
@@ -294,8 +295,8 @@
               <path d="M3 3v5h5"></path>
               <path d="M12 7v5l4 2"></path>
             </svg>
-            <h3>Historial, versiones y respaldo</h3>
-            <p>Restaura versiones anteriores cuando lo necesites y descarga una copia de respaldo en archivo JSON.</p>
+            <h3>Versiones y copia JSON</h3>
+            <p>Vuelve a una edición anterior cuando quieras o baja un archivo de respaldo para otro equipo.</p>
           </li>
         </ul>
       </div>
@@ -305,28 +306,28 @@
     <section class="landing-section landing-section-alt" aria-labelledby="titulo-confianza">
       <div class="container container-wide">
         <div class="section-head">
-          <h2 id="titulo-confianza">Hecho para trabajar con tranquilidad</h2>
+          <h2 id="titulo-confianza">Sin sorpresas al trabajar</h2>
         </div>
 
         <div class="trust-grid">
           <div class="trust-card">
-            <h3>Guardado automático en tu navegador</h3>
-            <p>Tus conversaciones y borradores se conservan al recargar y puedes descargar o importar tu respaldo en cualquier momento.</p>
+            <h3>Tus borradores se quedan aquí</h3>
+            <p>Todo se guarda en este navegador al instante. Si cambias de equipo, descargas tu JSON y lo importas.</p>
           </div>
 
           <div class="trust-card">
-            <h3>Móvil primero, desde 360 px</h3>
-            <p>Cada página se diseña primero para verse clara en teléfonos y adaptarse automáticamente a pantallas de escritorio.</p>
+            <h3>Pensado primero para celular</h3>
+            <p>La vista previa a 360 px te enseña cómo ven tu página quienes abren el enlace desde WhatsApp.</p>
           </div>
 
           <div class="trust-card">
-            <h3>Pagos en pasarela segura</h3>
-            <p>Cuando decides activar un plan mensual, el cobro se realiza directamente en Mercado Pago. dmd nunca pide ni guarda datos de tarjeta.</p>
+            <h3>Cobro solo en Mercado Pago</h3>
+            <p>Si activas un plan mensual, el pago se autoriza en Mercado Pago. dmd nunca pide ni guarda números de tarjeta.</p>
           </div>
 
           <div class="trust-card">
-            <h3>Sin letras chiquitas</h3>
-            <p>Empieza gratis creando tu borrador y elige entre tres planes transparentes desde $79 MXN al mes solo cuando quieras activar tu suscripción.</p>
+            <h3>Prueba primero, decide después</h3>
+            <p>Armar borradores es gratis. Cuando quieras activar tu plan, hay opciones de $79, $189 y $299 MXN al mes.</p>
           </div>
         </div>
       </div>
@@ -341,28 +342,28 @@
 
         <div class="faq-list home-faq-list">
           <details class="faq-item" open>
-            <summary class="faq-question">¿Puedo crear mi borrador sin pagar antes?</summary>
-            <p class="faq-answer">Sí. Puedes abrir el creador, responder las preguntas de tu negocio, editar textos, cambiar plantilla, probar la vista previa y guardar tu borrador sin costo.</p>
+            <summary class="faq-question">¿Tengo que pagar para probar el creador?</summary>
+            <p class="faq-answer">No. Puedes armar tu borrador, editar textos, cambiar plantilla y ver cómo queda en celular sin ingresar tarjeta.</p>
           </details>
 
           <details class="faq-item">
-            <summary class="faq-question">¿Necesito saber programar o diseñar?</summary>
-            <p class="faq-answer">No. El chat arma la primera versión con los datos de tu negocio y luego puedes ajustar cualquier texto, foto o sección directamente desde el editor visual.</p>
+            <summary class="faq-question">¿Qué pasa si no pongo número de WhatsApp?</summary>
+            <p class="faq-answer">Tu página funciona igual y muestra el nombre y ciudad de tu negocio. Más adelante puedes escribir tu número en Diseño y el botón aparece solo.</p>
           </details>
 
           <details class="faq-item">
-            <summary class="faq-question">¿Dónde se guardan mis borradores?</summary>
-            <p class="faq-answer">Se guardan automáticamente en tu navegador para que no pierdas tu avance al recargar. También puedes descargar un respaldo en archivo JSON e importarlo en otro equipo.</p>
+            <summary class="faq-question">¿Dónde quedan guardados mis borradores?</summary>
+            <p class="faq-answer">En el navegador donde trabajas. Desde el menú lateral puedes bajar un respaldo en archivo JSON para abrirlo en otro teléfono o computadora.</p>
           </details>
 
           <details class="faq-item">
-            <summary class="faq-question">¿Cómo reciben mis clientes mi información o me escriben?</summary>
-            <p class="faq-answer">Tu página incluye un botón y un formulario conectados directamente a tu número de WhatsApp para que te lleguen pedidos, citas o preguntas sin intermediarios.</p>
+            <summary class="faq-question">¿Puedo cambiar textos y fotos después de generar el borrador?</summary>
+            <p class="faq-answer">Sí. Tocas Editar página y modificas títulos, servicios, preguntas frecuentes, logo o portada directo en el lienzo.</p>
           </details>
 
           <details class="faq-item">
-            <summary class="faq-question">¿Qué planes mensuales existen y cómo se pagan?</summary>
-            <p class="faq-answer">Existen tres planes mensuales: Básico ($79 MXN al mes), Emprendedor ($189 MXN al mes) y Negocio ($299 MXN al mes). Todos los pagos se autorizan en la pasarela segura de Mercado Pago. <a href="pago.html">Ver detalle de los planes</a>.</p>
+            <summary class="faq-question">¿Cuánto cuestan los planes mensuales?</summary>
+            <p class="faq-answer">Básico cuesta $79 MXN al mes, Emprendedor $189 MXN al mes y Negocio $299 MXN al mes, todos cobrados por Mercado Pago. <a href="pago.html">Comparar los 3 planes</a>.</p>
           </details>
         </div>
       </div>
@@ -373,12 +374,12 @@
       <div class="container container-wide">
         <div class="final-cta-card">
           <div>
-            <h2 id="titulo-cta-final">Empieza hoy la página web de tu negocio</h2>
-            <p class="lead">Crea tu primer borrador en minutos y revísalo en vista previa real antes de publicar.</p>
+            <h2 id="titulo-cta-final">Arma hoy el borrador de tu negocio</h2>
+            <p class="lead">Responde seis preguntas y revisa tu página real antes de decidir si publicas.</p>
           </div>
           <div class="final-cta-actions">
             <a class="btn btn-primary" href="app.html">Crear mi página</a>
-            <a class="btn btn-secondary" href="pago.html">Comparar planes</a>
+            <a class="btn btn-secondary" href="pago.html">Ver planes</a>
           </div>
         </div>
       </div>
@@ -402,6 +403,7 @@
           <a class="footer-link" href="app.html">Crear páginas web</a>
           <a class="footer-link" href="pago.html">Planes</a>
           <a class="footer-link" href="login.html">Tu cuenta</a>
+          <a class="footer-link" href="legal.html">Legal y contacto</a>
         </nav>
       </div>
       <p class="footer-note">dmd · Constructor de páginas web para negocios.</p>

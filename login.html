@@ -306,6 +306,62 @@
         <p id="estado-cuenta" class="status-banner" role="status" aria-live="polite"></p>
       </section>
 
+      <section id="seccion-mi-suscripcion" class="card account-card subscription-section" aria-labelledby="titulo-mi-suscripcion">
+        <div class="payment-secure-head">
+          <div>
+            <p class="field-hint">Suscripción mensual</p>
+            <h2 id="titulo-mi-suscripcion" class="payment-biz-name">Mi suscripción</h2>
+          </div>
+          <span id="mi-sub-badge" class="status-pill status-pill-muted">Consultando...</span>
+        </div>
+
+        <div id="mi-sub-resumen" class="sub-summary-grid">
+          <div class="sub-summary-item">
+            <span class="sub-summary-label">Plan activo</span>
+            <strong id="mi-sub-plan" class="sub-summary-value">Sin datos por ahora</strong>
+          </div>
+          <div class="sub-summary-item">
+            <span class="sub-summary-label">Estado</span>
+            <strong id="mi-sub-estado-texto" class="sub-summary-value">Verificando...</strong>
+          </div>
+          <div id="mi-sub-fecha-wrap" class="sub-summary-item" hidden>
+            <span class="sub-summary-label">Fecha de alta</span>
+            <strong id="mi-sub-fecha" class="sub-summary-value"></strong>
+          </div>
+        </div>
+
+        <p id="mi-sub-detalle" class="field-hint"></p>
+
+        <div id="mi-sub-acciones" class="session-actions">
+          <a id="btn-mi-sub-cambiar" class="btn btn-primary btn-sm" href="pago.html">
+            Ver o cambiar plan
+          </a>
+          <button id="btn-mi-sub-cancelar" class="btn btn-danger-ghost btn-sm" type="button" hidden>
+            Cancelar suscripción
+          </button>
+          <button id="btn-mi-sub-cerrar-sesion" class="btn btn-secondary btn-sm" type="button" hidden>
+            Cerrar sesión
+          </button>
+          <button id="btn-mi-sub-reintentar" class="btn btn-secondary btn-sm" type="button" hidden>
+            Comprobar de nuevo
+          </button>
+        </div>
+
+        <div id="mi-sub-confirmar-cancelar" class="confirm-box" role="alert" hidden>
+          <p>¿Confirmas que deseas cancelar tu suscripción actual? El cobro mensual dejará de renovarse en Mercado Pago.</p>
+          <div class="confirm-actions">
+            <button id="btn-mi-sub-confirmar-si" class="btn btn-danger-ghost btn-sm" type="button">
+              Sí, cancelar
+            </button>
+            <button id="btn-mi-sub-confirmar-no" class="btn btn-secondary btn-sm" type="button">
+              No, volver
+            </button>
+          </div>
+        </div>
+
+        <p id="mi-sub-aviso" class="status-banner" role="status" aria-live="polite"></p>
+      </section>
+
       <div class="subpage-back-row">
         <a class="btn btn-secondary btn-full" href="app.html">Volver al creador de páginas</a>
       </div>
@@ -328,6 +384,7 @@
           <a class="footer-link" href="index.html">Inicio</a>
           <a class="footer-link" href="app.html">Crear páginas web</a>
           <a class="footer-link" href="pago.html">Planes</a>
+          <a class="footer-link" href="legal.html">Legal y contacto</a>
         </nav>
       </div>
       <p class="footer-note">dmd · Constructor de páginas web para negocios.</p>
