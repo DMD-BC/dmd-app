@@ -32,9 +32,10 @@
   --error-bg: #fcf4f4;
   --error-border: #e5c3c3;
 
-  /* Tipografía del sistema */
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  /* Tipografía editorial y moderna con respaldo del sistema */
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
+  --font-editorial: "Instrument Serif", Georgia, "Times New Roman", serif;
 
   /* Escala fluida con clamp() */
   --text-xs: clamp(0.8rem, 0.78rem + 0.15vw, 0.85rem);
@@ -4871,3 +4872,785 @@ p {
   font-size: var(--text-sm);
   color: var(--ink-secondary);
 }
+
+/* ==========================================================================
+   Diseño editorial, Bento asimétrico, stickers troquelados y personalidad
+   visual por giro (un solo color principal #0f5c4d + papel y tinta neutra)
+   ========================================================================== */
+
+.editorial-emphasis {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent-ink);
+  font-size: 1.14em;
+  letter-spacing: -0.01em;
+}
+
+/* Botón principal con brillo táctil y flecha animada */
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+  transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.btn-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.btn-sheen:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 92, 77, 0.22);
+}
+
+.btn-sheen:hover::after {
+  transform: translateX(110%);
+}
+
+.btn-icon-arrow {
+  transition: transform 180ms ease;
+}
+
+.btn-sheen:hover .btn-icon-arrow {
+  transform: translateX(3px);
+}
+
+/* Stickers troquelados estilo papel adhesivo (monocromo verde + borde blanco) */
+.dmd-sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background-color: var(--accent-soft);
+  color: var(--accent-ink);
+  border: 2px solid var(--surface);
+  outline: 1px solid var(--accent-border);
+  box-shadow: 0 5px 14px rgba(15, 28, 24, 0.12);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dmd-sticker-tilt-right {
+  transform: rotate(2.5deg);
+}
+
+.dmd-sticker-tilt-left {
+  transform: rotate(-2.2deg);
+}
+
+.dmd-sticker:hover {
+  transform: rotate(0deg) scale(1.03);
+}
+
+.dmd-sticker-light {
+  background-color: #ffffff;
+  color: #0f5c4d;
+  border-color: rgba(255, 255, 255, 0.9);
+  outline-color: rgba(15, 92, 77, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+/* Sticker troquelado sobre portadas de borradores y demos */
+.biz-cover-wrap,
+.preview-cover-wrap,
+.hero-demo-cover,
+.tpl-mini-photo-wrap {
+  position: relative;
+}
+
+.biz-sticker {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: #0f5c4d;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 16px rgba(10, 24, 20, 0.24), 0 0 0 1px rgba(15, 92, 77, 0.18);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  transform: rotate(-2.8deg);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.biz-sticker-ferreteria,
+.biz-sticker-taller {
+  border-radius: 5px;
+  background-color: #0f5c4d;
+  color: #ffffff;
+  border-color: #ffffff;
+  transform: rotate(2deg);
+}
+
+.biz-sticker-taqueria,
+.biz-sticker-comida {
+  background-color: #0f5c4d;
+  color: #ffffff;
+  border-color: #ffffff;
+  transform: rotate(-3.2deg);
+}
+
+.biz-sticker-icon {
+  flex-shrink: 0;
+}
+
+.tpl-mini-sticker {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 2;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: #0f5c4d;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 3px 10px rgba(10, 24, 20, 0.22);
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+  transform: rotate(-2.5deg);
+}
+
+.tpl-mini-sticker-alt {
+  border-radius: 4px;
+  background-color: #0f5c4d;
+  color: #ffffff;
+  transform: rotate(2deg);
+}
+
+/* Escenario interactivo del Hero con foco suave al puntero */
+.spotlight-surface {
+  position: relative;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.spotlight-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    360px circle at var(--spot-x, 65%) var(--spot-y, 25%),
+    rgba(15, 92, 77, 0.09),
+    transparent 65%
+  );
+  pointer-events: none;
+}
+
+.spotlight-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-demo-card {
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.hero-demo-card.is-switching {
+  animation: dmdDemoPop 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes dmdDemoPop {
+  0% {
+    opacity: 0.72;
+    transform: translateY(4px) scale(0.992);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Encabezado con sticker en Cómo funciona */
+.section-head-with-sticker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  max-width: none;
+}
+
+/* Pasos editoriales con numerales grandes y micro piezas de interfaz */
+.steps-editorial .step-card {
+  position: relative;
+  padding: 22px 20px;
+  gap: 12px;
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.steps-editorial .step-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.step-numeral {
+  font-family: var(--font-editorial);
+  font-size: 2.35rem;
+  line-height: 0.9;
+  color: var(--accent-ink);
+  letter-spacing: -0.02em;
+}
+
+.step-mini-ui {
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 0.74rem;
+}
+
+.mini-bubble-q {
+  justify-self: start;
+  padding: 5px 9px;
+  border-radius: 10px 10px 10px 3px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+}
+
+.mini-bubble-a {
+  justify-self: end;
+  padding: 5px 9px;
+  border-radius: 10px 10px 3px 10px;
+  background-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.step-mini-pills {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.step-mini-pills span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--ink-secondary);
+  font-size: 0.73rem;
+  font-weight: 600;
+}
+
+.step-mini-pills span.is-on {
+  background-color: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent-ink);
+}
+
+.step-mini-url {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-border);
+  background-color: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-url-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Tarjetas de plantillas con elevación táctil */
+.home-tpl-card {
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.home-tpl-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md);
+}
+
+/* Bento asimétrico para Qué trae cada página */
+.bento-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.bento-grid .feature-card {
+  padding: 20px;
+  gap: 10px;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.bento-grid .feature-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.bento-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bento-head-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bento-photo-strip {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.bento-photo-strip img {
+  width: 100%;
+  height: 68px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.bento-chip-row {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bento-chip-row span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--ink-secondary);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.bento-hours-pill {
+  margin-top: 6px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background-color: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-ink);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.bento-card-accent {
+  background-color: #0f5c4d;
+  border-color: #0f5c4d;
+  color: #ffffff;
+}
+
+.bento-card-accent h3,
+.bento-card-accent p,
+.bento-card-accent .includes-icon {
+  color: #ffffff;
+}
+
+.bento-card-accent p {
+  opacity: 0.92;
+}
+
+.bento-seo-mock {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 2px;
+}
+
+.bento-seo-url {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  word-break: break-word;
+}
+
+.bento-seo-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+
+/* Sección de confianza editorial con líneas divisorias */
+.trust-editorial-layout {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.trust-intro-col {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.trust-ruled-grid {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--border-strong);
+}
+
+.landing-section-alt .trust-ruled-item,
+.trust-ruled-item {
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 18px 0;
+  box-shadow: none;
+}
+
+.trust-index {
+  font-family: var(--font-editorial);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--accent-ink);
+}
+
+/* FAQ editorial dividido */
+.faq-split-layout {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.faq-head-col {
+  display: grid;
+  gap: 6px;
+}
+
+/* CTA final de alto contraste en verde principal #0f5c4d */
+.final-cta-accent {
+  background-color: #0f5c4d;
+  border-color: #0b473b;
+  color: #ffffff;
+  padding: 28px 22px;
+  box-shadow: 0 14px 32px rgba(15, 92, 77, 0.22);
+}
+
+.final-cta-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.final-cta-accent h2 {
+  color: #ffffff;
+}
+
+.final-cta-accent .lead {
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 0;
+}
+
+.btn-on-accent {
+  background-color: #ffffff;
+  color: #0f5c4d;
+  border: 1px solid #ffffff;
+  font-weight: 700;
+}
+
+.btn-on-accent:hover {
+  background-color: #eaf3f0;
+  border-color: #eaf3f0;
+  color: #08372e;
+}
+
+.btn-outline-on-accent {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  font-weight: 600;
+}
+
+.btn-outline-on-accent:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Personalidad visual diferenciada en borradores generados (.biz-page y chat)
+   ========================================================================== */
+
+/* Panadería y Cafetería: calidez editorial de carta impresa */
+.biz-giro-panaderia .biz-title,
+.biz-giro-cafeteria .biz-title,
+.biz-giro-panaderia .preview-title,
+.biz-giro-cafeteria .preview-title {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  font-size: clamp(1.55rem, 1.35rem + 1vw, 2.05rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.biz-giro-panaderia .biz-cover-wrap,
+.biz-giro-cafeteria .biz-cover-wrap,
+.biz-giro-panaderia .preview-cover-wrap,
+.biz-giro-cafeteria .preview-cover-wrap {
+  border-radius: 14px;
+}
+
+.biz-giro-panaderia .biz-service-card,
+.biz-giro-cafeteria .biz-service-card {
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px dashed var(--border-strong);
+  border-left: 2px solid var(--accent-border);
+  border-radius: 0;
+  padding: 10px 12px;
+}
+
+.biz-giro-panaderia .biz-location-card,
+.biz-giro-cafeteria .biz-location-card {
+  border-radius: 12px;
+  background-color: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+/* Ferretería y Taller: cuadrícula utilitaria de catálogo con índices 01, 02... */
+.biz-giro-ferreteria .biz-cover-wrap,
+.biz-giro-taller .biz-cover-wrap,
+.biz-giro-ferreteria .preview-cover-wrap,
+.biz-giro-taller .preview-cover-wrap {
+  border-radius: 4px;
+}
+
+.biz-giro-ferreteria .biz-services-grid,
+.biz-giro-taller .biz-services-grid {
+  counter-reset: biz-cat-idx;
+}
+
+.biz-giro-ferreteria .biz-service-card,
+.biz-giro-taller .biz-service-card {
+  counter-increment: biz-cat-idx;
+  position: relative;
+  border-radius: 4px;
+  border-top: 2px solid var(--biz-accent);
+  background-color: var(--surface-subtle);
+  padding-top: 12px;
+}
+
+.biz-giro-ferreteria .biz-service-title::before,
+.biz-giro-taller .biz-service-title::before {
+  content: "0" counter(biz-cat-idx) " ";
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--accent-ink);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.biz-giro-ferreteria .biz-location-card,
+.biz-giro-taller .biz-location-card {
+  border-radius: 4px;
+  border-left: 4px solid var(--biz-accent);
+}
+
+/* Taquería y Comida: contraste ágil tipo tablero de órdenes */
+.biz-giro-taqueria .biz-section-title,
+.biz-giro-comida .biz-section-title {
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  color: var(--accent-ink);
+}
+
+.biz-giro-taqueria .biz-service-card,
+.biz-giro-comida .biz-service-card {
+  border-radius: 8px;
+  border-left: 3px solid var(--biz-accent);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Refinamiento de las 3 plantillas para contraste real entre sí */
+.biz-template-editorial .biz-topbar {
+  flex-direction: column;
+  text-align: center;
+  gap: 2px;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.biz-template-editorial .biz-title {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+}
+
+.biz-template-directa .biz-body {
+  gap: 18px;
+}
+
+.biz-template-directa .biz-section-title {
+  border-left: 0;
+  padding-left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.biz-template-directa .biz-section-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background-color: var(--biz-accent);
+  flex-shrink: 0;
+}
+
+/* Breakpoints responsivos (desktop sin afectar mobile-first 360 px) */
+@media (min-width: 768px) {
+  .steps-editorial {
+    grid-template-columns: 1.35fr 1fr 0.9fr;
+  }
+
+  .bento-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .bento-span-5 {
+    grid-column: span 5;
+  }
+
+  .bento-span-6 {
+    grid-column: span 6;
+  }
+
+  .bento-span-7 {
+    grid-column: span 7;
+  }
+
+  .trust-editorial-layout {
+    grid-template-columns: 0.85fr 1.45fr;
+    gap: 36px;
+  }
+
+  .trust-ruled-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 28px;
+  }
+
+  .faq-split-layout {
+    grid-template-columns: 0.78fr 1.42fr;
+    gap: 36px;
+  }
+
+  .final-cta-accent {
+    grid-template-columns: 1.4fr auto;
+    padding: 36px 34px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .dmd-sticker {
+    background-color: rgba(15, 92, 77, 0.28);
+    color: #9ce0ce;
+    border-color: var(--surface);
+    outline-color: rgba(156, 224, 206, 0.35);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  .dmd-sticker-light {
+    background-color: #ffffff;
+    color: #0f5c4d;
+    border-color: #ffffff;
+  }
+
+  .biz-sticker {
+    background-color: #181b1e;
+    color: #9ce0ce;
+    border-color: #2c3137;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .biz-sticker-ferreteria,
+  .biz-sticker-taller,
+  .biz-sticker-taqueria,
+  .biz-sticker-comida {
+    background-color: #0f5c4d;
+    color: #ffffff;
+    border-color: #181b1e;
+  }
+
+  .tpl-mini-sticker {
+    background-color: #181b1e;
+    color: #9ce0ce;
+    border-color: #2c3137;
+  }
+
+  .tpl-mini-sticker-alt {
+    background-color: #0f5c4d;
+    color: #ffffff;
+    border-color: #181b1e;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-sheen::after,
+  .hero-demo-card.is-switching {
+    animation: none;
+    transition: none;
+  }
+
+  .btn-sheen:hover,
+  .steps-editorial .step-card:hover,
+  .home-tpl-card:hover,
+  .bento-grid .feature-card:hover,
+  .dmd-sticker:hover {
+    transform: none;
+  }
+}
+

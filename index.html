@@ -6,6 +6,9 @@
   <meta name="color-scheme" content="light dark">
   <title>dmd | Constructor de páginas web para negocios</title>
   <meta name="description" content="Crea, edita y publica la página web de tu negocio desde tu celular o computadora. Plantillas limpias, vista previa real y contacto directo a WhatsApp.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="landing-body">
@@ -38,15 +41,15 @@
       <div class="container container-wide hero-grid">
         <div class="hero-copy">
           <p class="hero-eyebrow">Constructor de páginas web para negocios</p>
-          <h1 id="titulo-principal">La página web de tu negocio, lista desde tu celular</h1>
+          <h1 id="titulo-principal">La página web de tu negocio, lista desde tu <em class="editorial-emphasis">celular</em></h1>
           <p class="lead">
-            Responde unas preguntas breves, revisa tu página en vista previa real, edita cada texto a tu gusto y compártela con tus clientes por WhatsApp.
+            Responde seis preguntas breves, revisa tu página en vista previa real, edita cada texto a tu gusto y compártela con tus clientes.
           </p>
 
           <div class="hero-actions hero-actions-row">
-            <a id="cta-crear-pagina" class="btn btn-primary" href="app.html">
+            <a id="cta-crear-pagina" class="btn btn-primary btn-sheen" href="app.html">
               <span>Crear mi página</span>
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg class="btn-icon btn-icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M5 12h14"></path>
                 <path d="m12 5 7 7-7 7"></path>
               </svg>
@@ -57,12 +60,12 @@
           <ul class="hero-highlights" aria-label="Ventajas principales">
             <li>Sin programar ni instalar nada</li>
             <li>Vista real para celular y escritorio</li>
-            <li>Botón y formulario directo a tu WhatsApp</li>
+            <li>WhatsApp opcional cuando quieras</li>
           </ul>
         </div>
 
         <!-- Ejemplo interactivo de cómo se ve una página creada en dmd -->
-        <div class="hero-showcase" aria-label="Ejemplo interactivo de página web">
+        <div id="hero-showcase-stage" class="hero-showcase spotlight-surface" aria-label="Ejemplo interactivo de página web">
           <div class="showcase-bar">
             <span class="showcase-caption">Ejemplo de estructura</span>
             <div class="showcase-tabs" role="tablist" aria-label="Probar plantillas de ejemplo">
@@ -72,7 +75,7 @@
             </div>
           </div>
 
-          <div id="hero-demo-page" class="biz-page biz-template-clasica hero-demo-card">
+          <div id="hero-demo-page" class="biz-page biz-template-clasica biz-giro-cafeteria hero-demo-card">
             <div class="biz-topbar">
               <div class="biz-identity">
                 <span class="biz-topbar-name" data-demo-field="nombre">Café de Barrio</span>
@@ -91,6 +94,13 @@
                     height="600"
                     decoding="async"
                   >
+                  <span id="hero-demo-sticker" class="biz-sticker biz-sticker-cafeteria" aria-hidden="true">
+                    <svg class="biz-sticker-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"></path>
+                      <path d="M16 10h2a2.5 2.5 0 0 1 0 5h-2"></path>
+                    </svg>
+                    <span data-demo-field="sticker">Grano al día</span>
+                  </span>
                 </div>
                 <p class="biz-title hero-demo-title" data-demo-field="titulo">Café de grano tostado en Puebla</p>
                 <p class="biz-intro" data-demo-field="intro">Preparamos espresso, filtrado y pan salado desde las 7:30. Si pasas con prisa, aparta tu vaso antes de llegar.</p>
@@ -123,28 +133,50 @@
     <!-- Cómo funciona -->
     <section id="como-funciona" class="landing-section" aria-labelledby="titulo-pasos">
       <div class="container container-wide">
-        <div class="section-head">
-          <h2 id="titulo-pasos">Cómo se arma tu página</h2>
-          <p class="section-sub">Sin instalar programas ni pelearte con bloques vacíos.</p>
+        <div class="section-head section-head-with-sticker">
+          <div>
+            <h2 id="titulo-pasos">Cómo se arma tu página</h2>
+            <p class="section-sub">Sin instalar programas ni pelearte con bloques vacíos.</p>
+          </div>
+          <span class="dmd-sticker dmd-sticker-tilt-right" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 2"></path>
+            </svg>
+            <span>Sin código</span>
+          </span>
         </div>
 
-        <ol class="steps-grid">
-          <li class="step-card">
-            <span class="step-number" aria-hidden="true">1</span>
+        <ol class="steps-grid steps-editorial">
+          <li class="step-card step-card-featured">
+            <span class="step-numeral" aria-hidden="true">01</span>
             <h3>Responde seis preguntas</h3>
             <p>El chat te pide nombre, giro, ciudad, lo que vendes, el tono y si quieres poner WhatsApp. Si ya incluyes tu calle u horario, aparecen directo en el borrador.</p>
+            <div class="step-mini-ui" aria-hidden="true">
+              <span class="mini-bubble-q">¿Cómo se llama tu negocio?</span>
+              <span class="mini-bubble-a">Panadería La Espiga</span>
+            </div>
           </li>
 
           <li class="step-card">
-            <span class="step-number" aria-hidden="true">2</span>
+            <span class="step-numeral" aria-hidden="true">02</span>
             <h3>Ajusta lo que quieras</h3>
             <p>Prueba Clásica, Editorial o Directa, edita cualquier línea sobre la vista previa y sube tu foto o tu logo.</p>
+            <div class="step-mini-pills" aria-hidden="true">
+              <span class="is-on">Clásica</span>
+              <span>Editorial</span>
+              <span>Directa</span>
+            </div>
           </li>
 
           <li class="step-card">
-            <span class="step-number" aria-hidden="true">3</span>
+            <span class="step-numeral" aria-hidden="true">03</span>
             <h3>Comparte tu enlace</h3>
             <p>Publica y pégalo en tu perfil o en tus mensajes.</p>
+            <div class="step-mini-url" aria-hidden="true">
+              <span class="mini-url-dot"></span>
+              <span>tu-negocio.dmd.dmdmx.dev</span>
+            </div>
           </li>
         </ol>
       </div>
@@ -160,14 +192,17 @@
 
         <div class="home-templates-grid">
           <article class="home-tpl-card">
-            <div class="tpl-real-preview biz-page biz-template-clasica" aria-label="Ejemplo de plantilla Clásica con giro de panadería">
+            <div class="tpl-real-preview biz-page biz-template-clasica biz-giro-panaderia" aria-label="Ejemplo de plantilla Clásica con giro de panadería">
               <div class="tpl-mini-topbar biz-topbar">
                 <span class="tpl-mini-brand biz-topbar-name">Panadería La Espiga</span>
                 <span class="tpl-mini-city biz-topbar-city">Guadalajara</span>
               </div>
               <div class="tpl-mini-body">
                 <div class="tpl-mini-hero biz-hero">
-                  <img class="tpl-mini-photo" src="img/ejemplo-panaderia.jpg" alt="Vitrina con pan dulce y croissants de ejemplo para plantilla Clásica" loading="lazy" width="900" height="600">
+                  <div class="tpl-mini-photo-wrap">
+                    <img class="tpl-mini-photo" src="img/ejemplo-panaderia.jpg" alt="Vitrina con pan dulce y croissants de ejemplo para plantilla Clásica" loading="lazy" width="900" height="600">
+                    <span class="tpl-mini-sticker" aria-hidden="true">Recién horneado</span>
+                  </div>
                   <p class="tpl-mini-title">Conchas calientes desde las 6 de la mañana</p>
                   <p class="tpl-mini-desc">Horneamos bolillo, pan dulce y pasteles de tres leches sobre pedido en la colonia Americana.</p>
                 </div>
@@ -185,14 +220,17 @@
           </article>
 
           <article class="home-tpl-card">
-            <div class="tpl-real-preview biz-page biz-template-editorial" aria-label="Ejemplo de plantilla Editorial con giro de ferretería">
+            <div class="tpl-real-preview biz-page biz-template-editorial biz-giro-ferreteria" aria-label="Ejemplo de plantilla Editorial con giro de ferretería">
               <div class="tpl-mini-topbar biz-topbar">
                 <span class="tpl-mini-brand biz-topbar-name">Ferretería El Tornillo</span>
                 <span class="tpl-mini-city biz-topbar-city">Monterrey</span>
               </div>
               <div class="tpl-mini-body">
                 <div class="tpl-mini-hero biz-hero">
-                  <img class="tpl-mini-photo" src="img/ejemplo-ferreteria.jpg" alt="Herramientas manuales de ejemplo para plantilla Editorial" loading="lazy" width="900" height="675">
+                  <div class="tpl-mini-photo-wrap">
+                    <img class="tpl-mini-photo" src="img/ejemplo-ferreteria.jpg" alt="Herramientas manuales de ejemplo para plantilla Editorial" loading="lazy" width="900" height="675">
+                    <span class="tpl-mini-sticker tpl-mini-sticker-alt" aria-hidden="true">En mostrador</span>
+                  </div>
                   <p class="tpl-mini-title">Herramienta, plomería y material eléctrico</p>
                   <p class="tpl-mini-desc">Surtido para reparaciones de casa y obra chica. Pregunta si tenemos la pieza antes de venir.</p>
                 </div>
@@ -210,14 +248,17 @@
           </article>
 
           <article class="home-tpl-card">
-            <div class="tpl-real-preview biz-page biz-template-directa" aria-label="Ejemplo de plantilla Directa con giro de taquería">
+            <div class="tpl-real-preview biz-page biz-template-directa biz-giro-taqueria" aria-label="Ejemplo de plantilla Directa con giro de taquería">
               <div class="tpl-mini-topbar biz-topbar">
                 <span class="tpl-mini-brand biz-topbar-name">Taquería El Fogón</span>
                 <span class="tpl-mini-city biz-topbar-city">Querétaro</span>
               </div>
               <div class="tpl-mini-body">
                 <div class="tpl-mini-hero biz-hero">
-                  <img class="tpl-mini-photo" src="img/ejemplo-taqueria.jpg" alt="Tacos tradicionales con rábanos y salsa de ejemplo para plantilla Directa" loading="lazy" width="900" height="601">
+                  <div class="tpl-mini-photo-wrap">
+                    <img class="tpl-mini-photo" src="img/ejemplo-taqueria.jpg" alt="Tacos tradicionales con rábanos y salsa de ejemplo para plantilla Directa" loading="lazy" width="900" height="601">
+                    <span class="tpl-mini-sticker" aria-hidden="true">Al carbón</span>
+                  </div>
                   <p class="tpl-mini-title">Asada, pastor y gringas al carbón</p>
                   <p class="tpl-mini-desc">Abrimos de martes a domingo de 6 de la tarde a medianoche. Pedidos para recoger sin hacer fila.</p>
                 </div>
@@ -237,7 +278,7 @@
       </div>
     </section>
 
-    <!-- Qué incluye -->
+    <!-- Qué incluye (Bento asimétrico) -->
     <section class="landing-section" aria-labelledby="titulo-incluye">
       <div class="container container-wide">
         <div class="section-head">
@@ -245,87 +286,133 @@
           <p class="section-sub">Lo indispensable para que quien entre sepa qué haces y dónde encontrarte.</p>
         </div>
 
-        <ul class="features-grid">
-          <li class="feature-card">
-            <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-              <path d="M3 10h18"></path>
-            </svg>
-            <h3>Portada real</h3>
+        <ul class="features-grid bento-grid">
+          <li class="feature-card bento-span-7">
+            <div class="bento-head">
+              <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                <path d="M3 10h18"></path>
+              </svg>
+              <h3>Portada real</h3>
+            </div>
             <p>Sube una foto desde tu celular o elige una del catálogo.</p>
+            <div class="bento-photo-strip" aria-hidden="true">
+              <img src="img/ejemplo-cafeteria.jpg" alt="" loading="lazy" width="220" height="140">
+              <img src="img/ejemplo-panaderia.jpg" alt="" loading="lazy" width="220" height="140">
+              <img src="img/ejemplo-ferreteria.jpg" alt="" loading="lazy" width="220" height="140">
+            </div>
           </li>
 
-          <li class="feature-card">
-            <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="6" rx="2"></rect>
-              <rect x="3" y="14" width="18" height="6" rx="2"></rect>
-            </svg>
-            <h3>Catálogo o menú</h3>
+          <li class="feature-card bento-span-5">
+            <div class="bento-head">
+              <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="6" rx="2"></rect>
+                <rect x="3" y="14" width="18" height="6" rx="2"></rect>
+              </svg>
+              <h3>Catálogo o menú</h3>
+            </div>
             <p>Reordena tus servicios, agrega precios o quita lo que ya no ofreces. Cada tarjeta se edita directo en el lienzo.</p>
+            <div class="bento-chip-row" aria-hidden="true">
+              <span>Subir</span>
+              <span>Bajar</span>
+              <span>Editar texto</span>
+            </div>
           </li>
 
-          <li class="feature-card">
-            <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 6 9 17l-5-5"></path>
-            </svg>
-            <h3>Horarios y dudas a la vista</h3>
+          <li class="feature-card bento-span-5">
+            <div class="bento-head">
+              <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+              <h3>Horarios y dudas a la vista</h3>
+            </div>
             <p>Si incluyes tu calle y tu horario, aparecen desde el primer vistazo para ahorrarte responder siempre lo mismo.</p>
+            <div class="bento-hours-pill" aria-hidden="true">Lun a vie · 9 a 6 · Sáb 9 a 2</div>
           </li>
 
-          <li class="feature-card">
-            <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5Z"></path>
-            </svg>
-            <h3>Botón a tu WhatsApp</h3>
+          <li class="feature-card bento-span-7 bento-card-accent">
+            <div class="bento-head-split">
+              <div class="bento-head">
+                <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5Z"></path>
+                </svg>
+                <h3>Botón a tu WhatsApp</h3>
+              </div>
+              <span class="dmd-sticker dmd-sticker-light" aria-hidden="true">Opcional</span>
+            </div>
             <p>Es opcional. Si pones tu número, el botón y el formulario abren tu chat con el mensaje redactado; si lo dejas vacío, solo muestra tu ubicación.</p>
           </li>
 
-          <li class="feature-card">
-            <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7"></circle>
-              <path d="m21 21-4.3-4.3"></path>
-            </svg>
-            <h3>Vista previa de Google</h3>
+          <li class="feature-card bento-span-6">
+            <div class="bento-head">
+              <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <h3>Vista previa de Google</h3>
+            </div>
             <p>Edita título y descripción antes de publicar.</p>
+            <div class="bento-seo-mock" aria-hidden="true">
+              <span class="bento-seo-url">dmd.dmdmx.dev/panaderia-la-espiga</span>
+              <span class="bento-seo-title">Panadería La Espiga en Guadalajara</span>
+            </div>
           </li>
 
-          <li class="feature-card">
-            <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-              <path d="M3 3v5h5"></path>
-              <path d="M12 7v5l4 2"></path>
-            </svg>
-            <h3>Versiones y copia JSON</h3>
+          <li class="feature-card bento-span-6">
+            <div class="bento-head">
+              <svg class="includes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+                <path d="M12 7v5l4 2"></path>
+              </svg>
+              <h3>Versiones y copia JSON</h3>
+            </div>
             <p>Cada cambio guarda un punto anterior al que puedes regresar. También puedes descargar un archivo JSON para seguir en otro equipo.</p>
+            <div class="bento-chip-row" aria-hidden="true">
+              <span>v1 inicial</span>
+              <span>v2 portada</span>
+              <span>respaldo.json</span>
+            </div>
           </li>
         </ul>
       </div>
     </section>
 
-    <!-- Elementos de confianza -->
+    <!-- Elementos de confianza (editorial 2 columnas) -->
     <section class="landing-section landing-section-alt" aria-labelledby="titulo-confianza">
-      <div class="container container-wide">
-        <div class="section-head">
+      <div class="container container-wide trust-editorial-layout">
+        <div class="trust-intro-col">
           <h2 id="titulo-confianza">Sin sorpresas al trabajar</h2>
+          <p class="section-sub">Reglas claras desde el primer borrador, tanto si pruebas gratis como si activas un plan.</p>
+          <span class="dmd-sticker dmd-sticker-tilt-left" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+            <span>Hecho para negocios reales</span>
+          </span>
         </div>
 
-        <div class="trust-grid">
-          <div class="trust-card">
+        <div class="trust-grid trust-ruled-grid">
+          <div class="trust-card trust-ruled-item">
+            <span class="trust-index" aria-hidden="true">01</span>
             <h3>Tus borradores se quedan aquí</h3>
             <p>Todo se guarda en este navegador al instante. Si cambias de equipo, descargas tu JSON y lo importas.</p>
           </div>
 
-          <div class="trust-card">
+          <div class="trust-card trust-ruled-item">
+            <span class="trust-index" aria-hidden="true">02</span>
             <h3>Pensado primero para celular</h3>
             <p>La vista previa a 360 px te enseña cómo ven tu página quienes abren el enlace desde WhatsApp.</p>
           </div>
 
-          <div class="trust-card">
+          <div class="trust-card trust-ruled-item">
+            <span class="trust-index" aria-hidden="true">03</span>
             <h3>Cobro solo en Mercado Pago</h3>
             <p>Si activas un plan mensual, el pago se autoriza en Mercado Pago. dmd nunca pide ni guarda números de tarjeta.</p>
           </div>
 
-          <div class="trust-card">
+          <div class="trust-card trust-ruled-item">
+            <span class="trust-index" aria-hidden="true">04</span>
             <h3>Prueba primero, decide después</h3>
             <p>Armar borradores es gratis. Cuando quieras activar tu plan, hay opciones de $79, $189 y $299 MXN al mes.</p>
           </div>
@@ -333,11 +420,12 @@
       </div>
     </section>
 
-    <!-- Preguntas frecuentes -->
+    <!-- Preguntas frecuentes (editorial dividido) -->
     <section id="preguntas" class="landing-section" aria-labelledby="titulo-faq-home">
-      <div class="container container-wide">
-        <div class="section-head">
+      <div class="container container-wide faq-split-layout">
+        <div class="faq-head-col">
           <h2 id="titulo-faq-home">Preguntas frecuentes</h2>
+          <p class="section-sub">Respuestas cortas sobre borradores, teléfonos y planes mensuales.</p>
         </div>
 
         <div class="faq-list home-faq-list">
@@ -372,14 +460,15 @@
     <!-- Cierre / CTA final -->
     <section class="landing-section" aria-labelledby="titulo-cta-final">
       <div class="container container-wide">
-        <div class="final-cta-card">
-          <div>
+        <div class="final-cta-card final-cta-accent">
+          <div class="final-cta-copy">
+            <span class="dmd-sticker dmd-sticker-light dmd-sticker-tilt-left" aria-hidden="true">Gratis para probar</span>
             <h2 id="titulo-cta-final">Arma hoy el borrador de tu negocio</h2>
             <p class="lead">Responde seis preguntas y revisa tu página real antes de decidir si publicas.</p>
           </div>
           <div class="final-cta-actions">
-            <a class="btn btn-primary" href="app.html">Crear mi página</a>
-            <a class="btn btn-secondary" href="pago.html">Ver planes</a>
+            <a class="btn btn-on-accent" href="app.html">Crear mi página</a>
+            <a class="btn btn-outline-on-accent" href="pago.html">Ver planes</a>
           </div>
         </div>
       </div>

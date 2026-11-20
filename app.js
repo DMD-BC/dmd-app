@@ -8,6 +8,8 @@ const NUMERO_WHATSAPP_DMD = "";
 
 const DEMOS_PLANTILLAS_HOME = {
   clasica: {
+    giro: "cafeteria",
+    sticker: "Grano al día",
     nombre: "Café de Barrio",
     ciudad: "Puebla",
     foto: "img/ejemplo-cafeteria.jpg",
@@ -22,6 +24,8 @@ const DEMOS_PLANTILLAS_HOME = {
     cta: "Pedir para recoger"
   },
   editorial: {
+    giro: "ferreteria",
+    sticker: "Pieza y mayoreo",
     nombre: "Ferretería El Tornillo",
     ciudad: "Monterrey",
     foto: "img/ejemplo-ferreteria.jpg",
@@ -36,6 +40,8 @@ const DEMOS_PLANTILLAS_HOME = {
     cta: "Consultar existencia"
   },
   directa: {
+    giro: "taqueria",
+    sticker: "Al carbón",
     nombre: "Taquería El Fogón",
     ciudad: "Querétaro",
     foto: "img/ejemplo-taqueria.jpg",
@@ -87,13 +93,24 @@ function inicializarDemoPlantillasHome() {
   const elS2Tit = demoPage.querySelector("[data-demo-field='s2-titulo']");
   const elS2Desc = demoPage.querySelector("[data-demo-field='s2-desc']");
   const elCta = demoPage.querySelector("[data-demo-field='cta']");
+  const elSticker = demoPage.querySelector("[data-demo-field='sticker']");
+  const stickerWrap = document.getElementById("hero-demo-sticker");
 
   const aplicarPlantillaDemo = (plantilla) => {
     const elegida = DEMOS_PLANTILLAS_HOME[plantilla] ? plantilla : "clasica";
     const info = DEMOS_PLANTILLAS_HOME[elegida];
 
-    demoPage.classList.remove("biz-template-clasica", "biz-template-editorial", "biz-template-directa");
-    demoPage.classList.add(`biz-template-${elegida}`);
+    demoPage.classList.remove(
+      "biz-template-clasica",
+      "biz-template-editorial",
+      "biz-template-directa",
+      "biz-giro-cafeteria",
+      "biz-giro-ferreteria",
+      "biz-giro-taqueria",
+      "is-switching"
+    );
+    void demoPage.offsetWidth;
+    demoPage.classList.add(`biz-template-${elegida}`, `biz-giro-${info.giro}`, "is-switching");
 
     if (elNombre) elNombre.textContent = info.nombre;
     if (elCiudad) elCiudad.textContent = info.ciudad;
@@ -109,6 +126,11 @@ function inicializarDemoPlantillasHome() {
     if (elS2Tit) elS2Tit.textContent = info.servicios[1].titulo;
     if (elS2Desc) elS2Desc.textContent = info.servicios[1].desc;
     if (elCta) elCta.textContent = info.cta;
+    if (elSticker) elSticker.textContent = info.sticker;
+    if (stickerWrap) {
+      stickerWrap.classList.remove("biz-sticker-cafeteria", "biz-sticker-ferreteria", "biz-sticker-taqueria");
+      stickerWrap.classList.add(`biz-sticker-${info.giro}`);
+    }
 
     tabs.forEach((btn) => {
       const activo = btn.dataset.demoTpl === elegida;
@@ -127,6 +149,19 @@ function inicializarDemoPlantillasHome() {
       aplicarPlantillaDemo(btn.dataset.demoTpl);
     });
   });
+
+  // Brillo sutil siguiendo el puntero en escritorio (desactivado si el usuario prefiere menos movimiento)
+  const stage = document.getElementById("hero-showcase-stage");
+  const reduceMotion =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (stage && !reduceMotion) {
+    stage.addEventListener("pointermove", (ev) => {
+      const rect = stage.getBoundingClientRect();
+      stage.style.setProperty("--spot-x", `${Math.round(ev.clientX - rect.left)}px`);
+      stage.style.setProperty("--spot-y", `${Math.round(ev.clientY - rect.top)}px`);
+    });
+  }
 }
 
 if (document.readyState === "loading") {

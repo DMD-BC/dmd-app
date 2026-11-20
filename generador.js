@@ -2473,6 +2473,61 @@ function limpiarMencionesWhatsappSiVacio(texto, tieneWhatsapp) {
   return out;
 }
 
+const STICKERS_POR_GIRO = {
+  panaderia: { texto: "Recién horneado", icono: "horno", clase: "panaderia" },
+  ferreteria: { texto: "Pieza y mayoreo", icono: "llave", clase: "ferreteria" },
+  taqueria: { texto: "Al momento", icono: "flama", clase: "taqueria" },
+  cafeteria: { texto: "Grano al día", icono: "taza", clase: "cafeteria" },
+  comida: { texto: "Sazón del día", icono: "flama", clase: "comida" },
+  tienda: { texto: "En mostrador", icono: "etiqueta", clase: "tienda" },
+  "taller u oficio": { texto: "Trabajo directo", icono: "llave", clase: "taller" },
+  "salud y belleza": { texto: "Atención dedicada", icono: "chispa", clase: "salud" },
+  servicios: { texto: "Trato directo", icono: "pin", clase: "servicios" },
+  otro: { texto: "Atención local", icono: "pin", clase: "otro" }
+};
+
+function crearStickerElemento(stickerInfo) {
+  if (!stickerInfo || !stickerInfo.texto || typeof document === "undefined") {
+    return null;
+  }
+  const ns = "http://www.w3.org/2000/svg";
+  const badge = document.createElement("span");
+  badge.className = `biz-sticker biz-sticker-${stickerInfo.clase || "otro"}`;
+  badge.setAttribute("aria-hidden", "true");
+
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "14");
+  svg.setAttribute("height", "14");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2.1");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.classList.add("biz-sticker-icon");
+
+  const paths = {
+    horno: ["M4 13a8 8 0 0 1 16 0v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3Z", "M8 10v2", "M12 9v3", "M16 10v2"],
+    llave: ["M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3Z"],
+    flama: ["M12 3c2.5 3.2 5 5.4 5 9a5 5 0 1 1-10 0c0-2.1 1-4.1 2.2-5.6.3 1.5 1.1 2.3 2.1 2.6-.3-2.1-.1-4.1.7-6Z"],
+    taza: ["M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z", "M16 10h2a2.5 2.5 0 0 1 0 5h-2", "M8 5v1", "M12 4v2"],
+    etiqueta: ["M3 10V4h6l10 10-6 6L3 10Z", "M7.5 7.5h.01"],
+    chispa: ["M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3Z"],
+    pin: ["M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z", "M12 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"]
+  };
+  (paths[stickerInfo.icono] || paths.pin).forEach((d) => {
+    const p = document.createElementNS(ns, "path");
+    p.setAttribute("d", d);
+    svg.appendChild(p);
+  });
+
+  const label = document.createElement("span");
+  label.textContent = stickerInfo.texto;
+  badge.appendChild(svg);
+  badge.appendChild(label);
+  return badge;
+}
+
 function obtenerEstructuraNegocio(datos, detallesOpt) {
   const info = datos && typeof datos === "object" ? datos : {};
   const nombre = formatearNombrePropio(info.nombre, "nombre") || "tu negocio";
@@ -2503,9 +2558,16 @@ function obtenerEstructuraNegocio(datos, detallesOpt) {
   const notaContactoSinWhatsapp = detalles.horario
     ? `${baseNota.replace(/\.+$/, "")} · ${detalles.horario}.`
     : baseNota;
+  const stickerInfo =
+    STICKERS_POR_GIRO[tipo] ||
+    STICKERS_POR_GIRO[temaEspecifico] ||
+    STICKERS_POR_GIRO[info.giro] ||
+    STICKERS_POR_GIRO.otro;
 
   return {
     tipo: tipo || "otro",
+    claseVisual: stickerInfo.clase || "otro",
+    sticker: { ...stickerInfo },
     ordenSecciones: base.ordenSecciones.slice(),
     titulos: { ...base.titulos },
     ctaWhatsapp: base.ctaWhatsapp.replace(/\{nombre\}/g, nombre),
@@ -2927,7 +2989,8 @@ function sanearBorradorLegado(registro) {
   } else if (
     !registro.borrador.estructura ||
     typeof registro.borrador.estructura.notaContactoSinWhatsapp !== "string" ||
-    !registro.borrador.estructura.notaContactoSinWhatsapp
+    !registro.borrador.estructura.notaContactoSinWhatsapp ||
+    !registro.borrador.estructura.sticker
   ) {
     registro.borrador.estructura = obtenerEstructuraNegocio(registro.datos, detallesReales);
     cambio = true;
@@ -3015,6 +3078,7 @@ window.dmdGenerador = {
   seleccionarPortada: seleccionarPortadaNegocio,
   obtenerSiguientePortada,
   obtenerEstructuraNegocio,
+  crearStickerElemento,
   sanearBorradorLegado,
   esArchivoImagenValido,
   comprimirImagenArchivo: comprimirImagenArchivoLocal,

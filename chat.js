@@ -1570,8 +1570,10 @@
       const card = document.createElement("div");
       card.className = "chat-draft-wrap";
 
+      const claseVisualGiro = (estructura && estructura.claseVisual) || "otro";
       const frame = document.createElement("article");
-      frame.className = "preview-frame";
+      frame.className = `preview-frame biz-giro-${claseVisualGiro}`;
+      frame.dataset.giro = claseVisualGiro;
       frame.setAttribute("aria-label", `Borrador de ${datos.nombre}`);
 
       const topbar = document.createElement("div");
@@ -1644,6 +1646,12 @@
               img.hidden = true;
             });
             fig.appendChild(img);
+            if (estructura && estructura.sticker && typeof gen.crearStickerElemento === "function") {
+              const stickerEl = gen.crearStickerElemento(estructura.sticker);
+              if (stickerEl) {
+                fig.appendChild(stickerEl);
+              }
+            }
             hero.appendChild(fig);
           }
 

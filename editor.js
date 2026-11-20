@@ -1339,12 +1339,23 @@
     const orden = diseno.ordenSecciones || SECCIONES_DEFECTO;
     const esModoEditar = modoLienzo === "editar";
 
+    const numeroWa = String(datos.whatsapp || "").replace(/\D/g, "");
+    const estructura =
+      (borrador && borrador.estructura) ||
+      (window.dmdGenerador &&
+        typeof window.dmdGenerador.obtenerEstructuraNegocio === "function" &&
+        window.dmdGenerador.obtenerEstructuraNegocio(datos)) ||
+      null;
+    const claseVisualGiro = (estructura && estructura.claseVisual) || "otro";
+    const titulosSec = (estructura && estructura.titulos) || {};
+
     ui.lienzo.textContent = "";
 
     const articulo = document.createElement("article");
-    articulo.className = `biz-page biz-template-${plantilla}${
+    articulo.className = `biz-page biz-template-${plantilla} biz-giro-${claseVisualGiro}${
       vistaActual === "escritorio" ? " biz-desktop-layout" : ""
     }${esModoEditar ? " biz-is-editing" : " biz-is-live-preview"}`;
+    articulo.dataset.giro = claseVisualGiro;
     articulo.style.setProperty("--biz-accent", colorMarca);
     articulo.style.setProperty("--biz-font", fuente);
 
@@ -1378,15 +1389,6 @@
 
     const cuerpo = document.createElement("div");
     cuerpo.className = "biz-body";
-
-    const numeroWa = String(datos.whatsapp || "").replace(/\D/g, "");
-    const estructura =
-      (borrador && borrador.estructura) ||
-      (window.dmdGenerador &&
-        typeof window.dmdGenerador.obtenerEstructuraNegocio === "function" &&
-        window.dmdGenerador.obtenerEstructuraNegocio(datos)) ||
-      null;
-    const titulosSec = (estructura && estructura.titulos) || {};
 
     orden.forEach((secId, idx) => {
       let contenedorDestino = cuerpo;
@@ -1468,6 +1470,17 @@
             img.hidden = true;
           });
           fig.appendChild(img);
+          if (
+            estructura &&
+            estructura.sticker &&
+            window.dmdGenerador &&
+            typeof window.dmdGenerador.crearStickerElemento === "function"
+          ) {
+            const stickerEl = window.dmdGenerador.crearStickerElemento(estructura.sticker);
+            if (stickerEl) {
+              fig.appendChild(stickerEl);
+            }
+          }
           hero.appendChild(fig);
         }
 
