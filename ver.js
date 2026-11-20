@@ -664,10 +664,10 @@
           cardInfo.className = "biz-location-card";
           const pLoc = document.createElement("p");
           pLoc.className = "biz-location-title";
-          pLoc.textContent = `${datos.nombre} · ${datos.ciudad}`;
+          pLoc.textContent = datos.nombre;
           const pDesc = document.createElement("p");
           pDesc.className = "biz-location-sub";
-          pDesc.textContent = "Atención directa local. Próximamente enlace de WhatsApp disponible.";
+          pDesc.textContent = `Atención directa en ${datos.ciudad}.`;
           cardInfo.appendChild(pLoc);
           cardInfo.appendChild(pDesc);
           bloque.appendChild(cardInfo);

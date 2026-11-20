@@ -49,7 +49,7 @@
       campo: "whatsapp",
       etiqueta: "WhatsApp (opcional)",
       pregunta: "¿Cuál es tu WhatsApp? (con lada, ej. 528112345678)",
-      chips: ["Omitir"]
+      chips: ["Continuar sin teléfono"]
     }
   ];
 
@@ -71,7 +71,12 @@
     "despues",
     "después",
     "hola",
-    "buenas"
+    "buenas",
+    "sin whatsapp",
+    "no tengo whatsapp",
+    "seguir sin whatsapp",
+    "continuar sin telefono",
+    "continuar sin teléfono"
   ]);
 
   function leer(clave, defecto) {
@@ -266,6 +271,11 @@
     const btnUndo = document.getElementById("btn-app-undo");
     const btnUndoCerrar = document.getElementById("btn-app-undo-cerrar");
 
+    const sidebarUndoBanner = document.getElementById("sidebar-undo-banner");
+    const sidebarUndoTexto = document.getElementById("sidebar-undo-texto");
+    const btnSidebarUndo = document.getElementById("btn-sidebar-undo");
+    const btnSidebarUndoCerrar = document.getElementById("btn-sidebar-undo-cerrar");
+
     let todasConversaciones = [];
     let todosBorradores = [];
     let todasPublicadas = [];
@@ -347,6 +357,9 @@
       if (undoToast) {
         undoToast.hidden = true;
       }
+      if (sidebarUndoBanner) {
+        sidebarUndoBanner.hidden = true;
+      }
     }
 
     function mostrarUndoToast(mensaje, restaurarDatos) {
@@ -361,9 +374,50 @@
       if (undoToast) {
         undoToast.hidden = false;
       }
+      if (sidebarUndoTexto) {
+        sidebarUndoTexto.textContent = mensaje;
+      }
+      if (sidebarUndoBanner) {
+        sidebarUndoBanner.hidden = false;
+      }
       timerUndoToast = window.setTimeout(() => {
         ocultarUndoToast();
-      }, 10000);
+      }, 15000);
+    }
+
+    function esTextoOmision(texto) {
+      if (typeof gen.esOmisionWhatsapp === "function") {
+        return gen.esOmisionWhatsapp(texto);
+      }
+      if (typeof gen.esTextoRelleno === "function") {
+        return gen.esTextoRelleno(texto);
+      }
+      return /^(omitir|saltar|sin\s+whats?app|no\s+tengo)/i.test(String(texto || "").trim());
+    }
+
+    function limpiarDigitosWhatsappValidos(valor) {
+      if (esTextoOmision(valor)) {
+        return "";
+      }
+      const dig = gen.limpiarDigitos(valor);
+      return dig.length >= 10 && dig.length <= 15 ? dig : "";
+    }
+
+    function normalizarCiudadEjemplo(nombre, ciudad) {
+      const nNorm = String(nombre || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+      const cNorm = String(ciudad || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+      if (nNorm === "panaderia la espiga" && cNorm === "mexicali") {
+        return "Guadalajara";
+      }
+      return ciudad;
     }
 
     function sanearColeccionesCargadas() {
@@ -378,23 +432,55 @@
           return;
         }
         const nomNuevo = formatearNombre(b.datos.nombre, "nombre");
-        const ciuNueva = formatearNombre(b.datos.ciudad, "ciudad");
+        const ciuBase = formatearNombre(b.datos.ciudad, "ciudad");
+        const ciuNueva = normalizarCiudadEjemplo(nomNuevo, ciuBase);
         const ofNueva = limpiarOferta(b.datos.oferta);
+        const waLimpio = limpiarDigitosWhatsappValidos(b.datos.whatsapp);
+
+        let necesitaRegenerar = false;
         if (nomNuevo && nomNuevo !== b.datos.nombre) {
           b.datos.nombre = nomNuevo;
           huboAjuste = true;
         }
         if (ciuNueva && ciuNueva !== b.datos.ciudad) {
           b.datos.ciudad = ciuNueva;
+          necesitaRegenerar = true;
+          huboAjuste = true;
+        }
+        if (waLimpio !== (b.datos.whatsapp || "")) {
+          b.datos.whatsapp = waLimpio;
+          huboAjuste = true;
+        }
+        if (b.borrador && waLimpio !== (b.borrador.whatsapp || "")) {
+          b.borrador.whatsapp = waLimpio;
           huboAjuste = true;
         }
         if (ofNueva && ofNueva !== b.datos.oferta) {
           b.datos.oferta = ofNueva;
-          // Si el borrador tenía relleno "Omitir", regenerarlo limpio
-          if (b.borrador && /\bomitir\b/i.test(JSON.stringify(b.borrador))) {
-            b.borrador = gen.generarBorrador(b.datos, b.borrador.variante || 0);
-          }
+          necesitaRegenerar = true;
           huboAjuste = true;
+        }
+        if (
+          b.borrador &&
+          (/\b(omitir|sin\s+whats?app)\b/i.test(JSON.stringify(b.borrador)) || necesitaRegenerar)
+        ) {
+          b.borrador = gen.generarBorrador(b.datos, b.borrador.variante || 0);
+          huboAjuste = true;
+        }
+        if (Array.isArray(b.versiones)) {
+          b.versiones.forEach((v) => {
+            if (!v) {
+              return;
+            }
+            if (typeof v.etiqueta === "string" && /\bomitir\b/i.test(v.etiqueta)) {
+              v.etiqueta = "Actualización de borrador";
+              huboAjuste = true;
+            }
+            if (typeof v.detalle === "string" && /\bomitir\b/i.test(v.detalle)) {
+              v.detalle = "Contenido actualizado";
+              huboAjuste = true;
+            }
+          });
         }
         if (window.dmdEditor && typeof window.dmdEditor.asegurarEstructuraBorrador === "function") {
           window.dmdEditor.asegurarEstructuraBorrador(b);
@@ -414,16 +500,68 @@
           }
         }
         if (c.datos.ciudad) {
-          const ci = formatearNombre(c.datos.ciudad, "ciudad");
+          const ci = normalizarCiudadEjemplo(c.datos.nombre, formatearNombre(c.datos.ciudad, "ciudad"));
           if (ci !== c.datos.ciudad) {
             c.datos.ciudad = ci;
             huboAjuste = true;
           }
         }
+        const waConv = limpiarDigitosWhatsappValidos(c.datos.whatsapp);
+        if (waConv !== (c.datos.whatsapp || "")) {
+          c.datos.whatsapp = waConv;
+          huboAjuste = true;
+        }
         if (c.datos.oferta) {
           const of = limpiarOferta(c.datos.oferta);
           if (of && of !== c.datos.oferta) {
             c.datos.oferta = of;
+            huboAjuste = true;
+          }
+        }
+        if (Array.isArray(c.mensajes)) {
+          const antesLen = c.mensajes.length;
+          c.mensajes = c.mensajes
+            .filter((m) => {
+              if (!m || typeof m.texto !== "string") {
+                return false;
+              }
+              // Nunca mostrar burbujas literales de "Omitir" ni variantes de "sin WhatsApp"
+              if (m.rol === "usuario" && esTextoOmision(m.texto)) {
+                return false;
+              }
+              if (
+                m.rol === "asistente" &&
+                m.tipo !== "borrador" &&
+                /^(?:se\s+)?agreg(?:ado|ó):\s*"?(?:omitir|sin\s+whats?app|ninguno|pendiente|saltar)"?\.?$/i.test(
+                  m.texto.trim()
+                )
+              ) {
+                return false;
+              }
+              return true;
+            })
+            .map((m) => {
+              if (
+                m.rol === "asistente" &&
+                /(?:agregado|se agregó|oferta):\s*"?(?:omitir|sin\s+whats?app)"?/i.test(m.texto)
+              ) {
+                huboAjuste = true;
+                return {
+                  ...m,
+                  texto: `Borrador listo para ${c.datos.nombre || "tu negocio"}.`
+                };
+              }
+              if (
+                String(c.datos.nombre || "").toLowerCase() === "panadería la espiga" &&
+                m.rol === "usuario" &&
+                String(m.texto || "").trim().toLowerCase() === "mexicali"
+              ) {
+                huboAjuste = true;
+                return { ...m, texto: "Guadalajara" };
+              }
+              return m;
+            });
+          if (c.mensajes.length !== antesLen) {
             huboAjuste = true;
           }
         }
@@ -769,6 +907,7 @@
         registro: clonar(reg),
         publicadas: todasPublicadas.filter((p) => p && p.slug === reg.publicadaSlug).map(clonar),
         conversacionesPrevias: clonar(todasConversaciones),
+        convActivaPrevia: convActivaId,
         borradorActivoPrevio: borradorActivoId
       };
 
@@ -778,12 +917,19 @@
         todasPublicadas = todasPublicadas.filter((p) => p && p.slug !== reg.publicadaSlug);
       }
       todosBorradores = todosBorradores.filter((b) => b && b.id !== id);
+      const convVinculadaIds = new Set();
       todasConversaciones.forEach((c) => {
-        if (c && c.borradorId === id) {
-          c.borradorId = null;
-          c.mensajes = c.mensajes.filter((m) => m.borradorId !== id);
+        if (c && (c.borradorId === id || (reg.conversacionId && c.id === reg.conversacionId))) {
+          convVinculadaIds.add(c.id);
         }
       });
+      if (convVinculadaIds.size > 0) {
+        todasConversaciones = todasConversaciones.filter((c) => c && !convVinculadaIds.has(c.id));
+        if (convActivaId && convVinculadaIds.has(convActivaId)) {
+          convActivaId = null;
+          asegurarConversacionActiva();
+        }
+      }
       if (borradorActivoId === id) {
         const siguiente = borradoresDelPropietario()[0];
         borradorActivoId = siguiente ? siguiente.id : null;
@@ -840,13 +986,17 @@
         if (Array.isArray(snap.conversacionesPrevias)) {
           todasConversaciones = snap.conversacionesPrevias;
         }
+        if (snap.convActivaPrevia) {
+          convActivaId = snap.convActivaPrevia;
+          convBorradorMemoria = null;
+        }
         borradorActivoId = snap.borradorActivoPrevio || snap.registro.id;
         if (window.dmdEditor) {
           window.dmdEditor.cargarBorrador(obtenerBorradorPorId(borradorActivoId), false);
         }
         guardarColecciones();
         renderizarTodo();
-        estadoChatEl.textContent = `Se restauró "${snap.registro.datos.nombre}".`;
+        estadoChatEl.textContent = `Se restauró "${snap.registro.datos.nombre}" con su conversación.`;
       } else if (snap.tipo === "conversacion" && snap.conversacion) {
         if (!todasConversaciones.some((c) => c && c.id === snap.conversacion.id)) {
           todasConversaciones.unshift(snap.conversacion);
@@ -909,17 +1059,17 @@
         return { ok: true, valor: t };
       }
       if (campo === "whatsapp") {
-        if (/^(omitir|no|despues|después|ninguno|pendiente|saltar)/i.test(limpio)) {
-          return { ok: true, valor: "" };
+        if (esTextoOmision(limpio)) {
+          return { ok: true, valor: "", omitido: true };
         }
         const digitos = gen.limpiarDigitos(limpio);
         if (digitos.length < 10 || digitos.length > 15) {
           return {
             ok: false,
-            aviso: "Escribe entre 10 y 15 dígitos (ej. 528112345678) o toca Omitir."
+            aviso: "Escribe entre 10 y 15 dígitos (ej. 528112345678) o toca Continuar sin teléfono."
           };
         }
-        return { ok: true, valor: digitos };
+        return { ok: true, valor: digitos, omitido: false };
       }
       return { ok: true, valor: limpio };
     }
@@ -937,21 +1087,14 @@
       const limpio = gen.limpiarTexto(texto);
       const bajo = limpio.toLowerCase().replace(/[.!?¡¿,:;]+$/g, "").trim();
 
-      // Nunca filtrar "Omitir" ni palabras de relleno como si fueran servicios/productos
+      // Nunca guardar ni mostrar "Omitir" ni variantes de "sin WhatsApp"
       if (
         RESPUESTAS_NO_OFERTA.has(bajo) ||
+        esTextoOmision(limpio) ||
         (typeof gen.esTextoRelleno === "function" && gen.esTextoRelleno(limpio))
       ) {
-        conv.mensajes.push({
-          id: crearId("msg"),
-          rol: "asistente",
-          tipo: "texto",
-          texto:
-            "Tu borrador ya está listo arriba. Puedes escribir un ajuste específico (por ejemplo: \"cambia a tono profesional\", \"agrega entregas a domicilio\" o \"WhatsApp 528112345678\"), o tocar Editar para abrir el editor visual."
-        });
-        conv.actualizadaEn = new Date().toISOString();
-        guardarColecciones();
-        renderizarTodo();
+        estadoChatEl.textContent =
+          "Escribe un ajuste concreto (por ejemplo: \"cambia a tono profesional\" o \"agrega entregas a domicilio\"), o toca Editar.";
         return;
       }
 
@@ -976,11 +1119,11 @@
           cambio = `WhatsApp actualizado: ${dig}. Borrador actualizado.`;
           etiquetaVersion = "WhatsApp actualizado";
           detalleVersion = `Número configurado: ${dig}`;
-        } else if (/quita|borra|sin whatsapp/i.test(bajo)) {
+        } else if (/quita|borra|sin\s+whats?app/i.test(bajo)) {
           conv.datos.whatsapp = "";
-          cambio = "WhatsApp retirado del borrador.";
-          etiquetaVersion = "WhatsApp retirado";
-          detalleVersion = "Se quitó el número de WhatsApp";
+          cambio = "Número retirado del borrador.";
+          etiquetaVersion = "Contacto actualizado";
+          detalleVersion = "Se retiró el número de WhatsApp";
         } else {
           conv.mensajes.push({
             id: crearId("msg"),
@@ -1039,15 +1182,8 @@
             ? gen.limpiarOfertaDeRelleno(limpio)
             : limpio;
         if (ofertaNueva.length < 3) {
-          conv.mensajes.push({
-            id: crearId("msg"),
-            rol: "asistente",
-            tipo: "texto",
-            texto: "Escribe un producto, servicio o ajuste claro para actualizar tu borrador."
-          });
-          conv.actualizadaEn = new Date().toISOString();
-          guardarColecciones();
-          renderizarTodo();
+          estadoChatEl.textContent =
+            "Escribe un producto, servicio o ajuste claro para actualizar tu borrador.";
           return;
         }
         conv.datos.oferta = conv.datos.oferta ? `${conv.datos.oferta}, ${ofertaNueva}` : ofertaNueva;
@@ -1117,15 +1253,22 @@
       // Si estamos en paso guiado
       if (conv.pasoIndice < PASOS.length) {
         const paso = PASOS[conv.pasoIndice];
-        conv.mensajes.push({
-          id: crearId("msg"),
-          rol: "usuario",
-          tipo: "texto",
-          campo: paso.campo,
-          texto
-        });
-
         const validacion = validarRespuestaPaso(paso.campo, texto);
+
+        // Si en el paso de WhatsApp se omite, tratarlo como VACÍO sin guardar ni mostrar "Omitir" en el chat
+        const omitioWhatsapp = paso.campo === "whatsapp" && validacion.ok && validacion.omitido;
+        if (!omitioWhatsapp) {
+          conv.mensajes.push({
+            id: crearId("msg"),
+            rol: "usuario",
+            tipo: "texto",
+            campo: paso.campo,
+            texto: validacion.ok && (paso.campo === "nombre" || paso.campo === "ciudad")
+              ? validacion.valor
+              : texto
+          });
+        }
+
         if (!validacion.ok) {
           conv.mensajes.push({
             id: crearId("msg"),
@@ -1198,7 +1341,18 @@
         return;
       }
 
-      // Conversación ya completada: permitir cambios por chat
+      // Conversación ya completada: ignorar "Omitir" / "sin WhatsApp" sin agregarlos al hilo
+      const bajo = texto.toLowerCase().replace(/[.!?¡¿,:;]+$/g, "").trim();
+      if (
+        RESPUESTAS_NO_OFERTA.has(bajo) ||
+        esTextoOmision(texto) ||
+        (typeof gen.esTextoRelleno === "function" && gen.esTextoRelleno(texto))
+      ) {
+        estadoChatEl.textContent =
+          "Tu borrador ya está listo. Escribe un cambio concreto (ej. cambia a tono profesional o agrega envíos) o toca Editar.";
+        return;
+      }
+
       conv.mensajes.push({
         id: crearId("msg"),
         rol: "usuario",
@@ -1223,7 +1377,12 @@
           estadoChatEl.textContent = val.aviso;
           return;
         }
-        msg.texto = limpio;
+        if (msg.campo === "whatsapp" && val.omitido) {
+          conv.mensajes = conv.mensajes.filter((m) => m && m.id !== msg.id);
+        } else {
+          msg.texto =
+            msg.campo === "nombre" || msg.campo === "ciudad" ? val.valor : limpio;
+        }
         conv.datos[msg.campo] = val.valor;
         if (msg.campo === "giro") {
           conv.datos.giroTexto = val.giroTexto || limpio;
@@ -1545,10 +1704,10 @@
             cardLoc.className = "biz-location-card";
             const pLoc = document.createElement("p");
             pLoc.className = "biz-location-title";
-            pLoc.textContent = `${datos.nombre} · ${datos.ciudad}`;
+            pLoc.textContent = datos.nombre;
             const pSub = document.createElement("p");
             pSub.className = "biz-location-sub";
-            pSub.textContent = "Puedes agregar tu número de WhatsApp en cualquier momento desde el Editor visual.";
+            pSub.textContent = `Atención directa en ${datos.ciudad}.`;
             cardLoc.appendChild(pLoc);
             cardLoc.appendChild(pSub);
             bWa.appendChild(cardLoc);
@@ -2055,7 +2214,7 @@
           confirmBox.setAttribute("role", "alert");
 
           const msg = document.createElement("p");
-          msg.textContent = `¿Borrar "${reg.datos.nombre}"?`;
+          msg.textContent = `¿Borrar "${reg.datos.nombre}"? Podrás deshacerlo justo después.`;
 
           const confActions = document.createElement("div");
           confActions.className = "confirm-actions";
@@ -2349,6 +2508,12 @@
     }
     if (btnUndoCerrar) {
       btnUndoCerrar.addEventListener("click", ocultarUndoToast);
+    }
+    if (btnSidebarUndo) {
+      btnSidebarUndo.addEventListener("click", deshacerUltimoBorrado);
+    }
+    if (btnSidebarUndoCerrar) {
+      btnSidebarUndoCerrar.addEventListener("click", ocultarUndoToast);
     }
 
     tabModoChat.addEventListener("click", () => cambiarModo("chat"));

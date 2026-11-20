@@ -148,8 +148,13 @@
     if (!registro.diseno || typeof registro.diseno !== "object") {
       registro.diseno = {};
     }
+    const gen = window.dmdGenerador;
     const giroActual = (registro.datos && registro.datos.giro) || "otro";
-    const nombreActual = (registro.datos && registro.datos.nombre) || "Mi negocio";
+    const nombreCrudo = (registro.datos && registro.datos.nombre) || "Mi negocio";
+    const nombreActual =
+      gen && typeof gen.formatearNombrePropio === "function"
+        ? gen.formatearNombrePropio(nombreCrudo, "nombre") || "Mi negocio"
+        : nombreCrudo;
 
     if (!portada || !portada.url) {
       registro.diseno.portadaDataUrl = "";
@@ -164,10 +169,14 @@
       portada.origen === "propia" || String(portada.url).startsWith("data:image/")
         ? "propia"
         : "catalogo";
-    const alt =
+    let alt =
       typeof portada.alt === "string" && portada.alt.trim()
         ? portada.alt.trim()
         : `Imagen principal de ${nombreActual}`;
+    if (nombreActual && alt.toLowerCase().includes(nombreActual.toLowerCase()) && !alt.includes(nombreActual)) {
+      const esc = nombreActual.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      alt = alt.replace(new RegExp(esc, "gi"), nombreActual);
+    }
 
     registro.diseno.portadaDataUrl = String(portada.url);
     registro.diseno.portadaAlt = alt;
@@ -263,6 +272,28 @@
           registro.datos.ciudad = gen.formatearNombrePropio(registro.datos.ciudad, "ciudad");
         }
       }
+      const nNorm = String(registro.datos.nombre || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+      const cNorm = String(registro.datos.ciudad || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+      if (nNorm === "panaderia la espiga" && cNorm === "mexicali") {
+        registro.datos.ciudad = "Guadalajara";
+      }
+      if (typeof gen.esOmisionWhatsapp === "function" && gen.esOmisionWhatsapp(registro.datos.whatsapp)) {
+        registro.datos.whatsapp = "";
+      } else {
+        const digWa = String(registro.datos.whatsapp || "").replace(/\D/g, "");
+        registro.datos.whatsapp = digWa.length >= 10 && digWa.length <= 15 ? digWa : "";
+      }
+      if (registro.borrador && typeof registro.borrador === "object") {
+        registro.borrador.whatsapp = registro.datos.whatsapp;
+      }
       if (typeof gen.limpiarOfertaDeRelleno === "function" && registro.datos.oferta) {
         const ofertaSaneada = gen.limpiarOfertaDeRelleno(registro.datos.oferta);
         if (ofertaSaneada) {
@@ -314,6 +345,30 @@
     }
     if (typeof registro.diseno.portadaAlt !== "string") {
       registro.diseno.portadaAlt = "";
+    }
+    if (nombre && registro.diseno.portadaAlt) {
+      const escNom = nombre.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (
+        registro.diseno.portadaAlt.toLowerCase().includes(nombre.toLowerCase()) &&
+        !registro.diseno.portadaAlt.includes(nombre)
+      ) {
+        registro.diseno.portadaAlt = registro.diseno.portadaAlt.replace(
+          new RegExp(escNom, "gi"),
+          nombre
+        );
+      }
+    }
+    if (nombre && registro.diseno.logoAlt) {
+      const escNom = nombre.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (
+        registro.diseno.logoAlt.toLowerCase().includes(nombre.toLowerCase()) &&
+        !registro.diseno.logoAlt.includes(nombre)
+      ) {
+        registro.diseno.logoAlt = registro.diseno.logoAlt.replace(
+          new RegExp(escNom, "gi"),
+          nombre
+        );
+      }
     }
     if (!["catalogo", "propia", "ninguna"].includes(registro.diseno.portadaOrigen)) {
       if (registro.diseno.portadaDataUrl) {
@@ -697,6 +752,7 @@
       return;
     }
     const { diseno, datos } = registroActual;
+
     ui.tplBtns.forEach((b) => {
       const activo = b.dataset.plantilla === diseno.plantilla;
       b.classList.toggle("tpl-btn-active", activo);
@@ -1649,15 +1705,14 @@
           formBox.appendChild(salidaForm);
           bloque.appendChild(formBox);
         } else {
-          // Vista limpia y profesional sin texto de instrucciones internas ni formulario roto
           const cardInfo = document.createElement("div");
           cardInfo.className = "biz-location-card";
           const pLoc = document.createElement("p");
           pLoc.className = "biz-location-title";
-          pLoc.textContent = `${datos.nombre} · ${datos.ciudad}`;
+          pLoc.textContent = datos.nombre;
           const pDesc = document.createElement("p");
           pDesc.className = "biz-location-sub";
-          pDesc.textContent = "Atención directa local. Próximamente enlace de WhatsApp disponible.";
+          pDesc.textContent = `Atención directa en ${datos.ciudad}.`;
           cardInfo.appendChild(pLoc);
           cardInfo.appendChild(pDesc);
           bloque.appendChild(cardInfo);

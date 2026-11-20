@@ -803,12 +803,12 @@ const PLANES_DMD = [
       }
       if (sesionTit) {
         sesionTit.textContent = errorAuth
-          ? "No pudimos verificar tu sesión en este momento"
+          ? "El servicio de cuentas no está disponible temporalmente"
           : "Puedes explorar y elegir tu plan ahora";
       }
       if (sesionSub) {
         sesionSub.textContent = errorAuth
-          ? "Puedes revisar los planes abajo y reintentar la conexión cuando quieras."
+          ? "Puedes comparar los 3 planes aquí y seguir creando borradores en la app sin iniciar sesión."
           : "Para finalizar el cobro en Mercado Pago solo te pediremos iniciar sesión en tu cuenta.";
       }
       if (btnReintentar) {
@@ -865,6 +865,8 @@ const PLANES_DMD = [
     const btnMantener = document.getElementById("btn-mantener-sub");
     const btnReintentarSesion = document.getElementById("btn-pago-reintentar-sesion");
     const btnContinuarMp = document.getElementById("btn-continuar-mp");
+    const btnPagoGoogle = document.getElementById("btn-pago-google-sso");
+    const estadoPagoGoogle = document.getElementById("estado-pago-google");
 
     if (btnPedirCancelar && confirmBox) {
       btnPedirCancelar.addEventListener("click", () => {
@@ -894,11 +896,48 @@ const PLANES_DMD = [
           return;
         }
         btnReintentarSesion.disabled = true;
-        btnReintentarSesion.textContent = "Verificando...";
-        await window.dmdCuenta.verificarSesion();
+        btnReintentarSesion.textContent = "Comprobando...";
+        const res = await window.dmdCuenta.verificarSesion();
         btnReintentarSesion.disabled = false;
-        btnReintentarSesion.textContent = "Reintentar";
+        btnReintentarSesion.textContent = "Comprobar de nuevo";
         sincronizarVistaPago();
+        if (res && res.sinConexion) {
+          const sesionSub = document.getElementById("pago-sesion-sub");
+          if (sesionSub) {
+            sesionSub.textContent =
+              "El servicio de cuentas sigue sin responder por ahora. No hace falta insistir; puedes revisar los planes o seguir creando borradores en la app.";
+          }
+          mostrarEstadoPago("El servicio de cuentas sigue fuera de línea por el momento.");
+        } else {
+          mostrarEstadoPago("Conexión con el servicio de cuentas verificada.");
+        }
+      });
+    }
+
+    if (btnPagoGoogle) {
+      btnPagoGoogle.addEventListener("click", async () => {
+        if (!window.dmdCuenta || typeof window.dmdCuenta.iniciarAccesoGoogle !== "function") {
+          return;
+        }
+        btnPagoGoogle.disabled = true;
+        if (estadoPagoGoogle) {
+          estadoPagoGoogle.textContent = "Comprobando acceso con Google...";
+        }
+        try {
+          const res = await window.dmdCuenta.iniciarAccesoGoogle();
+          if (!res.ok && estadoPagoGoogle) {
+            estadoPagoGoogle.textContent = res.mensaje;
+          } else if (res.yaAutenticado) {
+            if (estadoPagoGoogle) {
+              estadoPagoGoogle.textContent = "";
+            }
+            sincronizarVistaPago();
+          } else if (res.redirigiendo && estadoPagoGoogle) {
+            estadoPagoGoogle.textContent = "Abriendo acceso seguro de tu cuenta dmd...";
+          }
+        } finally {
+          btnPagoGoogle.disabled = false;
+        }
       });
     }
 

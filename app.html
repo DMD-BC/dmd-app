@@ -60,6 +60,13 @@
             <h2 id="titulo-hist-borradores">Páginas y borradores</h2>
             <span id="contador-borradores" class="count-badge">0</span>
           </div>
+          <div id="sidebar-undo-banner" class="sidebar-undo-banner" role="status" aria-live="polite" hidden>
+            <p id="sidebar-undo-texto" class="sidebar-undo-text"></p>
+            <div class="sidebar-undo-actions">
+              <button id="btn-sidebar-undo" class="btn btn-primary btn-sm" type="button">Deshacer borrado</button>
+              <button id="btn-sidebar-undo-cerrar" class="btn btn-secondary btn-sm" type="button">Cerrar</button>
+            </div>
+          </div>
           <p id="borradores-vacio" class="sidebar-empty">Aún no tienes borradores guardados.</p>
           <ul id="lista-borradores" class="sidebar-drafts" hidden></ul>
         </section>
@@ -248,16 +255,22 @@
                     <span class="field-label">Plantilla visual</span>
                     <div class="template-picker" role="group" aria-label="Elegir plantilla">
                       <button type="button" class="tpl-btn" data-plantilla="clasica">
-                        <span class="tpl-thumb tpl-thumb-clasica" aria-hidden="true">
-                          <span class="tpl-thumb-bar"><span></span><span></span></span>
-                          <span class="tpl-thumb-hero">
-                            <span class="tpl-thumb-cover"></span>
-                            <span class="tpl-thumb-line w-80"></span>
-                            <span class="tpl-thumb-line w-55"></span>
+                        <span class="tpl-real-mini biz-page biz-template-clasica" aria-hidden="true">
+                          <span class="tpl-mini-topbar biz-topbar">
+                            <span class="tpl-mini-brand biz-topbar-name" data-tpl-name>Panadería La Espiga</span>
+                            <span class="tpl-mini-city biz-topbar-city" data-tpl-city>Guadalajara</span>
                           </span>
-                          <span class="tpl-thumb-cards">
-                            <span class="tpl-thumb-card"></span>
-                            <span class="tpl-thumb-card"></span>
+                          <span class="tpl-mini-body">
+                            <span class="tpl-mini-hero biz-hero">
+                              <img class="tpl-mini-photo tpl-mini-photo-sm" data-tpl-img src="img/panaderia-portada.jpg" alt="" loading="lazy">
+                              <span class="tpl-mini-title tpl-mini-title-sm" data-tpl-title>Pan recién horneado</span>
+                            </span>
+                            <span class="tpl-mini-sec-title biz-section-title">Menú</span>
+                            <span class="tpl-mini-grid">
+                              <span class="tpl-mini-card" data-tpl-s1>Pan dulce</span>
+                              <span class="tpl-mini-card" data-tpl-s2>Pasteles</span>
+                            </span>
+                            <span class="tpl-mini-cta tpl-mini-cta-sm">WhatsApp</span>
                           </span>
                         </span>
                         <span class="tpl-btn-name">Clásica</span>
@@ -265,17 +278,22 @@
                       </button>
 
                       <button type="button" class="tpl-btn" data-plantilla="editorial">
-                        <span class="tpl-thumb tpl-thumb-editorial" aria-hidden="true">
-                          <span class="tpl-thumb-bar"><span></span><span></span></span>
-                          <span class="tpl-thumb-hero centered">
-                            <span class="tpl-thumb-cover"></span>
-                            <span class="tpl-thumb-line w-70"></span>
-                            <span class="tpl-thumb-line w-50"></span>
+                        <span class="tpl-real-mini biz-page biz-template-editorial" aria-hidden="true">
+                          <span class="tpl-mini-topbar biz-topbar">
+                            <span class="tpl-mini-brand biz-topbar-name" data-tpl-name>Panadería La Espiga</span>
+                            <span class="tpl-mini-city biz-topbar-city" data-tpl-city>Guadalajara</span>
                           </span>
-                          <span class="tpl-thumb-rule"></span>
-                          <span class="tpl-thumb-cards">
-                            <span class="tpl-thumb-card"></span>
-                            <span class="tpl-thumb-card"></span>
+                          <span class="tpl-mini-body">
+                            <span class="tpl-mini-hero biz-hero">
+                              <img class="tpl-mini-photo tpl-mini-photo-sm" data-tpl-img src="img/panaderia-portada.jpg" alt="" loading="lazy">
+                              <span class="tpl-mini-title tpl-mini-title-sm" data-tpl-title>Pan recién horneado</span>
+                            </span>
+                            <span class="tpl-mini-sec-title biz-section-title">Menú</span>
+                            <span class="tpl-mini-grid">
+                              <span class="tpl-mini-card" data-tpl-s1>Pan dulce</span>
+                              <span class="tpl-mini-card" data-tpl-s2>Pasteles</span>
+                            </span>
+                            <span class="tpl-mini-cta tpl-mini-cta-sm">WhatsApp</span>
                           </span>
                         </span>
                         <span class="tpl-btn-name">Editorial</span>
@@ -283,16 +301,22 @@
                       </button>
 
                       <button type="button" class="tpl-btn" data-plantilla="directa">
-                        <span class="tpl-thumb tpl-thumb-directa" aria-hidden="true">
-                          <span class="tpl-thumb-bar filled"><span></span><span></span></span>
-                          <span class="tpl-thumb-hero">
-                            <span class="tpl-thumb-cover"></span>
-                            <span class="tpl-thumb-line w-85"></span>
-                            <span class="tpl-thumb-line w-60"></span>
+                        <span class="tpl-real-mini biz-page biz-template-directa" aria-hidden="true">
+                          <span class="tpl-mini-topbar biz-topbar">
+                            <span class="tpl-mini-brand biz-topbar-name" data-tpl-name>Panadería La Espiga</span>
+                            <span class="tpl-mini-city biz-topbar-city" data-tpl-city>Guadalajara</span>
                           </span>
-                          <span class="tpl-thumb-cards">
-                            <span class="tpl-thumb-card"></span>
-                            <span class="tpl-thumb-card"></span>
+                          <span class="tpl-mini-body">
+                            <span class="tpl-mini-hero biz-hero">
+                              <img class="tpl-mini-photo tpl-mini-photo-sm" data-tpl-img src="img/panaderia-portada.jpg" alt="" loading="lazy">
+                              <span class="tpl-mini-title tpl-mini-title-sm" data-tpl-title>Pan recién horneado</span>
+                            </span>
+                            <span class="tpl-mini-sec-title biz-section-title">Menú</span>
+                            <span class="tpl-mini-grid">
+                              <span class="tpl-mini-card" data-tpl-s1>Pan dulce</span>
+                              <span class="tpl-mini-card" data-tpl-s2>Pasteles</span>
+                            </span>
+                            <span class="tpl-mini-cta tpl-mini-cta-sm">WhatsApp</span>
                           </span>
                         </span>
                         <span class="tpl-btn-name">Directa</span>

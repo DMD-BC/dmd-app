@@ -55,7 +55,7 @@ const PORTADAS_POR_GIRO = {
     palabras: ["pan", "panaderia", "bolillo", "concha", "cuernito", "pastel", "pasteleria", "reposteria", "postre", "galleta", "dona", "cupcake", "horneado", "bizcocho", "rosca", "pay"],
     fotos: [
       {
-        url: "https://images.pexels.com/photos/29380150/pexels-photo-29380150.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        url: "img/panaderia-portada.jpg",
         etiqueta: "Panadería con pan recién horneado"
       },
       {
@@ -1385,16 +1385,60 @@ const PALABRAS_RELLENO_SET = new Set([
   "no",
   "sin dato",
   "sin datos",
+  "sin whatsapp",
+  "no tengo",
+  "no tengo whatsapp",
+  "no uso whatsapp",
+  "sin numero",
+  "sin número",
+  "sin telefono",
+  "sin teléfono",
+  "seguir sin whatsapp",
+  "continuar sin telefono",
+  "continuar sin teléfono",
   "despues",
-  "después"
+  "después",
+  "luego",
+  "mas tarde",
+  "más tarde"
 ]);
 
 function esTextoRellenoGen(texto) {
-  const limpio = limpiarTextoGen(texto).toLowerCase().replace(/[.!?¡¿,:;]+$/g, "").trim();
+  const limpio = limpiarTextoGen(texto)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.!?¡¿,:;"'()]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!limpio) {
     return true;
   }
-  return PALABRAS_RELLENO_SET.has(limpio);
+  if (PALABRAS_RELLENO_SET.has(limpio)) {
+    return true;
+  }
+  return /^(omitir|saltar|sin\s+whats?app|no\s+tengo\s+whats?app|seguir\s+sin\s+whats?app|continuar\s+sin\s+(telefono|numero|whats?app)|sin\s+(telefono|numero))$/i.test(
+    limpio
+  );
+}
+
+function esOmisionWhatsapp(texto) {
+  const limpio = limpiarTextoGen(texto)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.!?¡¿,:;"'()]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!limpio) {
+    return true;
+  }
+  if (esTextoRellenoGen(limpio)) {
+    return true;
+  }
+  return /^(omitir|saltar|no|ninguno|ninguna|pendiente|despues|luego|nada|sin\s+whats?app|no\s+tengo|no\s+uso|continuar\s+sin|seguir\s+sin)\b/i.test(
+    limpio
+  );
 }
 
 function limpiarOfertaDeRelleno(texto) {
@@ -1861,7 +1905,7 @@ function seleccionarPortadaNegocio(datos, variante, indiceForzado) {
   const claveTema = resolverTemaPortada(info);
   const tema = PORTADAS_POR_GIRO[claveTema] || PORTADAS_POR_GIRO.otro;
   const opciones = tema.fotos || [];
-  const nombre = limpiarTextoGen(info.nombre);
+  const nombre = formatearNombrePropio(info.nombre, "nombre");
   const v = Math.abs(Number(variante) || 0);
 
   let idx = 0;
@@ -1909,7 +1953,7 @@ function obtenerSiguientePortada(datos, indiceActual, urlActual) {
 
 function obtenerEstructuraNegocio(datos) {
   const info = datos && typeof datos === "object" ? datos : {};
-  const nombre = limpiarTextoGen(info.nombre) || "tu negocio";
+  const nombre = formatearNombrePropio(info.nombre, "nombre") || "tu negocio";
   let tipo = PERFILES_GIRO[info.giro] ? info.giro : "";
   if (!tipo || tipo === "otro") {
     const inferido = normalizarGiro(
@@ -2248,6 +2292,7 @@ window.dmdGenerador = {
   limpiarDigitos: limpiarDigitosGen,
   quitarGuionesLargos: quitarGuionesLargosGen,
   esTextoRelleno: esTextoRellenoGen,
+  esOmisionWhatsapp,
   limpiarOfertaDeRelleno,
   formatearNombrePropio,
   normalizarSubdominio: normalizarSubdominioGen,

@@ -44,18 +44,21 @@
           <span>Verificando tu sesión...</span>
         </div>
 
-        <div id="cuenta-error-servicio" class="service-alert" role="alert" hidden>
-          <p id="cuenta-error-servicio-msg" class="service-alert-title"></p>
-          <p class="service-alert-hint">
-            Puedes reintentar ahora o seguir creando y guardando tus borradores directamente en la app sin iniciar sesión.
+        <div id="cuenta-error-servicio" class="service-notice" role="status" aria-live="polite" hidden>
+          <p id="cuenta-error-servicio-msg" class="service-notice-title"></p>
+          <p id="cuenta-error-servicio-hint" class="service-notice-hint">
+            Puedes crear, editar y guardar tus borradores en este navegador sin iniciar sesión, y revisar los planes disponibles.
           </p>
           <div class="service-alert-actions">
-            <button id="btn-reintentar-auth" class="btn btn-primary btn-sm" type="button">
-              Reintentar conexión
-            </button>
-            <a class="btn btn-secondary btn-sm" href="app.html">
+            <a class="btn btn-primary btn-sm" href="app.html">
               Seguir creando borradores
             </a>
+            <a class="btn btn-secondary btn-sm" href="pago.html">
+              Ver planes
+            </a>
+            <button id="btn-reintentar-auth" class="btn btn-secondary btn-sm" type="button">
+              Comprobar de nuevo
+            </button>
           </div>
         </div>
 
@@ -145,18 +148,26 @@
             <div id="bloque-recuperar-password" class="recovery-box" hidden>
               <p class="recovery-title">Recuperar contraseña</p>
               <p class="field-hint">
-                Si no recuerdas tu clave, puedes restablecer el acceso desde el portal seguro de cuenta de dmd con tu correo registrado.
+                Escribe el correo con el que creaste tu cuenta. Cuando el servicio de cuentas esté activo, te enviaremos un enlace para restablecer tu clave sin salir de aquí.
               </p>
-              <div class="recovery-actions">
-                <a
-                  id="btn-ir-recuperar"
-                  class="btn btn-secondary btn-sm"
-                  href="https://login.dmdmx.dev/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div class="field">
+                <label class="field-label" for="rec-correo">Correo registrado</label>
+                <input
+                  id="rec-correo"
+                  name="rec_correo"
+                  class="input"
+                  type="email"
+                  autocomplete="email"
+                  placeholder="tucorreo@ejemplo.com"
+                  aria-describedby="error-rec-correo"
                 >
-                  Ir a recuperar acceso
-                </a>
+                <p id="error-rec-correo" class="field-error" aria-live="polite"></p>
+              </div>
+              <p id="estado-rec-password" class="field-hint" role="status" aria-live="polite"></p>
+              <div class="recovery-actions">
+                <button id="btn-enviar-recuperacion" class="btn btn-primary btn-sm" type="button">
+                  Enviar instrucciones
+                </button>
                 <button id="btn-cerrar-recuperar" class="btn btn-secondary btn-sm" type="button">
                   Cerrar
                 </button>
@@ -250,18 +261,18 @@
           </div>
 
           <div class="auth-google-box">
-            <a
+            <button
               id="btn-login-google-sso"
               class="btn btn-secondary btn-full"
-              href="https://login.dmdmx.dev/"
+              type="button"
             >
               <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M21.35 11.1h-9.18v2.98h5.27c-.23 1.46-1.74 4.28-5.27 4.28-3.17 0-5.76-2.63-5.76-5.86s2.59-5.86 5.76-5.86c1.81 0 3.02.77 3.71 1.43l2.53-2.44C16.79 4.1 14.69 3.2 12.17 3.2 7.21 3.2 3.2 7.21 3.2 12.17s4.01 8.97 8.97 8.97c5.18 0 8.61-3.64 8.61-8.77 0-.59-.06-1.04-.14-1.27Z"></path>
               </svg>
               <span>Continuar con Google</span>
-            </a>
-            <p class="field-hint">
-              Se abrirá el acceso seguro de tu cuenta dmd. Al terminar, regresa a esta pestaña.
+            </button>
+            <p id="estado-google-sso" class="field-hint" role="status" aria-live="polite">
+              Acceso rápido con tu cuenta de Google a través del servicio de cuentas de dmd.
             </p>
           </div>
         </div>

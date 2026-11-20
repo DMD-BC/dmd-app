@@ -172,7 +172,7 @@ async function solicitarAuth(ruta, opciones) {
       sinConexion: true,
       data: null,
       mensaje:
-        "No se pudo conectar con el servicio de cuenta en este momento. Comprueba tu conexión o intenta de nuevo."
+        "El servicio de cuentas no está disponible en este momento."
     };
   } finally {
     if (temporizador) {
@@ -422,6 +422,70 @@ async function solicitarAuth(ruta, opciones) {
       ultimoErrorServicio = "";
       notificarCambioSesion("logout");
       return { ok: true };
+    },
+
+    async iniciarAccesoGoogle() {
+      const res = await solicitarAuth("/me", { method: "GET" });
+      if (res.sinConexion) {
+        ultimoErrorServicio = res.mensaje;
+        notificarCambioSesion("error");
+        return {
+          ok: false,
+          sinConexion: true,
+          mensaje:
+            "El acceso con Google no está disponible mientras el servicio de cuentas esté fuera de línea. Puedes seguir creando tus borradores sin iniciar sesión."
+        };
+      }
+      if (res.ok) {
+        const usuario = normalizarUsuarioServidor(res.data);
+        if (usuario) {
+          sesionActual = usuario;
+          ultimoErrorServicio = "";
+          notificarCambioSesion("me");
+          return { ok: true, yaAutenticado: true, sesion: clonarSesion(usuario) };
+        }
+      }
+      window.location.assign(URL_LOGIN_GOOGLE_SSO);
+      return { ok: true, redirigiendo: true };
+    },
+
+    async solicitarRecuperacionPassword(correo) {
+      const correoLimpio = normalizarCorreo(correo);
+      if (!esCorreoValido(correoLimpio)) {
+        return {
+          ok: false,
+          campo: "correo",
+          mensaje: "Escribe un correo válido."
+        };
+      }
+      const res = await solicitarAuth("/forgot-password", {
+        method: "POST",
+        body: { email: correoLimpio }
+      });
+      if (res.sinConexion) {
+        ultimoErrorServicio = res.mensaje;
+        notificarCambioSesion("error");
+        return {
+          ok: false,
+          sinConexion: true,
+          mensaje:
+            "El servicio de cuentas no está disponible en este momento, por lo que no se puede enviar el correo de recuperación todavía. Tus borradores siguen disponibles sin iniciar sesión."
+        };
+      }
+      if (!res.ok) {
+        return {
+          ok: false,
+          sinConexion: false,
+          mensaje:
+            res.mensaje ||
+            "No fue posible procesar la recuperación de contraseña con ese correo."
+        };
+      }
+      return {
+        ok: true,
+        mensaje:
+          "Si ese correo está registrado, recibirás instrucciones para restablecer tu contraseña."
+      };
     }
   };
 
@@ -733,15 +797,56 @@ async function solicitarAuth(ruta, opciones) {
     });
 
     if (btnReintentarAuth) {
+      const errorServicioHint = document.getElementById("cuenta-error-servicio-hint");
       btnReintentarAuth.addEventListener("click", async () => {
         btnReintentarAuth.disabled = true;
-        btnReintentarAuth.textContent = "Verificando...";
-        estadoCuenta.textContent = "Consultando servicio de cuenta...";
-        await dmdCuenta.verificarSesion();
+        btnReintentarAuth.textContent = "Comprobando...";
         estadoCuenta.textContent = "";
+        const res = await dmdCuenta.verificarSesion();
         btnReintentarAuth.disabled = false;
-        btnReintentarAuth.textContent = "Reintentar conexión";
+        btnReintentarAuth.textContent = "Comprobar de nuevo";
+        if (res && res.sinConexion) {
+          if (errorServicioHint) {
+            errorServicioHint.textContent =
+              "El servicio de cuentas sigue sin responder por ahora. No hace falta insistir; puedes crear y guardar borradores en la app o revisar los planes mientras se restablece.";
+          }
+          estadoCuenta.textContent =
+            "El servicio de cuentas sigue fuera de línea por el momento.";
+        } else if (res && res.sesion) {
+          estadoCuenta.textContent = `Sesión verificada: ${res.sesion.nombre}.`;
+        } else {
+          estadoCuenta.textContent = "Servicio de cuentas disponible. Ya puedes iniciar sesión.";
+        }
         actualizarVistaCuenta();
+      });
+    }
+
+    // Acceso con Google sin exponer el dominio en un enlace visible
+    const btnGoogleSso = document.getElementById("btn-login-google-sso");
+    const estadoGoogleSso = document.getElementById("estado-google-sso");
+    if (btnGoogleSso) {
+      btnGoogleSso.addEventListener("click", async () => {
+        if (enviando) {
+          return;
+        }
+        enviando = true;
+        btnGoogleSso.disabled = true;
+        if (estadoGoogleSso) {
+          estadoGoogleSso.textContent = "Comprobando acceso con Google...";
+        }
+        try {
+          const res = await dmdCuenta.iniciarAccesoGoogle();
+          if (!res.ok && estadoGoogleSso) {
+            estadoGoogleSso.textContent = res.mensaje;
+          } else if (res.yaAutenticado) {
+            actualizarVistaCuenta();
+          } else if (res.redirigiendo && estadoGoogleSso) {
+            estadoGoogleSso.textContent = "Abriendo acceso seguro de tu cuenta dmd...";
+          }
+        } finally {
+          enviando = false;
+          btnGoogleSso.disabled = false;
+        }
       });
     }
 
@@ -763,15 +868,62 @@ async function solicitarAuth(ruta, opciones) {
       });
     });
 
-    // Recuperar contraseña
+    // Recuperar contraseña en la misma página (sin enlace externo)
     const btnAbrirRecuperar = document.getElementById("btn-abrir-recuperar");
     const bloqueRecuperar = document.getElementById("bloque-recuperar-password");
     const btnCerrarRecuperar = document.getElementById("btn-cerrar-recuperar");
+    const recCorreo = document.getElementById("rec-correo");
+    const errorRecCorreo = document.getElementById("error-rec-correo");
+    const estadoRecPassword = document.getElementById("estado-rec-password");
+    const btnEnviarRecuperacion = document.getElementById("btn-enviar-recuperacion");
+
+    async function manejarRecuperacionPassword() {
+      if (enviando || !recCorreo) {
+        return;
+      }
+      const correo = normalizarCorreo(recCorreo.value);
+      fijarError(recCorreo, errorRecCorreo, "");
+      if (estadoRecPassword) {
+        estadoRecPassword.textContent = "";
+      }
+      if (!esCorreoValido(correo)) {
+        fijarError(recCorreo, errorRecCorreo, "Escribe un correo válido para recuperar tu acceso.");
+        recCorreo.focus();
+        return;
+      }
+      enviando = true;
+      if (btnEnviarRecuperacion) {
+        btnEnviarRecuperacion.disabled = true;
+        btnEnviarRecuperacion.textContent = "Enviando...";
+      }
+      try {
+        const res = await dmdCuenta.solicitarRecuperacionPassword(correo);
+        if (estadoRecPassword) {
+          estadoRecPassword.textContent = res.mensaje;
+        }
+        if (res.ok) {
+          recCorreo.value = "";
+        }
+      } finally {
+        enviando = false;
+        if (btnEnviarRecuperacion) {
+          btnEnviarRecuperacion.disabled = false;
+          btnEnviarRecuperacion.textContent = "Enviar instrucciones";
+        }
+      }
+    }
+
     if (btnAbrirRecuperar && bloqueRecuperar) {
       btnAbrirRecuperar.addEventListener("click", () => {
         const abierto = !bloqueRecuperar.hidden;
         bloqueRecuperar.hidden = abierto;
         btnAbrirRecuperar.setAttribute("aria-expanded", abierto ? "false" : "true");
+        if (!abierto && recCorreo) {
+          if (!recCorreo.value && loginCorreo && loginCorreo.value) {
+            recCorreo.value = loginCorreo.value.trim();
+          }
+          recCorreo.focus();
+        }
       });
     }
     if (btnCerrarRecuperar && bloqueRecuperar && btnAbrirRecuperar) {
@@ -779,6 +931,18 @@ async function solicitarAuth(ruta, opciones) {
         bloqueRecuperar.hidden = true;
         btnAbrirRecuperar.setAttribute("aria-expanded", "false");
         btnAbrirRecuperar.focus();
+      });
+    }
+    if (btnEnviarRecuperacion) {
+      btnEnviarRecuperacion.addEventListener("click", manejarRecuperacionPassword);
+    }
+    if (recCorreo) {
+      recCorreo.addEventListener("input", () => fijarError(recCorreo, errorRecCorreo, ""));
+      recCorreo.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          manejarRecuperacionPassword();
+        }
       });
     }
 

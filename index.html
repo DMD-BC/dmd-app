@@ -81,28 +81,15 @@
             </div>
             <div class="biz-body hero-demo-body">
               <div class="biz-section biz-hero">
-                <div class="hero-demo-cover" aria-hidden="true">
-                  <svg class="hero-demo-svg" viewBox="0 0 640 320" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <linearGradient id="dmdHeroGrad" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#0f5c4d"/>
-                        <stop offset="100%" stop-color="#0a3c32"/>
-                      </linearGradient>
-                    </defs>
-                    <rect width="640" height="320" fill="url(#dmdHeroGrad)"/>
-                    <circle cx="520" cy="80" r="140" fill="#ffffff" fill-opacity="0.06"/>
-                    <circle cx="110" cy="270" r="120" fill="#5bc7ae" fill-opacity="0.09"/>
-                    <rect x="44" y="48" width="144" height="28" rx="14" fill="#ffffff" fill-opacity="0.14"/>
-                    <rect x="64" y="59" width="104" height="6" rx="3" fill="#ffffff" fill-opacity="0.82"/>
-                    <rect x="44" y="102" width="290" height="22" rx="6" fill="#ffffff" fill-opacity="0.92"/>
-                    <rect x="44" y="138" width="220" height="14" rx="5" fill="#ffffff" fill-opacity="0.55"/>
-                    <rect x="44" y="182" width="148" height="38" rx="8" fill="#ffffff" fill-opacity="0.95"/>
-                    <rect x="68" y="198" width="100" height="6" rx="3" fill="#0f5c4d"/>
-                    <rect x="380" y="64" width="216" height="192" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.22"/>
-                    <rect x="404" y="92" width="168" height="72" rx="8" fill="#ffffff" fill-opacity="0.16"/>
-                    <rect x="404" y="182" width="128" height="10" rx="4" fill="#ffffff" fill-opacity="0.72"/>
-                    <rect x="404" y="204" width="96" height="8" rx="4" fill="#ffffff" fill-opacity="0.45"/>
-                  </svg>
+                <div class="hero-demo-cover">
+                  <img
+                    class="hero-demo-photo"
+                    src="img/panaderia-portada.jpg"
+                    alt="Mostrador de Panadería La Espiga con conchas y bolillos recién horneados"
+                    width="960"
+                    height="536"
+                    decoding="async"
+                  >
                 </div>
                 <p class="biz-title hero-demo-title">Pan recién horneado en Guadalajara</p>
                 <p class="biz-intro">Preparamos conchas, bolillos y pasteles sobre pedido cada mañana. Escríbenos para apartar antes de pasar.</p>
@@ -162,28 +149,34 @@
       </div>
     </section>
 
-    <!-- Plantillas reales -->
+    <!-- Plantillas reales renderizadas con Panadería La Espiga (Guadalajara) -->
     <section id="plantillas" class="landing-section landing-section-alt" aria-labelledby="titulo-plantillas">
       <div class="container container-wide">
         <div class="section-head">
           <h2 id="titulo-plantillas">Tres plantillas sobrias, listas para tu negocio</h2>
-          <p class="section-sub">Puedes cambiar de plantilla en cualquier momento sin perder tus textos ni tu portada.</p>
+          <p class="section-sub">Vista previa real de cómo cambia tu página entre Clásica, Editorial y Directa sin perder tus textos ni tu portada.</p>
         </div>
 
         <div class="home-templates-grid">
           <article class="home-tpl-card">
-            <div class="tpl-thumb tpl-thumb-clasica tpl-thumb-lg" aria-hidden="true">
-              <div class="tpl-thumb-bar"><span></span><span></span></div>
-              <div class="tpl-thumb-hero">
-                <div class="tpl-thumb-cover"></div>
-                <div class="tpl-thumb-line w-80"></div>
-                <div class="tpl-thumb-line w-60"></div>
+            <div class="tpl-real-preview biz-page biz-template-clasica" aria-label="Vista en miniatura de plantilla Clásica con Panadería La Espiga">
+              <div class="tpl-mini-topbar biz-topbar">
+                <span class="tpl-mini-brand biz-topbar-name">Panadería La Espiga</span>
+                <span class="tpl-mini-city biz-topbar-city">Guadalajara</span>
               </div>
-              <div class="tpl-thumb-cards">
-                <div class="tpl-thumb-card"></div>
-                <div class="tpl-thumb-card"></div>
+              <div class="tpl-mini-body">
+                <div class="tpl-mini-hero biz-hero">
+                  <img class="tpl-mini-photo" src="img/panaderia-portada.jpg" alt="Portada en plantilla Clásica de Panadería La Espiga" loading="lazy" width="960" height="536">
+                  <p class="tpl-mini-title">Pan recién horneado en Guadalajara</p>
+                  <p class="tpl-mini-desc">Conchas, bolillos y pasteles sobre pedido cada mañana.</p>
+                </div>
+                <p class="tpl-mini-sec-title biz-section-title">Menú y especialidades</p>
+                <div class="tpl-mini-grid">
+                  <div class="tpl-mini-card">Pan dulce del día</div>
+                  <div class="tpl-mini-card">Pasteles sobre pedido</div>
+                </div>
+                <div class="tpl-mini-cta">Hacer pedido por WhatsApp</div>
               </div>
-              <div class="tpl-thumb-btn"></div>
             </div>
             <h3>Clásica</h3>
             <p>Equilibrada y clara, con encabezados limpios y tarjetas bien separadas para cualquier giro.</p>
@@ -191,19 +184,24 @@
           </article>
 
           <article class="home-tpl-card">
-            <div class="tpl-thumb tpl-thumb-editorial tpl-thumb-lg" aria-hidden="true">
-              <div class="tpl-thumb-bar"><span></span><span></span></div>
-              <div class="tpl-thumb-hero centered">
-                <div class="tpl-thumb-cover"></div>
-                <div class="tpl-thumb-line w-70"></div>
-                <div class="tpl-thumb-line w-50"></div>
+            <div class="tpl-real-preview biz-page biz-template-editorial" aria-label="Vista en miniatura de plantilla Editorial con Panadería La Espiga">
+              <div class="tpl-mini-topbar biz-topbar">
+                <span class="tpl-mini-brand biz-topbar-name">Panadería La Espiga</span>
+                <span class="tpl-mini-city biz-topbar-city">Guadalajara</span>
               </div>
-              <div class="tpl-thumb-rule"></div>
-              <div class="tpl-thumb-cards">
-                <div class="tpl-thumb-card"></div>
-                <div class="tpl-thumb-card"></div>
+              <div class="tpl-mini-body">
+                <div class="tpl-mini-hero biz-hero">
+                  <img class="tpl-mini-photo" src="img/panaderia-portada.jpg" alt="Portada en plantilla Editorial de Panadería La Espiga" loading="lazy" width="960" height="536">
+                  <p class="tpl-mini-title">Pan recién horneado en Guadalajara</p>
+                  <p class="tpl-mini-desc">Conchas, bolillos y pasteles sobre pedido cada mañana.</p>
+                </div>
+                <p class="tpl-mini-sec-title biz-section-title">Menú y especialidades</p>
+                <div class="tpl-mini-grid">
+                  <div class="tpl-mini-card">Pan dulce del día</div>
+                  <div class="tpl-mini-card">Pasteles sobre pedido</div>
+                </div>
+                <div class="tpl-mini-cta">Hacer pedido por WhatsApp</div>
               </div>
-              <div class="tpl-thumb-btn"></div>
             </div>
             <h3>Editorial</h3>
             <p>Portada centrada y divisores finos, ideal para estudios, consultorios, cafeterías y marcas sobrias.</p>
@@ -211,18 +209,24 @@
           </article>
 
           <article class="home-tpl-card">
-            <div class="tpl-thumb tpl-thumb-directa tpl-thumb-lg" aria-hidden="true">
-              <div class="tpl-thumb-bar filled"><span></span><span></span></div>
-              <div class="tpl-thumb-hero">
-                <div class="tpl-thumb-cover"></div>
-                <div class="tpl-thumb-line w-85"></div>
-                <div class="tpl-thumb-line w-60"></div>
+            <div class="tpl-real-preview biz-page biz-template-directa" aria-label="Vista en miniatura de plantilla Directa con Panadería La Espiga">
+              <div class="tpl-mini-topbar biz-topbar">
+                <span class="tpl-mini-brand biz-topbar-name">Panadería La Espiga</span>
+                <span class="tpl-mini-city biz-topbar-city">Guadalajara</span>
               </div>
-              <div class="tpl-thumb-cards">
-                <div class="tpl-thumb-card"></div>
-                <div class="tpl-thumb-card"></div>
+              <div class="tpl-mini-body">
+                <div class="tpl-mini-hero biz-hero">
+                  <img class="tpl-mini-photo" src="img/panaderia-portada.jpg" alt="Portada en plantilla Directa de Panadería La Espiga" loading="lazy" width="960" height="536">
+                  <p class="tpl-mini-title">Pan recién horneado en Guadalajara</p>
+                  <p class="tpl-mini-desc">Conchas, bolillos y pasteles sobre pedido cada mañana.</p>
+                </div>
+                <p class="tpl-mini-sec-title biz-section-title">Menú y especialidades</p>
+                <div class="tpl-mini-grid">
+                  <div class="tpl-mini-card">Pan dulce del día</div>
+                  <div class="tpl-mini-card">Pasteles sobre pedido</div>
+                </div>
+                <div class="tpl-mini-cta">Hacer pedido por WhatsApp</div>
               </div>
-              <div class="tpl-thumb-btn"></div>
             </div>
             <h3>Directa</h3>
             <p>Encabezado de alto contraste en verde profundo para negocios que buscan pedidos y citas rápidas.</p>
