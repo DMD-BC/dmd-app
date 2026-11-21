@@ -11,7 +11,7 @@
 
 const MODELO = "gemini-3.8-flash";
 const URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/" + MODELO + ":generateContent";
-const MAX_OUTPUT_TOKENS = 3000;
+const MAX_OUTPUT_TOKENS = 2500;
 
 const PERFILES_DISENO_GIRO = {
   panaderia: {
