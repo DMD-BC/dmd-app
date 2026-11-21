@@ -14,10 +14,9 @@
       : "";
 
   const FUENTES_MAPA = {
-    sistema:
-      'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    sistema: "var(--font-sans)",
     editorial: 'Georgia, "Times New Roman", Times, serif',
-    moderna: '"Trebuchet MS", "Segoe UI", Roboto, Arial, sans-serif'
+    moderna: "var(--font-display)"
   };
 
   const SECCIONES_DEFECTO = [
