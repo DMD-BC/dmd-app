@@ -349,7 +349,8 @@ a:hover {
    ========================================================================== */
 main {
   flex: 1 0 auto;
-  padding-block: 28px 52px;
+  padding-top: 28px;
+  padding-bottom: calc(52px + var(--safe-bottom));
 }
 
 .section {
