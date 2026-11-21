@@ -85,8 +85,12 @@ const idCrudo = u.id !== undefined && u.id !== null ? u.id : u._id !== undefined
 if (!idCrudo && !correo) return null;
 const nombreBase = limpiarTextoCuenta(u.name || u.nombre || u.fullName || u.displayName || "");
 const nombre = nombreBase || (correo ? correo.split("@")[0] : "Usuario");
+const username = limpiarTextoCuenta(u.username || u.usuario || "").replace(/^@+/, "");
+const bio = String(u.bio || u.biografia || "").trim();
+const website = String(u.website || u.sitioWeb || u.sitio_web || "").trim();
+const avatar = String(u.avatar || u.avatarUrl || u.picture || u.photoUrl || u.foto || "").trim();
 const cuotaInfo = extraerCuotaTexto(data, u);
-return { id: String(idCrudo), nombre, correo, cuota: cuotaInfo.valor, cuotaTexto: cuotaInfo.texto, db: data.db === true };
+return { id: String(idCrudo), nombre, correo, username, bio, website, avatar, cuota: cuotaInfo.valor, cuotaTexto: cuotaInfo.texto, db: data.db === true };
 }
 async function solicitarAuth(ruta, opciones) {
 const metodo = (opciones && opciones.method) || "GET";
@@ -294,6 +298,25 @@ return { ok: false, noDisponible: false, mensaje: res.mensaje || "Código incorr
 await verificarSesionDesdeServidor("phone-otp");
 const msgServidor = res.data && typeof res.data === "object" ? (res.data.message || res.data.mensaje || "") : "";
 return { ok: true, mensaje: msgServidor || "Tu número de teléfono quedó confirmado." };
+},
+async actualizarPerfil({ nombre, username, bio, website, avatar }) {
+const payload = {
+name: limpiarTextoCuenta(nombre),
+username: limpiarTextoCuenta(username).replace(/^@+/, ""),
+bio: String(bio || "").trim(),
+website: String(website || "").trim(),
+avatar: String(avatar || "").trim()
+};
+const res = await solicitarAuth("/profile", { method: "PUT", body: payload });
+if (res.status === 404 || res.status === 405 || res.status === 501 || res.sinConexion) {
+return { ok: false, noDisponible: true, mensaje: "Perfil guardado en este navegador. La sincronización con el servidor aún no está disponible." };
+}
+if (!res.ok || (res.data && res.data.ok === false)) {
+return { ok: false, noDisponible: false, mensaje: res.mensaje || "Perfil guardado en este navegador, pero no se pudo sincronizar con el servidor." };
+}
+await verificarSesionDesdeServidor("profile");
+const msgServidor = res.data && typeof res.data === "object" ? (res.data.message || res.data.mensaje || "") : "";
+return { ok: true, sincronizado: true, mensaje: msgServidor || "Perfil guardado y sincronizado con tu cuenta." };
 }
 };
 window.dmdCuenta = dmdCuenta;

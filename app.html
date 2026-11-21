@@ -716,13 +716,13 @@
         </div>
       </section>
 
-      <!-- Vista 6: Mi cuenta (datos reales de /api/auth/me, /api/usage y /subscription + mini login integrado) -->
+      <!-- Vista 6: Mi cuenta (perfil, Creados/Guardados, datos reales de /api/auth/me, /api/usage y /subscription + mini login integrado) -->
       <section id="vista-cuenta" class="app-subview" aria-labelledby="titulo-vista-cuenta" hidden>
         <div class="subview-inner">
-          <div class="subview-head">
+          <div id="cuenta-vista-head" class="subview-head">
             <div>
               <h2 id="titulo-vista-cuenta">Mi cuenta</h2>
-              <p id="cuenta-vista-subtitulo" class="field-hint">Consulta los datos reales de tu cuenta, uso de cambios y plan actual.</p>
+              <p id="cuenta-vista-subtitulo" class="field-hint">Tu perfil, tus páginas, fotos guardadas y estado de tu plan.</p>
             </div>
           </div>
 
@@ -733,8 +733,83 @@
             </div>
           </div>
 
-          <!-- Panel autenticado con datos reales -->
-          <div id="app-cuenta-autenticada" class="account-inline-stack" hidden>
+          <!-- Panel autenticado con perfil y datos reales -->
+          <div id="app-cuenta-autenticada" class="account-inline-stack profile-account-stack" hidden>
+            <!-- Encabezado de perfil -->
+            <article class="card profile-header-card" aria-label="Perfil de la cuenta">
+              <div class="profile-avatar-ring">
+                <img id="perfil-avatar-img" class="profile-avatar-img" src="" alt="Foto de perfil" hidden>
+                <span id="perfil-avatar-iniciales" class="profile-avatar-initials" aria-hidden="true"></span>
+              </div>
+
+              <div class="profile-identity">
+                <h3 id="perfil-nombre" class="profile-name"></h3>
+                <p id="perfil-username-row" class="profile-username-row">
+                  <span id="perfil-username" class="profile-username" hidden></span>
+                  <button id="btn-perfil-agregar-username" class="text-link-btn profile-prompt-btn" type="button" hidden>
+                    Agrega un nombre de usuario
+                  </button>
+                </p>
+                <p class="profile-stats">0 seguidores · 0 siguiendo</p>
+              </div>
+
+              <div class="profile-bio-block">
+                <p id="perfil-bio" class="profile-bio" hidden></p>
+                <p id="perfil-bio-vacia" class="profile-bio-empty" hidden>
+                  Sin biografía.
+                  <button id="btn-perfil-agregar-bio" class="text-link-btn profile-prompt-btn" type="button">
+                    Agrega una biografía
+                  </button>
+                </p>
+                <a id="perfil-web" class="profile-website-link" href="" target="_blank" rel="noopener noreferrer" hidden></a>
+              </div>
+
+              <div class="profile-header-actions">
+                <button id="btn-perfil-editar" class="btn btn-secondary profile-edit-btn" type="button">
+                  Editar perfil
+                </button>
+              </div>
+
+              <p id="perfil-estado-guardado" class="profile-save-status" role="status" aria-live="polite" hidden></p>
+            </article>
+
+            <!-- Pestañas del perfil: Creados y Guardados -->
+            <section class="profile-tabs-section" aria-label="Contenido de tu perfil">
+              <div class="profile-tabs" role="tablist" aria-label="Secciones del perfil">
+                <button id="tab-perfil-creados" class="profile-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panel-perfil-creados" data-perfil-tab="creados">
+                  Creados
+                </button>
+                <button id="tab-perfil-guardados" class="profile-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-perfil-guardados" data-perfil-tab="guardados">
+                  Guardados
+                </button>
+              </div>
+
+              <div id="panel-perfil-creados" class="profile-tab-panel" role="tabpanel" aria-labelledby="tab-perfil-creados">
+                <div id="perfil-creados-vacio" class="empty-state-box" hidden>
+                  <p><strong>Aún no tienes páginas creadas</strong></p>
+                  <p class="field-hint">Tus borradores y páginas publicadas aparecerán aquí cuando crees una desde el chat.</p>
+                  <button id="btn-perfil-creados-ir-chat" class="btn btn-primary btn-sm" type="button">Ir al chat</button>
+                </div>
+                <div id="grid-perfil-creados" class="profile-created-grid" hidden></div>
+              </div>
+
+              <div id="panel-perfil-guardados" class="profile-tab-panel" role="tabpanel" aria-labelledby="tab-perfil-guardados" hidden>
+                <div class="profile-saved-toolbar">
+                  <p class="field-hint">Fotos subidas en tus páginas o guardadas desde tu dispositivo.</p>
+                  <label class="btn btn-secondary btn-sm upload-label" for="perfil-input-guardar-foto">Subir foto</label>
+                  <input id="perfil-input-guardar-foto" type="file" accept="image/*" hidden>
+                </div>
+                <p id="perfil-guardados-estado" class="field-hint" role="status" aria-live="polite" hidden></p>
+                <div id="perfil-guardados-vacio" class="empty-state-box" hidden>
+                  <p><strong>Aún no tienes fotos guardadas</strong></p>
+                  <p class="field-hint">Las fotografías que subas en tus páginas o guardes desde aquí aparecerán en esta pestaña.</p>
+                  <label class="btn btn-primary btn-sm upload-label" for="perfil-input-guardar-foto">Subir foto</label>
+                </div>
+                <div id="grid-perfil-guardados" class="profile-saved-grid" hidden></div>
+              </div>
+            </section>
+
+            <!-- Resumen de cuenta, plan y uso -->
             <article class="card account-inline-card">
               <div class="account-inline-head">
                 <div>
@@ -767,6 +842,68 @@
               </div>
               <p id="app-cuenta-estado" class="status-banner" role="status" aria-live="polite"></p>
             </article>
+          </div>
+
+          <!-- Vista aparte: Editar perfil -->
+          <div id="app-cuenta-editar-perfil" class="profile-edit-view" aria-labelledby="titulo-editar-perfil" hidden>
+            <div class="profile-edit-topbar">
+              <button id="btn-perfil-cancelar" class="btn btn-secondary btn-sm profile-edit-nav-btn" type="button">
+                Volver
+              </button>
+              <h2 id="titulo-editar-perfil" class="profile-edit-title">Editar perfil</h2>
+              <button id="btn-perfil-guardar" class="btn btn-primary btn-sm profile-edit-nav-btn" type="submit" form="form-editar-perfil">
+                Listo
+              </button>
+            </div>
+
+            <form id="form-editar-perfil" class="card profile-edit-card form-grid" novalidate>
+              <div id="error-perfil-general" class="form-error-summary" role="alert" hidden></div>
+
+              <div class="profile-edit-avatar-block">
+                <div class="profile-avatar-ring profile-avatar-ring-lg">
+                  <img id="perfil-edit-avatar-img" class="profile-avatar-img" src="" alt="Vista previa de tu foto de perfil" hidden>
+                  <span id="perfil-edit-avatar-iniciales" class="profile-avatar-initials" aria-hidden="true"></span>
+                </div>
+                <div class="profile-edit-avatar-actions">
+                  <label class="btn btn-secondary btn-sm upload-label" for="perfil-input-foto">Editar</label>
+                  <input id="perfil-input-foto" type="file" accept="image/*" hidden>
+                  <button id="btn-perfil-quitar-foto" class="btn btn-danger-ghost btn-sm" type="button" hidden>Quitar</button>
+                </div>
+                <p id="error-perfil-foto" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="perfil-input-nombre">Nombre <span class="required-mark" aria-hidden="true">*</span></label>
+                <input id="perfil-input-nombre" name="name" class="input" type="text" maxlength="80" autocomplete="name" placeholder="Tu nombre" aria-describedby="error-perfil-nombre">
+                <p id="error-perfil-nombre" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="perfil-input-username">Nombre de usuario</label>
+                <div class="profile-username-input-wrap">
+                  <span class="profile-username-prefix" aria-hidden="true">@</span>
+                  <input id="perfil-input-username" name="username" class="input profile-username-input" type="text" maxlength="30" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Agrega un nombre de usuario" aria-describedby="pista-perfil-username error-perfil-username">
+                </div>
+                <p id="pista-perfil-username" class="field-hint">Opcional. Agrega un nombre de usuario usando letras, números, punto o guion bajo.</p>
+                <p id="error-perfil-username" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <div class="field-label-row">
+                  <label class="field-label" for="perfil-input-bio">Biografía</label>
+                  <span id="perfil-bio-cuenta" class="char-counter">0 / 180</span>
+                </div>
+                <textarea id="perfil-input-bio" name="bio" class="textarea" rows="3" maxlength="180" placeholder="Cuéntale a tus clientes quién eres o qué ofrece tu negocio"></textarea>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="perfil-input-web">Sitio web</label>
+                <input id="perfil-input-web" name="website" class="input" type="url" maxlength="160" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="https://tunegocio.com" aria-describedby="error-perfil-web">
+                <p id="error-perfil-web" class="field-error" aria-live="polite"></p>
+              </div>
+
+              <p class="field-hint">Los cambios se guardan de inmediato en este navegador y se sincronizarán con tu cuenta cuando el servicio de perfil esté activo.</p>
+            </form>
           </div>
 
           <!-- Mini login integrado dentro de la app (sin salir de app.html) -->

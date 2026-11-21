@@ -285,8 +285,10 @@
     const inputImportar = document.getElementById("input-importar-respaldo");
     const estadoRespaldo = document.getElementById("estado-respaldo-sidebar");
 
+    const cuentaVistaHead = document.getElementById("cuenta-vista-head");
     const appCuentaCargando = document.getElementById("app-cuenta-cargando");
     const appCuentaAutenticada = document.getElementById("app-cuenta-autenticada");
+    const appCuentaEditarPerfil = document.getElementById("app-cuenta-editar-perfil");
     const appCuentaMiniLogin = document.getElementById("app-cuenta-mini-login");
     const appCuentaNombre = document.getElementById("app-cuenta-nombre");
     const appCuentaCorreo = document.getElementById("app-cuenta-correo");
@@ -300,6 +302,47 @@
     const btnAppCuentaVerPlanes = document.getElementById("btn-app-cuenta-ver-planes");
     const btnAppCuentaRefrescar = document.getElementById("btn-app-cuenta-refrescar");
     const btnAppCuentaSalir = document.getElementById("btn-app-cuenta-salir");
+
+    const perfilAvatarImg = document.getElementById("perfil-avatar-img");
+    const perfilAvatarIniciales = document.getElementById("perfil-avatar-iniciales");
+    const perfilNombre = document.getElementById("perfil-nombre");
+    const perfilUsername = document.getElementById("perfil-username");
+    const btnPerfilAgregarUsername = document.getElementById("btn-perfil-agregar-username");
+    const perfilBio = document.getElementById("perfil-bio");
+    const perfilBioVacia = document.getElementById("perfil-bio-vacia");
+    const btnPerfilAgregarBio = document.getElementById("btn-perfil-agregar-bio");
+    const perfilWeb = document.getElementById("perfil-web");
+    const btnPerfilEditar = document.getElementById("btn-perfil-editar");
+    const perfilEstadoGuardado = document.getElementById("perfil-estado-guardado");
+
+    const botonesTabPerfil = Array.from(document.querySelectorAll("[data-perfil-tab]"));
+    const panelPerfilCreados = document.getElementById("panel-perfil-creados");
+    const panelPerfilGuardados = document.getElementById("panel-perfil-guardados");
+    const perfilCreadosVacio = document.getElementById("perfil-creados-vacio");
+    const btnPerfilCreadosIrChat = document.getElementById("btn-perfil-creados-ir-chat");
+    const gridPerfilCreados = document.getElementById("grid-perfil-creados");
+    const perfilInputGuardarFoto = document.getElementById("perfil-input-guardar-foto");
+    const perfilGuardadosEstado = document.getElementById("perfil-guardados-estado");
+    const perfilGuardadosVacio = document.getElementById("perfil-guardados-vacio");
+    const gridPerfilGuardados = document.getElementById("grid-perfil-guardados");
+
+    const formEditarPerfil = document.getElementById("form-editar-perfil");
+    const btnPerfilCancelar = document.getElementById("btn-perfil-cancelar");
+    const btnPerfilGuardar = document.getElementById("btn-perfil-guardar");
+    const errorPerfilGeneral = document.getElementById("error-perfil-general");
+    const perfilEditAvatarImg = document.getElementById("perfil-edit-avatar-img");
+    const perfilEditAvatarIniciales = document.getElementById("perfil-edit-avatar-iniciales");
+    const perfilInputFoto = document.getElementById("perfil-input-foto");
+    const btnPerfilQuitarFoto = document.getElementById("btn-perfil-quitar-foto");
+    const errorPerfilFoto = document.getElementById("error-perfil-foto");
+    const perfilInputNombre = document.getElementById("perfil-input-nombre");
+    const errorPerfilNombre = document.getElementById("error-perfil-nombre");
+    const perfilInputUsername = document.getElementById("perfil-input-username");
+    const errorPerfilUsername = document.getElementById("error-perfil-username");
+    const perfilInputBio = document.getElementById("perfil-input-bio");
+    const perfilBioCuenta = document.getElementById("perfil-bio-cuenta");
+    const perfilInputWeb = document.getElementById("perfil-input-web");
+    const errorPerfilWeb = document.getElementById("error-perfil-web");
 
     const miniLoginAvisoServicio = document.getElementById("app-mini-login-aviso-servicio");
     const miniLoginAvisoTitulo = document.getElementById("app-mini-login-aviso-titulo");
@@ -377,6 +420,14 @@
 
     let cuentaDatosCargadosParaId = "";
     let miniLoginEnviando = false;
+
+    const KEY_PERFILES_LOCAL = "dmd_perfiles_v1";
+    const KEY_FOTOS_GUARDADAS_LOCAL = "dmd_fotos_guardadas_v1";
+    let tabPerfilActual = "creados";
+    let editandoPerfilActivo = false;
+    let avatarBorradorEditar = "";
+    let perfilGuardandoAhora = false;
+    let perfilAvisoTexto = "";
 
     let plantillaInicialUrl = "";
     try {
@@ -994,6 +1045,9 @@
     function cambiarVistaApp(nuevaVista) {
       const permitidas = ["chat", "editor", "archivos", "proyectos", "suscripcion", "cuenta"];
       const destino = permitidas.includes(nuevaVista) ? nuevaVista : "chat";
+      if (destino !== "cuenta") {
+        editandoPerfilActivo = false;
+      }
       vistaActual = destino;
       modoActual = destino === "editor" ? "editor" : "chat";
 
@@ -3766,6 +3820,708 @@
       }
     }
 
+    function leerJsonLocalSeguro(clave, fallback) {
+      try {
+        if (!window.localStorage) {
+          return fallback;
+        }
+        const crudo = window.localStorage.getItem(clave);
+        if (!crudo) {
+          return fallback;
+        }
+        const parsed = JSON.parse(crudo);
+        return parsed && typeof parsed === "object" ? parsed : fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function guardarJsonLocalSeguro(clave, valor) {
+      try {
+        if (!window.localStorage) {
+          return { ok: false, cuota: false };
+        }
+        window.localStorage.setItem(clave, JSON.stringify(valor));
+        return { ok: true, cuota: false };
+      } catch (error) {
+        const esCuota = Boolean(
+          error &&
+            (error.name === "QuotaExceededError" ||
+              error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+              error.code === 22)
+        );
+        return { ok: false, cuota: esCuota };
+      }
+    }
+
+    function obtenerInicialesPerfil(nombre, correo) {
+      const base = String(nombre || correo || "U").trim();
+      const partes = base.split(/\s+/).filter(Boolean);
+      if (partes.length >= 2) {
+        return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
+      }
+      return base.slice(0, 2).toUpperCase() || "U";
+    }
+
+    function obtenerPerfilLocal(cuentaId) {
+      if (!cuentaId) {
+        return null;
+      }
+      const mapa = leerJsonLocalSeguro(KEY_PERFILES_LOCAL, {});
+      const item = mapa[String(cuentaId)];
+      return item && typeof item === "object" ? item : null;
+    }
+
+    function guardarPerfilLocal(cuentaId, datos) {
+      if (!cuentaId) {
+        return { ok: false, cuota: false };
+      }
+      const mapa = leerJsonLocalSeguro(KEY_PERFILES_LOCAL, {});
+      mapa[String(cuentaId)] = {
+        nombre: String(datos.nombre || "").trim(),
+        username: String(datos.username || "").trim().replace(/^@+/, ""),
+        bio: String(datos.bio || "").trim(),
+        website: String(datos.website || "").trim(),
+        avatar: String(datos.avatar || "").trim(),
+        actualizadoEn: new Date().toISOString()
+      };
+      return guardarJsonLocalSeguro(KEY_PERFILES_LOCAL, mapa);
+    }
+
+    function obtenerPerfilCombinado(sesion) {
+      if (!sesion) {
+        return {
+          nombre: "",
+          username: "",
+          bio: "",
+          website: "",
+          avatar: ""
+        };
+      }
+      const local = obtenerPerfilLocal(sesion.id);
+      const nombre =
+        local && local.nombre !== undefined
+          ? local.nombre || sesion.nombre || "Tu cuenta"
+          : sesion.nombre || "Tu cuenta";
+      const username =
+        local && local.username !== undefined
+          ? String(local.username || "").replace(/^@+/, "")
+          : String(sesion.username || "").replace(/^@+/, "");
+      const bio =
+        local && local.bio !== undefined ? String(local.bio || "") : String(sesion.bio || "");
+      const website =
+        local && local.website !== undefined
+          ? String(local.website || "")
+          : String(sesion.website || "");
+      const avatar =
+        local && local.avatar !== undefined
+          ? String(local.avatar || "")
+          : String(sesion.avatar || "");
+      return { nombre, username, bio, website, avatar };
+    }
+
+    function normalizarSitioWebPerfil(valor) {
+      const crudo = String(valor || "").trim();
+      if (!crudo) {
+        return { ok: true, url: "", display: "" };
+      }
+      if (/^(javascript|data|vbscript):/i.test(crudo)) {
+        return { ok: false, url: "", display: "" };
+      }
+      const conProtocolo = /^https?:\/\//i.test(crudo) ? crudo : `https://${crudo}`;
+      try {
+        const parsed = new URL(conProtocolo);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          return { ok: false, url: "", display: "" };
+        }
+        if (!parsed.hostname || !parsed.hostname.includes(".")) {
+          return { ok: false, url: "", display: "" };
+        }
+        const display = parsed.href.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+        return { ok: true, url: parsed.href, display };
+      } catch (error) {
+        return { ok: false, url: "", display: "" };
+      }
+    }
+
+    function aplicarAvatarElemento(imgEl, inicialesEl, avatarUrl, nombre, correo) {
+      const urlLimpia = String(avatarUrl || "").trim();
+      const esValida =
+        urlLimpia.startsWith("data:image/") || /^https?:\/\//i.test(urlLimpia);
+      if (imgEl && esValida) {
+        imgEl.src = urlLimpia;
+        imgEl.alt = nombre ? `Foto de perfil de ${nombre}` : "Foto de perfil";
+        imgEl.hidden = false;
+        if (inicialesEl) {
+          inicialesEl.hidden = true;
+        }
+      } else {
+        if (imgEl) {
+          imgEl.hidden = true;
+          imgEl.removeAttribute("src");
+        }
+        if (inicialesEl) {
+          inicialesEl.textContent = obtenerInicialesPerfil(nombre, correo);
+          inicialesEl.hidden = false;
+        }
+      }
+    }
+
+    function comprimirFotoLocal(archivo, maxAncho) {
+      if (
+        window.dmdGenerador &&
+        typeof window.dmdGenerador.comprimirImagenArchivo === "function"
+      ) {
+        return window.dmdGenerador.comprimirImagenArchivo(archivo, maxAncho);
+      }
+      return new Promise((resolve, reject) => {
+        if (!archivo || !String(archivo.type || "").toLowerCase().startsWith("image/")) {
+          reject(new Error("Solo se permiten archivos de imagen."));
+          return;
+        }
+        const lector = new FileReader();
+        lector.onerror = () => reject(new Error("No se pudo leer la imagen."));
+        lector.onload = () => resolve(String(lector.result || ""));
+        lector.readAsDataURL(archivo);
+      });
+    }
+
+    function obtenerProyectosPerfil() {
+      const prop = propietarioActual();
+      const borradores = borradoresDelPropietario();
+      const slugsVistos = new Set();
+      borradores.forEach((b) => {
+        if (b && b.publicadaSlug) {
+          slugsVistos.add(b.publicadaSlug);
+        }
+      });
+      const soloPublicadas = todasPublicadas
+        .filter((p) => p && p.cuentaId === prop && p.slug && !slugsVistos.has(p.slug))
+        .map((p) => Object.assign({}, p, { publicadaSlug: p.slug }));
+      return borradores.concat(soloPublicadas);
+    }
+
+    function obtenerFotosGuardadasLocales(prop) {
+      const mapa = leerJsonLocalSeguro(KEY_FOTOS_GUARDADAS_LOCAL, {});
+      const lista = mapa[String(prop || "invitado")];
+      return Array.isArray(lista) ? lista.filter((x) => x && x.dataUrl) : [];
+    }
+
+    function guardarFotosGuardadasLocales(prop, lista) {
+      const mapa = leerJsonLocalSeguro(KEY_FOTOS_GUARDADAS_LOCAL, {});
+      mapa[String(prop || "invitado")] = lista;
+      return guardarJsonLocalSeguro(KEY_FOTOS_GUARDADAS_LOCAL, mapa);
+    }
+
+    function obtenerFotosGuardadasCombinadas() {
+      const prop = propietarioActual();
+      const vistos = new Set();
+      const items = [];
+
+      obtenerFotosGuardadasLocales(prop).forEach((foto) => {
+        const url = String(foto.dataUrl || "");
+        if (url.startsWith("data:image/") && !vistos.has(url)) {
+          vistos.add(url);
+          items.push({
+            id: foto.id || "",
+            dataUrl: url,
+            tipo: "Foto guardada",
+            negocio: foto.nombre || "Tu dispositivo",
+            alt: foto.nombre || "Foto guardada",
+            esPropiaGuardada: true
+          });
+        }
+      });
+
+      obtenerMediaSubidaUsuario().forEach((item) => {
+        if (item && item.dataUrl && !vistos.has(item.dataUrl)) {
+          vistos.add(item.dataUrl);
+          items.push(Object.assign({}, item, { esPropiaGuardada: false }));
+        }
+      });
+
+      return items;
+    }
+
+    function renderizarPerfilCreados() {
+      if (!gridPerfilCreados || !perfilCreadosVacio) {
+        return;
+      }
+      const lista = obtenerProyectosPerfil();
+      gridPerfilCreados.textContent = "";
+      if (lista.length === 0) {
+        perfilCreadosVacio.hidden = false;
+        gridPerfilCreados.hidden = true;
+        return;
+      }
+      perfilCreadosVacio.hidden = true;
+      gridPerfilCreados.hidden = false;
+      lista.forEach((reg) => {
+        gridPerfilCreados.appendChild(construirMiniVentanaPagina(reg));
+      });
+    }
+
+    function eliminarFotoGuardadaPerfil(fotoId) {
+      if (!fotoId) {
+        return;
+      }
+      const prop = propietarioActual();
+      const actuales = obtenerFotosGuardadasLocales(prop);
+      const filtradas = actuales.filter((f) => f && f.id !== fotoId);
+      guardarFotosGuardadasLocales(prop, filtradas);
+      if (perfilGuardadosEstado) {
+        perfilGuardadosEstado.textContent = "Foto eliminada de tus guardados.";
+        perfilGuardadosEstado.hidden = false;
+      }
+      renderizarPerfilGuardados();
+    }
+
+    function renderizarPerfilGuardados() {
+      if (!gridPerfilGuardados || !perfilGuardadosVacio) {
+        return;
+      }
+      const fotos = obtenerFotosGuardadasCombinadas();
+      gridPerfilGuardados.textContent = "";
+      if (fotos.length === 0) {
+        perfilGuardadosVacio.hidden = false;
+        gridPerfilGuardados.hidden = true;
+        return;
+      }
+      perfilGuardadosVacio.hidden = true;
+      gridPerfilGuardados.hidden = false;
+
+      fotos.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "profile-saved-item";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "media-thumb-btn profile-saved-btn";
+        btn.setAttribute("aria-label", `Ver ${item.tipo}: ${item.negocio}`);
+        btn.addEventListener("click", () => abrirModalMedia(item));
+
+        const img = document.createElement("img");
+        img.className = "media-thumb-img";
+        img.src = item.dataUrl;
+        img.alt = item.alt;
+        img.loading = "lazy";
+
+        const cap = document.createElement("span");
+        cap.className = "media-thumb-caption";
+        cap.textContent = item.esPropiaGuardada
+          ? item.negocio
+          : `${item.tipo} · ${item.negocio}`;
+
+        btn.appendChild(img);
+        btn.appendChild(cap);
+        card.appendChild(btn);
+
+        if (item.esPropiaGuardada && item.id) {
+          const btnDel = document.createElement("button");
+          btnDel.type = "button";
+          btnDel.className = "profile-saved-remove-btn";
+          btnDel.setAttribute("aria-label", `Quitar ${item.negocio} de guardados`);
+          btnDel.textContent = "Quitar";
+          btnDel.addEventListener("click", (e) => {
+            e.stopPropagation();
+            eliminarFotoGuardadaPerfil(item.id);
+          });
+          card.appendChild(btnDel);
+        }
+
+        gridPerfilGuardados.appendChild(card);
+      });
+    }
+
+    function cambiarTabPerfil(tab) {
+      tabPerfilActual = tab === "guardados" ? "guardados" : "creados";
+      botonesTabPerfil.forEach((btn) => {
+        const activo = btn.dataset.perfilTab === tabPerfilActual;
+        btn.classList.toggle("is-active", activo);
+        btn.setAttribute("aria-selected", activo ? "true" : "false");
+      });
+      if (panelPerfilCreados) {
+        panelPerfilCreados.hidden = tabPerfilActual !== "creados";
+      }
+      if (panelPerfilGuardados) {
+        panelPerfilGuardados.hidden = tabPerfilActual !== "guardados";
+      }
+      if (tabPerfilActual === "creados") {
+        renderizarPerfilCreados();
+      } else {
+        renderizarPerfilGuardados();
+      }
+    }
+
+    function renderizarPerfilCuenta(sesion) {
+      if (!sesion) {
+        return;
+      }
+      const perfil = obtenerPerfilCombinado(sesion);
+
+      aplicarAvatarElemento(
+        perfilAvatarImg,
+        perfilAvatarIniciales,
+        perfil.avatar,
+        perfil.nombre,
+        sesion.correo
+      );
+
+      if (perfilNombre) {
+        perfilNombre.textContent = perfil.nombre || "Tu cuenta";
+      }
+      if (appCuentaNombre) {
+        appCuentaNombre.textContent = perfil.nombre || "Tu cuenta";
+      }
+
+      if (perfil.username) {
+        if (perfilUsername) {
+          perfilUsername.textContent = `@${perfil.username}`;
+          perfilUsername.hidden = false;
+        }
+        if (btnPerfilAgregarUsername) {
+          btnPerfilAgregarUsername.hidden = true;
+        }
+      } else {
+        if (perfilUsername) {
+          perfilUsername.textContent = "";
+          perfilUsername.hidden = true;
+        }
+        if (btnPerfilAgregarUsername) {
+          btnPerfilAgregarUsername.hidden = false;
+        }
+      }
+
+      if (perfil.bio) {
+        if (perfilBio) {
+          perfilBio.textContent = perfil.bio;
+          perfilBio.hidden = false;
+        }
+        if (perfilBioVacia) {
+          perfilBioVacia.hidden = true;
+        }
+      } else {
+        if (perfilBio) {
+          perfilBio.textContent = "";
+          perfilBio.hidden = true;
+        }
+        if (perfilBioVacia) {
+          perfilBioVacia.hidden = false;
+        }
+      }
+
+      const webInfo = normalizarSitioWebPerfil(perfil.website);
+      if (perfilWeb) {
+        if (webInfo.ok && webInfo.url) {
+          perfilWeb.href = webInfo.url;
+          perfilWeb.textContent = webInfo.display;
+          perfilWeb.hidden = false;
+        } else {
+          perfilWeb.removeAttribute("href");
+          perfilWeb.textContent = "";
+          perfilWeb.hidden = true;
+        }
+      }
+
+      if (perfilEstadoGuardado) {
+        if (perfilAvisoTexto) {
+          perfilEstadoGuardado.textContent = perfilAvisoTexto;
+          perfilEstadoGuardado.hidden = false;
+        } else {
+          perfilEstadoGuardado.textContent = "";
+          perfilEstadoGuardado.hidden = true;
+        }
+      }
+
+      cambiarTabPerfil(tabPerfilActual);
+    }
+
+    function actualizarContadorBioPerfil() {
+      if (!perfilBioCuenta || !perfilInputBio) {
+        return;
+      }
+      perfilBioCuenta.textContent = `${String(perfilInputBio.value || "").length} / 180`;
+    }
+
+    function limpiarErroresEditarPerfil() {
+      if (errorPerfilGeneral) {
+        errorPerfilGeneral.textContent = "";
+        errorPerfilGeneral.hidden = true;
+      }
+      if (errorPerfilFoto) {
+        errorPerfilFoto.textContent = "";
+      }
+      fijarErrorMiniCampo(perfilInputNombre, errorPerfilNombre, "");
+      fijarErrorMiniCampo(perfilInputUsername, errorPerfilUsername, "");
+      fijarErrorMiniCampo(perfilInputWeb, errorPerfilWeb, "");
+    }
+
+    function abrirVistaEditarPerfil(campoEnfocar) {
+      const sesion =
+        window.dmdCuenta && typeof window.dmdCuenta.obtenerSesionActual === "function"
+          ? window.dmdCuenta.obtenerSesionActual()
+          : null;
+      if (!sesion) {
+        return;
+      }
+      const perfil = obtenerPerfilCombinado(sesion);
+      avatarBorradorEditar = perfil.avatar || "";
+      limpiarErroresEditarPerfil();
+
+      aplicarAvatarElemento(
+        perfilEditAvatarImg,
+        perfilEditAvatarIniciales,
+        avatarBorradorEditar,
+        perfil.nombre,
+        sesion.correo
+      );
+      if (btnPerfilQuitarFoto) {
+        btnPerfilQuitarFoto.hidden = !avatarBorradorEditar;
+      }
+      if (perfilInputFoto) {
+        perfilInputFoto.value = "";
+      }
+      if (perfilInputNombre) {
+        perfilInputNombre.value = perfil.nombre || "";
+      }
+      if (perfilInputUsername) {
+        perfilInputUsername.value = perfil.username || "";
+      }
+      if (perfilInputBio) {
+        perfilInputBio.value = perfil.bio || "";
+      }
+      if (perfilInputWeb) {
+        perfilInputWeb.value = perfil.website || "";
+      }
+      actualizarContadorBioPerfil();
+
+      editandoPerfilActivo = true;
+      if (cuentaVistaHead) {
+        cuentaVistaHead.hidden = true;
+      }
+      if (appCuentaAutenticada) {
+        appCuentaAutenticada.hidden = true;
+      }
+      if (appCuentaEditarPerfil) {
+        appCuentaEditarPerfil.hidden = false;
+      }
+
+      const mapaFoco = {
+        username: perfilInputUsername,
+        bio: perfilInputBio,
+        web: perfilInputWeb,
+        nombre: perfilInputNombre
+      };
+      const objetivo = mapaFoco[campoEnfocar] || perfilInputNombre;
+      if (objetivo && typeof objetivo.focus === "function") {
+        objetivo.focus();
+      }
+    }
+
+    function cerrarVistaEditarPerfil() {
+      editandoPerfilActivo = false;
+      renderizarMiCuenta(false);
+    }
+
+    async function manejarSubirFotoPerfil(archivo) {
+      if (!archivo) {
+        return;
+      }
+      if (errorPerfilFoto) {
+        errorPerfilFoto.textContent = "";
+      }
+      try {
+        const dataUrl = await comprimirFotoLocal(archivo, 320);
+        avatarBorradorEditar = dataUrl;
+        const sesion =
+          window.dmdCuenta && typeof window.dmdCuenta.obtenerSesionActual === "function"
+            ? window.dmdCuenta.obtenerSesionActual()
+            : null;
+        aplicarAvatarElemento(
+          perfilEditAvatarImg,
+          perfilEditAvatarIniciales,
+          avatarBorradorEditar,
+          (perfilInputNombre && perfilInputNombre.value) || (sesion && sesion.nombre) || "",
+          (sesion && sesion.correo) || ""
+        );
+        if (btnPerfilQuitarFoto) {
+          btnPerfilQuitarFoto.hidden = false;
+        }
+      } catch (error) {
+        if (errorPerfilFoto) {
+          errorPerfilFoto.textContent =
+            (error && error.message) || "No se pudo cargar esa imagen.";
+        }
+      } finally {
+        if (perfilInputFoto) {
+          perfilInputFoto.value = "";
+        }
+      }
+    }
+
+    async function manejarGuardarPerfil(e) {
+      if (e) {
+        e.preventDefault();
+      }
+      if (perfilGuardandoAhora) {
+        return;
+      }
+      const sesion =
+        window.dmdCuenta && typeof window.dmdCuenta.obtenerSesionActual === "function"
+          ? window.dmdCuenta.obtenerSesionActual()
+          : null;
+      if (!sesion) {
+        cerrarVistaEditarPerfil();
+        return;
+      }
+
+      limpiarErroresEditarPerfil();
+
+      const nombre = String((perfilInputNombre && perfilInputNombre.value) || "")
+        .replace(/\s+/g, " ")
+        .trim();
+      const usernameRaw = String((perfilInputUsername && perfilInputUsername.value) || "")
+        .trim()
+        .replace(/^@+/, "");
+      const bio = String((perfilInputBio && perfilInputBio.value) || "").trim();
+      const webRaw = String((perfilInputWeb && perfilInputWeb.value) || "").trim();
+
+      let primero = null;
+      if (!nombre) {
+        fijarErrorMiniCampo(perfilInputNombre, errorPerfilNombre, "Escribe tu nombre.");
+        primero = primero || perfilInputNombre;
+      }
+      if (usernameRaw && !/^[a-zA-Z0-9._]{3,30}$/.test(usernameRaw)) {
+        fijarErrorMiniCampo(
+          perfilInputUsername,
+          errorPerfilUsername,
+          "Usa de 3 a 30 caracteres: letras, números, punto o guion bajo."
+        );
+        primero = primero || perfilInputUsername;
+      }
+      const webCheck = normalizarSitioWebPerfil(webRaw);
+      if (webRaw && !webCheck.ok) {
+        fijarErrorMiniCampo(
+          perfilInputWeb,
+          errorPerfilWeb,
+          "Escribe un sitio web válido, por ejemplo https://tunegocio.com."
+        );
+        primero = primero || perfilInputWeb;
+      }
+      if (primero) {
+        primero.focus();
+        return;
+      }
+
+      const datosGuardar = {
+        nombre,
+        username: usernameRaw,
+        bio,
+        website: webCheck.url,
+        avatar: avatarBorradorEditar
+      };
+
+      const resLocal = guardarPerfilLocal(sesion.id, datosGuardar);
+      if (!resLocal.ok) {
+        if (errorPerfilGeneral) {
+          errorPerfilGeneral.textContent = resLocal.cuota
+            ? "No hay suficiente espacio en este navegador para guardar esta foto. Intenta con una imagen más ligera."
+            : "No se pudo guardar el perfil en este navegador.";
+          errorPerfilGeneral.hidden = false;
+        }
+        return;
+      }
+
+      perfilGuardandoAhora = true;
+      if (btnPerfilGuardar) {
+        btnPerfilGuardar.disabled = true;
+        btnPerfilGuardar.textContent = "Guardando...";
+      }
+
+      perfilAvisoTexto = "Perfil guardado en este navegador.";
+      editandoPerfilActivo = false;
+      renderizarMiCuenta(false);
+
+      try {
+        if (window.dmdCuenta && typeof window.dmdCuenta.actualizarPerfil === "function") {
+          const resSrv = await window.dmdCuenta.actualizarPerfil(datosGuardar);
+          if (resSrv && resSrv.ok && resSrv.sincronizado) {
+            perfilAvisoTexto =
+              resSrv.mensaje || "Perfil guardado y sincronizado con tu cuenta.";
+          } else {
+            perfilAvisoTexto =
+              (resSrv && resSrv.mensaje) ||
+              "Perfil guardado en este navegador. La sincronización con el servidor aún no está disponible.";
+          }
+          if (vistaActual === "cuenta" && !editandoPerfilActivo) {
+            renderizarMiCuenta(false);
+          }
+        }
+      } finally {
+        perfilGuardandoAhora = false;
+        if (btnPerfilGuardar) {
+          btnPerfilGuardar.disabled = false;
+          btnPerfilGuardar.textContent = "Listo";
+        }
+      }
+    }
+
+    async function manejarSubirFotoGuardada(archivo) {
+      if (!archivo) {
+        return;
+      }
+      if (perfilGuardadosEstado) {
+        perfilGuardadosEstado.textContent = "Guardando fotografía...";
+        perfilGuardadosEstado.hidden = false;
+      }
+      try {
+        const dataUrl = await comprimirFotoLocal(archivo, 720);
+        const prop = propietarioActual();
+        const actuales = obtenerFotosGuardadasLocales(prop);
+        if (actuales.some((f) => f && f.dataUrl === dataUrl)) {
+          if (perfilGuardadosEstado) {
+            perfilGuardadosEstado.textContent = "Esa foto ya está en tus guardados.";
+            perfilGuardadosEstado.hidden = false;
+          }
+          return;
+        }
+        const nombreLimpio = String(archivo.name || "Foto guardada")
+          .replace(/\.[^/.]+$/, "")
+          .slice(0, 60);
+        const nueva = {
+          id: crearId("foto"),
+          nombre: nombreLimpio || "Foto guardada",
+          dataUrl,
+          guardadaEn: new Date().toISOString()
+        };
+        const resLocal = guardarFotosGuardadasLocales(prop, [nueva].concat(actuales));
+        if (!resLocal.ok) {
+          if (perfilGuardadosEstado) {
+            perfilGuardadosEstado.textContent = resLocal.cuota
+              ? "No hay suficiente espacio en este navegador para guardar más fotos."
+              : "No se pudo guardar la foto en este navegador.";
+            perfilGuardadosEstado.hidden = false;
+          }
+          return;
+        }
+        if (perfilGuardadosEstado) {
+          perfilGuardadosEstado.textContent = "Foto guardada en este navegador.";
+          perfilGuardadosEstado.hidden = false;
+        }
+        renderizarPerfilGuardados();
+      } catch (error) {
+        if (perfilGuardadosEstado) {
+          perfilGuardadosEstado.textContent =
+            (error && error.message) || "No se pudo cargar esa fotografía.";
+          perfilGuardadosEstado.hidden = false;
+        }
+      } finally {
+        if (perfilInputGuardarFoto) {
+          perfilInputGuardarFoto.value = "";
+        }
+      }
+    }
+
     function renderizarMiCuenta(forzarConsulta) {
       if (!vistaCuenta) {
         return;
@@ -3785,11 +4541,17 @@
           : "";
 
       if (!verificada) {
+        if (cuentaVistaHead) {
+          cuentaVistaHead.hidden = false;
+        }
         if (appCuentaCargando) {
           appCuentaCargando.hidden = false;
         }
         if (appCuentaAutenticada) {
           appCuentaAutenticada.hidden = true;
+        }
+        if (appCuentaEditarPerfil) {
+          appCuentaEditarPerfil.hidden = true;
         }
         if (appCuentaMiniLogin) {
           appCuentaMiniLogin.hidden = true;
@@ -3802,18 +4564,35 @@
       }
 
       if (sesion) {
-        if (appCuentaAutenticada) {
-          appCuentaAutenticada.hidden = false;
-        }
         if (appCuentaMiniLogin) {
           appCuentaMiniLogin.hidden = true;
         }
-        if (appCuentaNombre) {
-          appCuentaNombre.textContent = sesion.nombre || "Tu cuenta";
+        if (editandoPerfilActivo) {
+          if (cuentaVistaHead) {
+            cuentaVistaHead.hidden = true;
+          }
+          if (appCuentaAutenticada) {
+            appCuentaAutenticada.hidden = true;
+          }
+          if (appCuentaEditarPerfil) {
+            appCuentaEditarPerfil.hidden = false;
+          }
+          return;
+        }
+
+        if (cuentaVistaHead) {
+          cuentaVistaHead.hidden = false;
+        }
+        if (appCuentaEditarPerfil) {
+          appCuentaEditarPerfil.hidden = true;
+        }
+        if (appCuentaAutenticada) {
+          appCuentaAutenticada.hidden = false;
         }
         if (appCuentaCorreo) {
           appCuentaCorreo.textContent = sesion.correo || "";
         }
+        renderizarPerfilCuenta(sesion);
         if (forzarConsulta || cuentaDatosCargadosParaId !== sesion.id) {
           cuentaDatosCargadosParaId = sesion.id;
           consultarUsoCuenta(sesion);
@@ -3822,9 +4601,17 @@
         return;
       }
 
+      editandoPerfilActivo = false;
+      perfilAvisoTexto = "";
       cuentaDatosCargadosParaId = "";
+      if (cuentaVistaHead) {
+        cuentaVistaHead.hidden = false;
+      }
       if (appCuentaAutenticada) {
         appCuentaAutenticada.hidden = true;
+      }
+      if (appCuentaEditarPerfil) {
+        appCuentaEditarPerfil.hidden = true;
       }
       if (appCuentaMiniLogin) {
         appCuentaMiniLogin.hidden = false;
@@ -4123,6 +4910,8 @@
             renderizarArchivos();
           } else if (vistaActual === "proyectos") {
             renderizarMisProyectos();
+          } else if (vistaActual === "cuenta" && !editandoPerfilActivo) {
+            renderizarMiCuenta(false);
           }
         },
         alPublicarBorrador(reg) {
@@ -4216,6 +5005,94 @@
     }
     if (btnConfigImportar && inputImportar) {
       btnConfigImportar.addEventListener("click", () => inputImportar.click());
+    }
+
+    botonesTabPerfil.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        cambiarTabPerfil(btn.dataset.perfilTab);
+      });
+    });
+    if (btnPerfilCreadosIrChat) {
+      btnPerfilCreadosIrChat.addEventListener("click", () => cambiarVistaApp("chat"));
+    }
+    if (btnPerfilEditar) {
+      btnPerfilEditar.addEventListener("click", () => abrirVistaEditarPerfil("nombre"));
+    }
+    if (btnPerfilAgregarUsername) {
+      btnPerfilAgregarUsername.addEventListener("click", () =>
+        abrirVistaEditarPerfil("username")
+      );
+    }
+    if (btnPerfilAgregarBio) {
+      btnPerfilAgregarBio.addEventListener("click", () => abrirVistaEditarPerfil("bio"));
+    }
+    if (btnPerfilCancelar) {
+      btnPerfilCancelar.addEventListener("click", cerrarVistaEditarPerfil);
+    }
+    if (formEditarPerfil) {
+      formEditarPerfil.addEventListener("submit", manejarGuardarPerfil);
+    }
+    if (perfilInputFoto) {
+      perfilInputFoto.addEventListener("change", () => {
+        if (perfilInputFoto.files && perfilInputFoto.files[0]) {
+          manejarSubirFotoPerfil(perfilInputFoto.files[0]);
+        }
+      });
+    }
+    if (btnPerfilQuitarFoto) {
+      btnPerfilQuitarFoto.addEventListener("click", () => {
+        avatarBorradorEditar = "";
+        const sesion =
+          window.dmdCuenta && typeof window.dmdCuenta.obtenerSesionActual === "function"
+            ? window.dmdCuenta.obtenerSesionActual()
+            : null;
+        aplicarAvatarElemento(
+          perfilEditAvatarImg,
+          perfilEditAvatarIniciales,
+          "",
+          (perfilInputNombre && perfilInputNombre.value) || (sesion && sesion.nombre) || "",
+          (sesion && sesion.correo) || ""
+        );
+        btnPerfilQuitarFoto.hidden = true;
+      });
+    }
+    if (perfilInputNombre) {
+      perfilInputNombre.addEventListener("input", () => {
+        fijarErrorMiniCampo(perfilInputNombre, errorPerfilNombre, "");
+        if (!avatarBorradorEditar) {
+          const sesion =
+            window.dmdCuenta && typeof window.dmdCuenta.obtenerSesionActual === "function"
+              ? window.dmdCuenta.obtenerSesionActual()
+              : null;
+          aplicarAvatarElemento(
+            perfilEditAvatarImg,
+            perfilEditAvatarIniciales,
+            "",
+            perfilInputNombre.value,
+            (sesion && sesion.correo) || ""
+          );
+        }
+      });
+    }
+    if (perfilInputUsername) {
+      perfilInputUsername.addEventListener("input", () =>
+        fijarErrorMiniCampo(perfilInputUsername, errorPerfilUsername, "")
+      );
+    }
+    if (perfilInputBio) {
+      perfilInputBio.addEventListener("input", actualizarContadorBioPerfil);
+    }
+    if (perfilInputWeb) {
+      perfilInputWeb.addEventListener("input", () =>
+        fijarErrorMiniCampo(perfilInputWeb, errorPerfilWeb, "")
+      );
+    }
+    if (perfilInputGuardarFoto) {
+      perfilInputGuardarFoto.addEventListener("change", () => {
+        if (perfilInputGuardarFoto.files && perfilInputGuardarFoto.files[0]) {
+          manejarSubirFotoGuardada(perfilInputGuardarFoto.files[0]);
+        }
+      });
     }
 
     if (btnAppCuentaVerPlanes) {
@@ -4364,6 +5241,8 @@
       if (e.key === "Escape") {
         if (modalMediaVisor && !modalMediaVisor.hidden) {
           cerrarModalMedia();
+        } else if (editandoPerfilActivo && vistaActual === "cuenta") {
+          cerrarVistaEditarPerfil();
         } else if (!esEscritorioApp() && sidebar.classList.contains("is-open")) {
           abrirSidebar(false);
         }
@@ -4443,12 +5322,18 @@
 
     if (window.dmdCuenta && typeof window.dmdCuenta.alCambiarSesion === "function") {
       window.dmdCuenta.alCambiarSesion((_sesion, motivo) => {
+        if (motivo === "profile") {
+          if (vistaActual === "cuenta" && !editandoPerfilActivo) {
+            renderizarMiCuenta(false);
+          }
+          return;
+        }
         cuentaDatosCargadosParaId = "";
         const hidratado =
           !window.dmdAlmacen ||
           typeof window.dmdAlmacen.estaHidratado !== "function" ||
           window.dmdAlmacen.estaHidratado();
-        restaurarEstadoCompleto(motivo !== "hidratacion" && hidratado);
+        restaurarEstadoCompleto(motivo !== "hidratacion" && hidratado && vistaActual === "chat");
         if (vistaActual === "cuenta") {
           renderizarMiCuenta(true);
         }
