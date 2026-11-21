@@ -584,7 +584,7 @@ const ESTRUCTURAS_POR_TIPO_NEGOCIO = {
     ctaWhatsapp: "Hacer pedido a {nombre}"
   },
   tienda: {
-    ordenSecciones: ["presentacion", "servicios", "beneficios", "preguntas", "contacto"],
+    ordenSecciones: ["presentacion", "servicios", "preguntas", "beneficios", "contacto"],
     titulos: {
       presentacion: "Presentación",
       servicios: "Productos disponibles",
@@ -617,7 +617,7 @@ const ESTRUCTURAS_POR_TIPO_NEGOCIO = {
     ctaWhatsapp: "Cotizar por WhatsApp con {nombre}"
   },
   servicios: {
-    ordenSecciones: ["presentacion", "servicios", "beneficios", "preguntas", "contacto"],
+    ordenSecciones: ["presentacion", "beneficios", "servicios", "preguntas", "contacto"],
     titulos: {
       presentacion: "Presentación",
       servicios: "Servicios",
@@ -1805,7 +1805,7 @@ const ESTRUCTURAS_ESPECIFICAS_GIRO = {
     notaSinWhatsapp: "Venta en mostrador · {ubicacion}."
   },
   taqueria: {
-    ordenSecciones: ["presentacion", "servicios", "contacto", "preguntas"],
+    ordenSecciones: ["presentacion", "contacto", "servicios", "preguntas"],
     titulos: {
       presentacion: "Presentación",
       servicios: "De la parrilla",
@@ -2673,6 +2673,289 @@ function crearStickerElemento(stickerInfo) {
   return wrap;
 }
 
+const SISTEMAS_DISENO_GIRO = {
+  panaderia: {
+    layout: "carta-editorial",
+    unidadBasePx: 8,
+    tipografia: {
+      tituloFamilia: "editorial",
+      tituloTamano: "clamp(1.72rem, 1.45rem + 1.25vw, 2.3rem)",
+      tituloPeso: 400,
+      tituloInterlineado: 1.08,
+      tituloTracking: "-0.015em",
+      seccionTamano: "0.96rem",
+      seccionPeso: 700,
+      cuerpoTamano: "0.98rem",
+      cuerpoInterlineado: 1.64
+    },
+    espaciado: { gapSecciones: "28px", paddingTarjeta: "12px 14px", paddingCuerpo: "22px 18px" },
+    radios: { portada: "16px", tarjeta: "0px", boton: "999px", horarios: "14px" },
+    sombras: { portada: "0 10px 24px rgba(15, 28, 24, 0.12)", tarjeta: "none" },
+    componentes: {
+      botonPrincipal: "pildora-amplia",
+      tarjetaProducto: "renglon-carta-punteado",
+      horarios: "tarjeta-tinte-suave",
+      galeria: "marco-organico-16-10"
+    },
+    reglas: {
+      si: ["Tipografía serif en titular", "Renglones de carta con divisores punteados", "Aire generoso entre secciones"],
+      no: ["Cajas pesadas con sombra gruesa", "Frases paralelas en productos"]
+    }
+  },
+  ferreteria: {
+    layout: "catalogo-tecnico",
+    unidadBasePx: 4,
+    tipografia: {
+      tituloFamilia: "moderna",
+      tituloTamano: "clamp(1.42rem, 1.22rem + 0.85vw, 1.88rem)",
+      tituloPeso: 800,
+      tituloInterlineado: 1.14,
+      tituloTracking: "-0.025em",
+      seccionTamano: "0.78rem",
+      seccionPeso: 800,
+      cuerpoTamano: "0.92rem",
+      cuerpoInterlineado: 1.5
+    },
+    espaciado: { gapSecciones: "18px", paddingTarjeta: "12px", paddingCuerpo: "16px 14px" },
+    radios: { portada: "4px", tarjeta: "4px", boton: "4px", horarios: "4px" },
+    sombras: { portada: "none", tarjeta: "none" },
+    componentes: {
+      botonPrincipal: "bloque-industrial-recto",
+      tarjetaProducto: "ficha-numerada-2col",
+      horarios: "ficha-borde-izquierdo",
+      galeria: "marco-tecnico-recto"
+    },
+    reglas: {
+      si: ["Radios secos de 4 px", "Tarjetas numeradas 01-04 con barra verde superior", "Ritmo compacto escaneable"],
+      no: ["Sombras difusas", "Vocabulario poético o de otro giro"]
+    }
+  },
+  taqueria: {
+    layout: "tablero-rapido",
+    unidadBasePx: 6,
+    tipografia: {
+      tituloFamilia: "moderna",
+      tituloTamano: "clamp(1.58rem, 1.32rem + 1.05vw, 2.1rem)",
+      tituloPeso: 800,
+      tituloInterlineado: 1.06,
+      tituloTracking: "-0.03em",
+      seccionTamano: "0.82rem",
+      seccionPeso: 800,
+      cuerpoTamano: "0.94rem",
+      cuerpoInterlineado: 1.48
+    },
+    espaciado: { gapSecciones: "20px", paddingTarjeta: "12px 14px", paddingCuerpo: "18px 14px" },
+    radios: { portada: "10px", tarjeta: "8px", boton: "10px", horarios: "10px" },
+    sombras: { portada: "0 8px 18px rgba(15, 28, 24, 0.14)", tarjeta: "0 3px 10px rgba(15, 28, 24, 0.06)" },
+    componentes: {
+      botonPrincipal: "accion-fuerte-arriba",
+      tarjetaProducto: "ficha-orden-borde-verde",
+      horarios: "franja-local-directa",
+      galeria: "marco-vivo-16-9"
+    },
+    reglas: {
+      si: ["Bloque de pedido o ubicación justo después de portada", "Barra verde izquierda en tarjetas de parrilla"],
+      no: ["Bloques extensos antes del menú", "Repetición de 'preparado al momento'"]
+    }
+  },
+  cafeteria: {
+    layout: "galeria-barra",
+    unidadBasePx: 8,
+    tipografia: {
+      tituloFamilia: "editorial",
+      tituloTamano: "clamp(1.66rem, 1.4rem + 1.1vw, 2.18rem)",
+      tituloPeso: 400,
+      tituloInterlineado: 1.12,
+      tituloTracking: "-0.01em",
+      seccionTamano: "0.74rem",
+      seccionPeso: 700,
+      cuerpoTamano: "0.96rem",
+      cuerpoInterlineado: 1.68
+    },
+    espaciado: { gapSecciones: "32px", paddingTarjeta: "14px 4px", paddingCuerpo: "24px 18px" },
+    radios: { portada: "14px", tarjeta: "0px", boton: "999px", horarios: "12px" },
+    sombras: { portada: "0 14px 28px rgba(15, 28, 24, 0.14)", tarjeta: "none" },
+    componentes: {
+      botonPrincipal: "pildora-limpia",
+      tarjetaProducto: "fila-minimal-hairline",
+      horarios: "nota-barra-abierta",
+      galeria: "foto-galeria-sombra-suave"
+    },
+    reglas: {
+      si: ["Sombra suave solo bajo la fotografía", "Espacio en blanco amplio y filetes finos"],
+      no: ["Tarjetas sobrecargadas", "Clichés inflados"]
+    }
+  },
+  "salud y belleza": {
+    layout: "cabina-serena",
+    unidadBasePx: 8,
+    tipografia: {
+      tituloFamilia: "editorial",
+      tituloTamano: "clamp(1.64rem, 1.38rem + 1vw, 2.12rem)",
+      tituloPeso: 400,
+      tituloInterlineado: 1.14,
+      tituloTracking: "0em",
+      seccionTamano: "0.84rem",
+      seccionPeso: 600,
+      cuerpoTamano: "0.97rem",
+      cuerpoInterlineado: 1.68
+    },
+    espaciado: { gapSecciones: "30px", paddingTarjeta: "16px", paddingCuerpo: "24px 18px" },
+    radios: { portada: "20px", tarjeta: "14px", boton: "999px", horarios: "16px" },
+    sombras: { portada: "0 10px 24px rgba(15, 28, 24, 0.09)", tarjeta: "0 2px 8px rgba(15, 28, 24, 0.04)" },
+    componentes: {
+      botonPrincipal: "pildora-serena",
+      tarjetaProducto: "tarjeta-suave-punto-verde",
+      horarios: "panel-cita-centrado",
+      galeria: "marco-suave-20px"
+    },
+    reglas: {
+      si: ["Radios amplios y lectura calmada", "Citas claras sin saturación visual"],
+      no: ["Esquinas industriales secas", "Promesas exageradas"]
+    }
+  },
+  "taller u oficio": {
+    layout: "hoja-taller",
+    unidadBasePx: 4,
+    tipografia: {
+      tituloFamilia: "moderna",
+      tituloTamano: "clamp(1.44rem, 1.24rem + 0.85vw, 1.9rem)",
+      tituloPeso: 700,
+      tituloInterlineado: 1.16,
+      tituloTracking: "-0.02em",
+      seccionTamano: "0.76rem",
+      seccionPeso: 800,
+      cuerpoTamano: "0.93rem",
+      cuerpoInterlineado: 1.52
+    },
+    espaciado: { gapSecciones: "20px", paddingTarjeta: "12px", paddingCuerpo: "16px 14px" },
+    radios: { portada: "4px", tarjeta: "4px", boton: "6px", horarios: "4px" },
+    sombras: { portada: "none", tarjeta: "none" },
+    componentes: {
+      botonPrincipal: "bloque-cotizacion-recto",
+      tarjetaProducto: "ficha-tecnica-numerada",
+      horarios: "caja-taller-borde-verde",
+      galeria: "marco-taller-recto"
+    },
+    reglas: {
+      si: ["Estructura técnica directa y numerada", "Diagnóstico y tiempos claros"],
+      no: ["Adornos decorativos", "Garantías inventadas"]
+    }
+  },
+  tienda: {
+    layout: "anaquel-comercio",
+    unidadBasePx: 6,
+    tipografia: {
+      tituloFamilia: "sistema",
+      tituloTamano: "clamp(1.5rem, 1.3rem + 0.9vw, 1.98rem)",
+      tituloPeso: 700,
+      tituloInterlineado: 1.18,
+      tituloTracking: "-0.02em",
+      seccionTamano: "0.86rem",
+      seccionPeso: 700,
+      cuerpoTamano: "0.95rem",
+      cuerpoInterlineado: 1.56
+    },
+    espaciado: { gapSecciones: "22px", paddingTarjeta: "14px", paddingCuerpo: "18px 16px" },
+    radios: { portada: "10px", tarjeta: "10px", boton: "8px", horarios: "10px" },
+    sombras: { portada: "0 6px 16px rgba(15, 28, 24, 0.08)", tarjeta: "0 2px 6px rgba(15, 28, 24, 0.04)" },
+    componentes: {
+      botonPrincipal: "boton-catalogo-limpio",
+      tarjetaProducto: "anaquel-2col-borde",
+      horarios: "ficha-mostrador-limpia",
+      galeria: "marco-catalogo-10px"
+    },
+    reglas: {
+      si: ["Productos al frente en cuadrícula ordenada", "Preguntas antes de beneficios"],
+      no: ["Precios o envíos inventados"]
+    }
+  },
+  comida: {
+    layout: "menu-local",
+    unidadBasePx: 6,
+    tipografia: {
+      tituloFamilia: "moderna",
+      tituloTamano: "clamp(1.56rem, 1.32rem + 1vw, 2.04rem)",
+      tituloPeso: 800,
+      tituloInterlineado: 1.12,
+      tituloTracking: "-0.02em",
+      seccionTamano: "0.84rem",
+      seccionPeso: 800,
+      cuerpoTamano: "0.95rem",
+      cuerpoInterlineado: 1.54
+    },
+    espaciado: { gapSecciones: "22px", paddingTarjeta: "14px", paddingCuerpo: "18px 16px" },
+    radios: { portada: "12px", tarjeta: "10px", boton: "10px", horarios: "10px" },
+    sombras: { portada: "0 8px 18px rgba(15, 28, 24, 0.12)", tarjeta: "0 2px 8px rgba(15, 28, 24, 0.05)" },
+    componentes: {
+      botonPrincipal: "boton-pedido-calido",
+      tarjetaProducto: "tarjeta-menu-borde-izquierdo",
+      horarios: "franja-comedor",
+      galeria: "marco-menu-12px"
+    },
+    reglas: {
+      si: ["Menú claro con ritmo ágil", "Separar comedor y para llevar"],
+      no: ["Frases calcadas entre platillos"]
+    }
+  },
+  servicios: {
+    layout: "ejecutivo-claro",
+    unidadBasePx: 8,
+    tipografia: {
+      tituloFamilia: "sistema",
+      tituloTamano: "clamp(1.5rem, 1.3rem + 0.9vw, 1.98rem)",
+      tituloPeso: 700,
+      tituloInterlineado: 1.18,
+      tituloTracking: "-0.025em",
+      seccionTamano: "0.8rem",
+      seccionPeso: 700,
+      cuerpoTamano: "0.96rem",
+      cuerpoInterlineado: 1.62
+    },
+    espaciado: { gapSecciones: "26px", paddingTarjeta: "16px", paddingCuerpo: "22px 18px" },
+    radios: { portada: "8px", tarjeta: "8px", boton: "8px", horarios: "8px" },
+    sombras: { portada: "0 6px 16px rgba(15, 28, 24, 0.07)", tarjeta: "none" },
+    componentes: {
+      botonPrincipal: "boton-ejecutivo-recto",
+      tarjetaProducto: "bloque-alcance-filete",
+      horarios: "ficha-contacto-formal",
+      galeria: "marco-ejecutivo-8px"
+    },
+    reglas: {
+      si: ["Beneficios antes del catálogo de servicios", "Líneas limpias y jerarquía clara"],
+      no: ["Jerga vacía o tarifas inventadas"]
+    }
+  },
+  otro: {
+    layout: "equilibrado",
+    unidadBasePx: 8,
+    tipografia: {
+      tituloFamilia: "sistema",
+      tituloTamano: "clamp(1.5rem, 1.3rem + 0.9vw, 1.95rem)",
+      tituloPeso: 700,
+      tituloInterlineado: 1.18,
+      tituloTracking: "-0.015em",
+      seccionTamano: "0.88rem",
+      seccionPeso: 700,
+      cuerpoTamano: "0.96rem",
+      cuerpoInterlineado: 1.58
+    },
+    espaciado: { gapSecciones: "24px", paddingTarjeta: "14px", paddingCuerpo: "20px 16px" },
+    radios: { portada: "12px", tarjeta: "10px", boton: "10px", horarios: "10px" },
+    sombras: { portada: "0 6px 16px rgba(15, 28, 24, 0.08)", tarjeta: "0 2px 6px rgba(15, 28, 24, 0.04)" },
+    componentes: {
+      botonPrincipal: "boton-estandar",
+      tarjetaProducto: "tarjeta-estandar",
+      horarios: "ficha-local-estandar",
+      galeria: "marco-estandar-12px"
+    },
+    reglas: {
+      si: ["Estructura equilibrada con acento verde único"],
+      no: ["Datos inventados o guiones largos"]
+    }
+  }
+};
+
 function obtenerEstructuraNegocio(datos, detallesOpt) {
   const info = datos && typeof datos === "object" ? datos : {};
   const nombre = formatearNombrePropio(info.nombre, "nombre") || "tu negocio";
@@ -2708,11 +2991,17 @@ function obtenerEstructuraNegocio(datos, detallesOpt) {
     STICKERS_POR_GIRO[temaEspecifico] ||
     STICKERS_POR_GIRO[info.giro] ||
     STICKERS_POR_GIRO.otro;
+  const sistemaDiseno =
+    SISTEMAS_DISENO_GIRO[tipo] ||
+    SISTEMAS_DISENO_GIRO[temaEspecifico] ||
+    SISTEMAS_DISENO_GIRO[info.giro] ||
+    SISTEMAS_DISENO_GIRO.otro;
 
   return {
     tipo: tipo || "otro",
     claseVisual: stickerInfo.clase || "otro",
     sticker: { ...stickerInfo },
+    sistemaDiseno,
     ordenSecciones: base.ordenSecciones.slice(),
     titulos: { ...base.titulos },
     ctaWhatsapp: base.ctaWhatsapp.replace(/\{nombre\}/g, nombre),
@@ -2980,7 +3269,7 @@ async function generarBorradorConServicio(datos, variante) {
       .join(". ");
 
     const controlador = new AbortController();
-    const temporizador = setTimeout(() => controlador.abort(), 15000);
+    const temporizador = setTimeout(() => controlador.abort(), 22000);
     let respuesta;
     try {
       respuesta = await fetch("/api/generate", {
@@ -2989,7 +3278,10 @@ async function generarBorradorConServicio(datos, variante) {
         body: JSON.stringify({
           nombre: datosLimpios.nombre || "",
           giro: datosLimpios.giroTexto || datosLimpios.giro || "",
+          giroTexto: datosLimpios.giroTexto || "",
           ciudad: datosLimpios.ciudad || "",
+          direccion: detallesReales.ubicacion || datosLimpios.direccion || "",
+          horario: detallesReales.horario || datosLimpios.horario || "",
           oferta: ofertaConContexto || "",
           tono: datosLimpios.tono || "cercano",
           whatsapp: datosLimpios.whatsapp || "",
@@ -3671,6 +3963,7 @@ window.dmdGenerador = {
   seleccionarPortada: seleccionarPortadaNegocio,
   obtenerSiguientePortada,
   obtenerEstructuraNegocio,
+  SISTEMAS_DISENO_GIRO,
   crearStickerElemento,
   sanearBorradorLegado,
   normalizarMensajeChatFuzzy,

@@ -6963,5 +6963,418 @@ p {
   }
 }
 
+/* ==========================================================================
+   Sistemas visuales completos por giro (tipografía, ritmo, radios, sombras
+   y componentes con nombre, todos con único color principal #0f5c4d)
+   ========================================================================== */
+
+/* 1) PANADERÍA: Carta editorial cálida (base 8 px, serif, renglones punteados) */
+.biz-giro-panaderia .biz-body,
+.biz-giro-panaderia .preview-body {
+  gap: 28px;
+  padding: 22px 18px;
+}
+
+.biz-giro-panaderia .biz-title,
+.biz-giro-panaderia .preview-title {
+  font-family: var(--font-editorial);
+  font-size: clamp(1.72rem, 1.45rem + 1.25vw, 2.3rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+}
+
+.biz-giro-panaderia .biz-intro,
+.biz-giro-panaderia .preview-intro {
+  font-size: 0.98rem;
+  line-height: 1.64;
+}
+
+.biz-giro-panaderia .biz-cover-img,
+.biz-giro-panaderia .preview-cover-img {
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 28, 24, 0.12);
+}
+
+.biz-giro-panaderia .biz-services-grid,
+.biz-giro-panaderia .preview-services {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.biz-giro-panaderia .biz-service-card,
+.biz-giro-panaderia .preview-service-item {
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px dashed var(--border-strong);
+  border-left: 2px solid var(--accent-border);
+  border-radius: 0;
+  padding: 12px 14px;
+  box-shadow: none;
+}
+
+.biz-giro-panaderia .biz-cta-btn,
+.biz-giro-panaderia .preview-cta-box .btn-primary {
+  border-radius: 999px;
+}
+
+.biz-giro-panaderia .biz-location-card {
+  border-radius: 14px;
+  padding: 16px;
+  background-color: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+}
+
+/* 2) FERRETERÍA y TALLER: Catálogo técnico utilitario (base 4 px, radios 4 px, numerado) */
+.biz-giro-ferreteria .biz-body,
+.biz-giro-taller .biz-body,
+.biz-giro-ferreteria .preview-body,
+.biz-giro-taller .preview-body {
+  gap: 18px;
+  padding: 16px 14px;
+}
+
+.biz-giro-ferreteria .biz-title,
+.biz-giro-ferreteria .preview-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.42rem, 1.22rem + 0.85vw, 1.88rem);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+}
+
+.biz-giro-taller .biz-title,
+.biz-giro-taller .preview-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.44rem, 1.24rem + 0.85vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+}
+
+.biz-giro-ferreteria .biz-section-title,
+.biz-giro-taller .biz-section-title,
+.biz-giro-ferreteria .preview-block-title,
+.biz-giro-taller .preview-block-title {
+  font-size: 0.77rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent-ink);
+}
+
+.biz-giro-ferreteria .biz-cover-img,
+.biz-giro-taller .biz-cover-img,
+.biz-giro-ferreteria .preview-cover-img,
+.biz-giro-taller .preview-cover-img {
+  border-radius: 4px;
+  box-shadow: none;
+  border: 1px solid var(--border-strong);
+}
+
+.biz-giro-ferreteria .biz-services-grid,
+.biz-giro-taller .biz-services-grid,
+.biz-giro-ferreteria .preview-services,
+.biz-giro-taller .preview-services {
+  counter-reset: biz-cat-idx;
+  gap: 10px;
+}
+
+.biz-giro-ferreteria .biz-service-card,
+.biz-giro-taller .biz-service-card,
+.biz-giro-ferreteria .preview-service-item,
+.biz-giro-taller .preview-service-item {
+  counter-increment: biz-cat-idx;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-top: 2px solid #0f5c4d;
+  background-color: var(--surface-subtle);
+  padding: 12px;
+  box-shadow: none;
+}
+
+.biz-giro-ferreteria .preview-service-title::before,
+.biz-giro-taller .preview-service-title::before {
+  content: "0" counter(biz-cat-idx) " ";
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--accent-ink);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.biz-giro-ferreteria .biz-cta-btn,
+.biz-giro-taller .biz-cta-btn,
+.biz-giro-ferreteria .preview-cta-box .btn-primary,
+.biz-giro-taller .preview-cta-box .btn-primary {
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.biz-giro-ferreteria .biz-location-card,
+.biz-giro-taller .biz-location-card {
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-left: 4px solid #0f5c4d;
+  background-color: var(--surface-subtle);
+}
+
+@media (min-width: 600px) {
+  .biz-desktop-layout.biz-giro-ferreteria .biz-services-grid,
+  .biz-desktop-layout.biz-giro-taller .biz-services-grid,
+  .biz-is-live-preview.biz-giro-ferreteria .biz-services-grid,
+  .biz-is-live-preview.biz-giro-taller .biz-services-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 3) TAQUERÍA y COMIDA: Tablero ágil de órdenes (base 6 px, display 800, barra verde izquierda) */
+.biz-giro-taqueria .biz-body,
+.biz-giro-comida .biz-body,
+.biz-giro-taqueria .preview-body,
+.biz-giro-comida .preview-body {
+  gap: 20px;
+  padding: 18px 14px;
+}
+
+.biz-giro-taqueria .biz-title,
+.biz-giro-taqueria .preview-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.58rem, 1.32rem + 1.05vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+
+.biz-giro-comida .biz-title,
+.biz-giro-comida .preview-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.56rem, 1.32rem + 1vw, 2.04rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.biz-giro-taqueria .biz-section-title,
+.biz-giro-comida .biz-section-title,
+.biz-giro-taqueria .preview-block-title,
+.biz-giro-comida .preview-block-title {
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: var(--accent-ink);
+}
+
+.biz-giro-taqueria .biz-cover-img,
+.biz-giro-comida .biz-cover-img,
+.biz-giro-taqueria .preview-cover-img,
+.biz-giro-comida .preview-cover-img {
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(15, 28, 24, 0.14);
+}
+
+.biz-giro-taqueria .biz-service-card,
+.biz-giro-comida .biz-service-card,
+.biz-giro-taqueria .preview-service-item,
+.biz-giro-comida .preview-service-item {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-left: 4px solid #0f5c4d;
+  padding: 12px 14px;
+  box-shadow: 0 3px 10px rgba(15, 28, 24, 0.06);
+}
+
+.biz-giro-taqueria .biz-location-card,
+.biz-giro-comida .biz-location-card {
+  border-radius: 10px;
+  border: 2px solid #0f5c4d;
+  background-color: var(--surface);
+  box-shadow: 0 4px 12px rgba(15, 92, 77, 0.1);
+}
+
+/* 4) CAFETERÍA: Galería minimalista de barra (base 8 px, mucho aire, sombra solo en foto) */
+.biz-giro-cafeteria .biz-body,
+.biz-giro-cafeteria .preview-body {
+  gap: 30px;
+  padding: 24px 18px;
+}
+
+.biz-giro-cafeteria .biz-title,
+.biz-giro-cafeteria .preview-title {
+  font-family: var(--font-editorial);
+  font-size: clamp(1.66rem, 1.4rem + 1.1vw, 2.18rem);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+.biz-giro-cafeteria .biz-section-title,
+.biz-giro-cafeteria .preview-block-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+  border-left: 0;
+  padding-left: 0;
+}
+
+.biz-giro-cafeteria .biz-cover-img,
+.biz-giro-cafeteria .preview-cover-img {
+  border-radius: 14px;
+  box-shadow: 0 14px 28px rgba(15, 28, 24, 0.14);
+}
+
+.biz-giro-cafeteria .biz-service-card,
+.biz-giro-cafeteria .preview-service-item {
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 14px 2px;
+  box-shadow: none;
+}
+
+.biz-giro-cafeteria .biz-cta-btn,
+.biz-giro-cafeteria .preview-cta-box .btn-primary {
+  border-radius: 999px;
+}
+
+/* 5) SALUD Y BELLEZA: Cabina serena (serif suave, radios 16-20 px, punto verde) */
+.biz-giro-salud .biz-body,
+.biz-giro-salud .preview-body {
+  gap: 28px;
+  padding: 24px 18px;
+}
+
+.biz-giro-salud .biz-title,
+.biz-giro-salud .preview-title {
+  font-family: var(--font-editorial);
+  font-size: clamp(1.64rem, 1.38rem + 1vw, 2.12rem);
+  font-weight: 400;
+  line-height: 1.14;
+}
+
+.biz-giro-salud .biz-cover-img,
+.biz-giro-salud .preview-cover-img {
+  border-radius: 20px;
+  box-shadow: 0 10px 24px rgba(15, 28, 24, 0.09);
+}
+
+.biz-giro-salud .biz-service-card,
+.biz-giro-salud .preview-service-item {
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(15, 28, 24, 0.04);
+}
+
+.biz-giro-salud .biz-service-title::before,
+.biz-giro-salud .preview-service-title::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #0f5c4d;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.biz-giro-salud .biz-cta-btn,
+.biz-giro-salud .preview-cta-box .btn-primary {
+  border-radius: 999px;
+}
+
+.biz-giro-salud .biz-location-card {
+  border-radius: 16px;
+  text-align: center;
+  background-color: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+/* 6) TIENDA: Anaquel de catálogo ordenado (base 6 px, radios 10 px, 2 col en ancho) */
+.biz-giro-tienda .biz-body,
+.biz-giro-tienda .preview-body {
+  gap: 22px;
+  padding: 18px 16px;
+}
+
+.biz-giro-tienda .biz-service-card,
+.biz-giro-tienda .preview-service-item {
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 2px 6px rgba(15, 28, 24, 0.04);
+}
+
+@media (min-width: 600px) {
+  .biz-desktop-layout.biz-giro-tienda .biz-services-grid,
+  .biz-is-live-preview.biz-giro-tienda .biz-services-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 7) SERVICIOS: Ejecutivo estructurado (base 8 px, radios 8 px, filete verde izquierdo) */
+.biz-giro-servicios .biz-body,
+.biz-giro-servicios .preview-body {
+  gap: 26px;
+  padding: 22px 18px;
+}
+
+.biz-giro-servicios .biz-title,
+.biz-giro-servicios .preview-title {
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 1.98rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+}
+
+.biz-giro-servicios .biz-cover-img,
+.biz-giro-servicios .preview-cover-img {
+  border-radius: 8px;
+}
+
+.biz-giro-servicios .biz-service-card,
+.biz-giro-servicios .preview-service-item {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-left: 2px solid #0f5c4d;
+  padding: 16px;
+  box-shadow: none;
+}
+
+.biz-giro-servicios .biz-cta-btn,
+.biz-giro-servicios .preview-cta-box .btn-primary {
+  border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .biz-giro-ferreteria .biz-service-card,
+  .biz-giro-taller .biz-service-card,
+  .biz-giro-ferreteria .preview-service-item,
+  .biz-giro-taller .preview-service-item {
+    border-top-color: #7cd5bf;
+  }
+
+  .biz-giro-taqueria .biz-service-card,
+  .biz-giro-comida .biz-service-card,
+  .biz-giro-taqueria .preview-service-item,
+  .biz-giro-comida .preview-service-item,
+  .biz-giro-servicios .biz-service-card,
+  .biz-giro-servicios .preview-service-item {
+    border-left-color: #7cd5bf;
+  }
+
+  .biz-giro-salud .biz-service-title::before,
+  .biz-giro-salud .preview-service-title::before {
+    background-color: #7cd5bf;
+  }
+}
+
+
 
 
