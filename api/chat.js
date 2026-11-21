@@ -2,11 +2,12 @@
 
 /* ==========================================================================
    dmd - api/chat.js (función serverless de Vercel)
-   Razonamiento conversacional en el servidor con Gemini 3.8 Flash.
-   En cada turno la IA analiza el historial y los datos reales del negocio,
-   clasifica la intención del mensaje y devuelve una decisión estructurada:
-   preguntar lo que falta (una pregunta a la vez), generar o actualizar el
-   borrador, responder una duda sin editar el borrador o darlo por completo.
+   Razonamiento conversacional en dos fases con Gemini 3.8 Flash:
+   1) Decisión corta (pocos tokens, timeout acotado): clasifica intención,
+      extrae datos reales y decide preguntar, responder, generar, actualizar
+      o dar por completo.
+   2) Generación de borrador (presupuesto completo de tokens): solo corre
+      cuando la fase 1 decide generar o actualizar el borrador.
    La clave vive SOLO en GEMINI_API_KEY en el servidor.
    ========================================================================== */
 
@@ -16,6 +17,7 @@ const {
   MAX_OUTPUT_TOKENS,
   PERFILES_DISENO_GIRO,
   detectarPerfilGiro,
+  construirPrompt,
   extraerTextoRespuestaGemini,
   extraerJsonSeguro,
   normalizarBorrador
@@ -23,7 +25,10 @@ const {
 
 const URL_GEMINI =
   "https://generativelanguage.googleapis.com/v1beta/models/" + MODELO + ":generateContent";
-const TIMEOUT_MS = 45000;
+const TIMEOUT_TOTAL_MS = 45000;
+const TIMEOUT_DECISION_MS = 15000;
+const TIMEOUT_BORRADOR_MAX_MS = 22000;
+const MAX_TOKENS_DECISION = 420;
 
 const ACCIONES_VALIDAS = new Set(["preguntar", "generar", "actualizar", "responder", "completo"]);
 const INTENCIONES_VALIDAS = new Set([
@@ -77,7 +82,6 @@ function sanitizarMensajeError(valor, clave) {
 
 function limpiarRespuestaNatural(texto) {
   let limpio = textoLimpio(texto, 420);
-  // Quitar aperturas típicas de IA si aparecieran al inicio
   limpio = limpio
     .replace(
       /^(?:¡?(?:excelente|perfecto|genial|maravilloso|fant[aá]stico|por\s+supuesto|claro\s+que\s+s[ií]|con\s+mucho\s+gusto)!?[\s,.:]+)+/i,
@@ -115,10 +119,10 @@ function normalizarMensajesEntrada(lista) {
     .filter((m) => m && typeof m === "object" && typeof m.texto === "string")
     .map((m) => ({
       rol: m.rol === "usuario" ? "usuario" : "asistente",
-      texto: textoLimpio(m.texto, 400)
+      texto: textoLimpio(m.texto, 320)
     }))
     .filter((m) => m.texto.length > 0)
-    .slice(-14);
+    .slice(-8);
 }
 
 function normalizarCamposLista(lista, permitidos) {
@@ -137,62 +141,48 @@ function normalizarCamposLista(lista, permitidos) {
   return salida;
 }
 
-function construirPromptChat({
+function construirPromptDecision({
   mensajes,
   datos,
   camposOmitidos,
   tieneBorrador,
   estadoEditor
 }) {
-  const perfilClave = detectarPerfilGiro(datos);
-  const perfil = PERFILES_DISENO_GIRO[perfilClave] || PERFILES_DISENO_GIRO.otro;
   const editorInfo = estadoEditor && typeof estadoEditor === "object" ? estadoEditor : {};
-
-  const resumenDatos = [
-    "nombre=" + (datos.nombre || "falta"),
-    "giro=" + (datos.giroTexto || datos.giro || "falta"),
-    "ciudad=" + (datos.ciudad || "falta"),
-    "oferta=" + (datos.oferta || "falta"),
-    "direccion=" + (datos.direccion || "vacio"),
-    "horario=" + (datos.horario || "vacio"),
-    "whatsapp=" + (datos.whatsapp || "vacio"),
+  const datosCompactos = [
+    "nombre=" + (datos.nombre || ""),
+    "giro=" + (datos.giroTexto || datos.giro || ""),
+    "ciudad=" + (datos.ciudad || ""),
+    "oferta=" + (datos.oferta || ""),
+    "direccion=" + (datos.direccion || ""),
+    "horario=" + (datos.horario || ""),
+    "whatsapp=" + (datos.whatsapp || ""),
     "tono=" + (datos.tono || "cercano")
-  ].join(" | ");
+  ].join(";");
 
-  const resumenEstado = [
-    "tieneBorrador=" + (tieneBorrador ? "si" : "no"),
-    "tieneLogo=" + (editorInfo.tieneLogo ? "si" : "no"),
+  const estadoCompacto = [
+    "borrador=" + (tieneBorrador ? "si" : "no"),
+    "logo=" + (editorInfo.tieneLogo ? "si" : "no"),
     "plantilla=" + (textoLimpio(editorInfo.plantilla || "clasica", 20) || "clasica"),
-    "omitidos=" + (camposOmitidos.length > 0 ? camposOmitidos.join(",") : "ninguno")
-  ].join(" | ");
+    "omitidos=" + (camposOmitidos.length > 0 ? camposOmitidos.join(",") : "")
+  ].join(";");
 
-  const historialLineas = mensajes
-    .slice(-10)
-    .map((m) => (m.rol === "usuario" ? "U: " : "A: ") + m.texto);
+  const historial = mensajes
+    .slice(-6)
+    .map((m) => (m.rol === "usuario" ? "U: " : "A: ") + m.texto)
+    .join("\n");
 
   return [
-    "Eres el asistente de DMD para crear y ajustar la página web de un negocio en México.",
-    "Español natural de México, frases cortas y directas. Sin guiones largos, sin clichés de IA ('¡Excelente!', '¡Por supuesto!'), sin mencionar IA ni marcas.",
-    "Nunca inventes precios, horarios, calles ni teléfonos. Si whatsapp=vacio, no menciones WhatsApp en el borrador.",
-    "",
-    "Intención del último mensaje (tolera faltas de ortografía):",
-    "- pregunta/saludo/ambiguo: accion='responder', datosExtraidos={}, borrador=null. Nunca pegues texto literal al borrador.",
-    "- quitar: usa camposQuitar (whatsapp|horario|direccion), ajusteDiseno (quitarLogo|quitarPortada) o limpia oferta.",
-    "- cambiar/agregar: actualiza datosExtraidos sin palabras de relleno (si pide precios sin montos, responde pidiendo precios reales); si solo cambia plantilla/portada usa ajusteDiseno y borrador=null.",
-    "- datos: extrae todos los datos que dio el usuario. Mínimos para generar: nombre, ciudad y oferta (deduce giro si es obvio). Opcionales: direccion, horario, whatsapp, tono. No repitas datos ya guardados u omitidos.",
-    "- Si falta un mínimo: accion='preguntar', UNA sola pregunta corta, borrador=null.",
-    "- Si ya tienes nombre, ciudad y oferta y tieneBorrador=no: genera ahora (accion='generar' con borrador) o haz UNA pregunta opcional breve con sugerencia 'Armar borrador ya'.",
-    "- Si tieneBorrador=si y cambiaron datos: accion='actualizar' con borrador. Si el usuario dice que ya quedó: accion='completo', borrador=null.",
-    "",
-    "Estilo de borrador (" + perfil.etiqueta + "): " + perfil.siHacer[0] + " " + perfil.noHacer[0],
-    "Datos actuales: " + resumenDatos,
-    "Estado: " + resumenEstado,
-    "Historial:",
-    ...historialLineas,
-    "",
-    "Devuelve SOLO JSON válido sin markdown:",
-    '{"accion":"preguntar|generar|actualizar|responder|completo","intencion":"datos|pregunta|cambiar|agregar|quitar|saludo|ambiguo|completo","respuesta":"...","datosExtraidos":{"nombre":"","giro":"","giroTexto":"","ciudad":"","direccion":"","horario":"","oferta":"","tono":"","whatsapp":""},"camposQuitar":[],"camposOmitidos":[],"ajusteDiseno":{"plantilla":"","quitarLogo":false,"quitarPortada":false,"cambiarPortada":false},"sugerencias":[],"borrador":null}',
-    'Si accion es generar o actualizar, borrador debe ser {"titulo":"...","presentacion":"...","servicios":[{"titulo":"...","descripcion":"..."}],"beneficios":["..."],"preguntasFrecuentes":[{"pregunta":"...","respuesta":"..."}]} (3-5 servicios, 3-4 beneficios, 2-4 preguntas). Si no, borrador:null.'
+    "Asistente DMD (México). Español natural y corto. Una pregunta a la vez. Sin guiones largos, sin clichés de IA, sin inventar precios/datos.",
+    "Intención del último mensaje (tolera errores): datos|pregunta|cambiar|agregar|quitar|saludo|ambiguo|completo.",
+    "pregunta/saludo/ambiguo => accion='responder', datosExtraidos={}. No pegues preguntas o texto confuso en oferta.",
+    "Mínimos: nombre, ciudad, oferta (deduce giro si es obvio). Opcionales: direccion, horario, whatsapp, tono.",
+    "Falta mínimo => accion='preguntar' (1 pregunta corta). Ya están los 3 mínimos y borrador=no => accion='generar' (o 1 pregunta opcional con chip 'Armar borrador ya').",
+    "borrador=si y cambian datos => accion='actualizar'. Solo plantilla/portada/logo => accion='responder' con ajusteDiseno. Si terminó => accion='completo'.",
+    "Datos: " + datosCompactos,
+    "Estado: " + estadoCompacto,
+    "Chat:\n" + historial,
+    'Solo JSON: {"accion":"","intencion":"","respuesta":"","datosExtraidos":{"nombre":"","giro":"","giroTexto":"","ciudad":"","direccion":"","horario":"","oferta":"","tono":"","whatsapp":""},"camposQuitar":[],"camposOmitidos":[],"ajusteDiseno":{"plantilla":"","quitarLogo":false,"quitarPortada":false,"cambiarPortada":false},"sugerencias":[]}'
   ].join("\n");
 }
 
@@ -209,7 +199,7 @@ function preguntaFaltanteMinima(datos) {
   return "¿Quieres agregar tu horario, calle o WhatsApp, o armamos el borrador así?";
 }
 
-function normalizarRespuestaChat(entrada, crudo) {
+function normalizarDecisionChat(entrada, crudo) {
   if (!crudo || typeof crudo !== "object" || Array.isArray(crudo)) {
     return null;
   }
@@ -277,7 +267,6 @@ function normalizarRespuestaChat(entrada, crudo) {
     datosActualizados[campo] = "";
   }
 
-  // Deducir giro automáticamente si ya es claro por nombre u oferta
   if (!datosActualizados.giro) {
     const detectado = detectarPerfilGiro(datosActualizados);
     if (detectado && detectado !== "otro") {
@@ -323,24 +312,15 @@ function normalizarRespuestaChat(entrada, crudo) {
     if (!tieneMinimos) {
       accion = "preguntar";
       respuesta = respuesta || preguntaFaltanteMinima(datosActualizados);
-    } else {
+    } else if (crudo.borrador && typeof crudo.borrador === "object") {
       const datosParaBorrador = Object.assign({}, datosActualizados, {
         tono: datosActualizados.tono || "cercano",
         variante: Number(entrada.variante) || 0
       });
-      if (crudo.borrador && typeof crudo.borrador === "object") {
-        borrador = normalizarBorrador(datosParaBorrador, crudo.borrador);
-      }
+      borrador = normalizarBorrador(datosParaBorrador, crudo.borrador);
     }
   } else if (accion === "completo" && !entrada.tieneBorrador && tieneMinimos) {
     accion = "generar";
-    const datosParaBorrador = Object.assign({}, datosActualizados, {
-      tono: datosActualizados.tono || "cercano",
-      variante: Number(entrada.variante) || 0
-    });
-    if (crudo.borrador && typeof crudo.borrador === "object") {
-      borrador = normalizarBorrador(datosParaBorrador, crudo.borrador);
-    }
   }
 
   if (!respuesta) {
@@ -372,6 +352,154 @@ function normalizarRespuestaChat(entrada, crudo) {
     sugerencias,
     borrador
   };
+}
+
+async function invocarGeminiJson({ clave, prompt, maxOutputTokens, temperature, timeoutMs }) {
+  const t0 = Date.now();
+  let respuestaGemini;
+  try {
+    const controlador = new AbortController();
+    const temporizador = setTimeout(() => controlador.abort(), timeoutMs);
+    try {
+      respuestaGemini = await fetch(URL_GEMINI, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": clave
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature,
+            maxOutputTokens,
+            thinkingConfig: {
+              thinkingLevel: "low"
+            }
+          }
+        }),
+        signal: controlador.signal
+      });
+    } finally {
+      clearTimeout(temporizador);
+    }
+  } catch (e) {
+    const elapsedMs = Date.now() - t0;
+    const detalleRed =
+      (e && e.name === "AbortError" ? "Timeout after " + timeoutMs + "ms" : "") ||
+      (e && e.cause && e.cause.message) ||
+      (e && e.message) ||
+      "network_error";
+    return {
+      ok: false,
+      httpStatus: 502,
+      error: "provider_unavailable",
+      providerStatus: null,
+      providerMessage: sanitizarMensajeError(detalleRed, clave),
+      elapsedMs
+    };
+  }
+
+  if (!respuestaGemini.ok) {
+    const elapsedMs = Date.now() - t0;
+    let cuerpoError = "";
+    try {
+      cuerpoError = await respuestaGemini.text();
+    } catch (e) {
+      cuerpoError = "";
+    }
+    let errorGoogle = null;
+    if (cuerpoError) {
+      try {
+        const parsed = JSON.parse(cuerpoError);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.error && typeof parsed.error === "object") {
+            errorGoogle = parsed.error;
+          } else if (
+            Array.isArray(parsed) &&
+            parsed[0] &&
+            parsed[0].error &&
+            typeof parsed[0].error === "object"
+          ) {
+            errorGoogle = parsed[0].error;
+          }
+        }
+      } catch (e) {
+        errorGoogle = null;
+      }
+    }
+    const mensajeCrudo =
+      (errorGoogle && (errorGoogle.message || errorGoogle.status)) ||
+      cuerpoError ||
+      respuestaGemini.statusText ||
+      "provider_error";
+    const esCuota = respuestaGemini.status === 429;
+    return {
+      ok: false,
+      httpStatus: esCuota ? 429 : 502,
+      error: esCuota ? "quota_exceeded" : "provider_error",
+      providerStatus: respuestaGemini.status,
+      providerMessage: sanitizarMensajeError(mensajeCrudo, clave),
+      elapsedMs
+    };
+  }
+
+  let payload;
+  try {
+    payload = await respuestaGemini.json();
+  } catch (e) {
+    return {
+      ok: false,
+      httpStatus: 502,
+      error: "provider_error",
+      providerStatus: respuestaGemini.status,
+      providerMessage: sanitizarMensajeError(e && e.message, clave) || "invalid_provider_json",
+      elapsedMs: Date.now() - t0
+    };
+  }
+
+  const texto = extraerTextoRespuestaGemini(payload);
+  if (!texto) {
+    const detallePayload =
+      (payload && payload.error && (payload.error.message || payload.error.status)) ||
+      (payload && payload.promptFeedback && payload.promptFeedback.blockReason) ||
+      "missing_candidates";
+    return {
+      ok: false,
+      httpStatus: 502,
+      error: "provider_error",
+      providerStatus: respuestaGemini.status,
+      providerMessage: sanitizarMensajeError(detallePayload, clave),
+      elapsedMs: Date.now() - t0
+    };
+  }
+
+  const crudo = extraerJsonSeguro(texto);
+  if (!crudo) {
+    return {
+      ok: false,
+      httpStatus: 502,
+      error: "invalid_response",
+      providerStatus: respuestaGemini.status,
+      providerMessage: "invalid_json",
+      elapsedMs: Date.now() - t0
+    };
+  }
+
+  return {
+    ok: true,
+    crudo,
+    elapsedMs: Date.now() - t0
+  };
+}
+
+function fijarHeaderTiming(res, decisionMs, borradorMs, totalMs) {
+  if (res && typeof res.setHeader === "function") {
+    res.setHeader(
+      "Server-Timing",
+      `decision;dur=${decisionMs}, borrador;dur=${borradorMs}, total;dur=${totalMs}`
+    );
+  }
 }
 
 async function handler(req, res) {
@@ -413,132 +541,92 @@ async function handler(req, res) {
       cuerpo.estadoEditor && typeof cuerpo.estadoEditor === "object" ? cuerpo.estadoEditor : {}
   };
 
-  let respuestaGemini;
-  try {
-    const controlador = new AbortController();
-    const temporizador = setTimeout(() => controlador.abort(), TIMEOUT_MS);
-    try {
-      respuestaGemini = await fetch(URL_GEMINI, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": clave
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: construirPromptChat(entrada) }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.5,
-            maxOutputTokens: MAX_OUTPUT_TOKENS,
-            thinkingConfig: {
-              thinkingLevel: "low"
-            }
-          }
-        }),
-        signal: controlador.signal
-      });
-    } finally {
-      clearTimeout(temporizador);
-    }
-  } catch (e) {
-    const detalleRed =
-      (e && e.name === "AbortError" ? "Timeout after " + TIMEOUT_MS + "ms" : "") ||
-      (e && e.cause && e.cause.message) ||
-      (e && e.message) ||
-      "network_error";
-    return res.status(502).json({
-      error: "provider_unavailable",
-      provider_status: null,
-      provider_message: sanitizarMensajeError(detalleRed, clave)
+  const tInicio = Date.now();
+
+  // Fase 1: razonamiento corto con pocos tokens para decidir la acción
+  const resDecision = await invocarGeminiJson({
+    clave,
+    prompt: construirPromptDecision(entrada),
+    maxOutputTokens: MAX_TOKENS_DECISION,
+    temperature: 0.3,
+    timeoutMs: TIMEOUT_DECISION_MS
+  });
+
+  const decisionMs = resDecision.elapsedMs || Date.now() - tInicio;
+
+  if (!resDecision.ok) {
+    const totalMs = Date.now() - tInicio;
+    fijarHeaderTiming(res, decisionMs, 0, totalMs);
+    return res.status(resDecision.httpStatus).json({
+      error: resDecision.error,
+      provider_status: resDecision.providerStatus,
+      provider_message: resDecision.providerMessage,
+      timing: { decision_ms: decisionMs, borrador_ms: 0, total_ms: totalMs }
     });
   }
 
-  if (!respuestaGemini.ok) {
-    let cuerpoError = "";
-    try {
-      cuerpoError = await respuestaGemini.text();
-    } catch (e) {
-      cuerpoError = "";
-    }
-    let errorGoogle = null;
-    if (cuerpoError) {
-      try {
-        const parsed = JSON.parse(cuerpoError);
-        if (parsed && typeof parsed === "object") {
-          if (parsed.error && typeof parsed.error === "object") {
-            errorGoogle = parsed.error;
-          } else if (
-            Array.isArray(parsed) &&
-            parsed[0] &&
-            parsed[0].error &&
-            typeof parsed[0].error === "object"
-          ) {
-            errorGoogle = parsed[0].error;
-          }
-        }
-      } catch (e) {
-        errorGoogle = null;
+  const resultado = normalizarDecisionChat(entrada, resDecision.crudo);
+  if (!resultado) {
+    const totalMs = Date.now() - tInicio;
+    fijarHeaderTiming(res, decisionMs, 0, totalMs);
+    return res.status(502).json({
+      error: "invalid_response",
+      timing: { decision_ms: decisionMs, borrador_ms: 0, total_ms: totalMs }
+    });
+  }
+
+  // Fase 2: solo si la acción es generar o actualizar el borrador (presupuesto completo dentro del límite total de 45s)
+  let borradorMs = 0;
+  if (
+    (resultado.accion === "generar" || resultado.accion === "actualizar") &&
+    !resultado.borrador
+  ) {
+    const restanteMs = TIMEOUT_TOTAL_MS - (Date.now() - tInicio);
+    const timeoutBorrador = Math.min(TIMEOUT_BORRADOR_MAX_MS, restanteMs);
+    if (timeoutBorrador >= 4000) {
+      const datosParaBorrador = Object.assign({}, resultado.datosActualizados, {
+        tono: resultado.datosActualizados.tono || "cercano",
+        variante: entrada.variante || 0
+      });
+      const resBorrador = await invocarGeminiJson({
+        clave,
+        prompt: construirPrompt(datosParaBorrador),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.7,
+        timeoutMs: timeoutBorrador
+      });
+      borradorMs = resBorrador.elapsedMs || 0;
+      if (resBorrador.ok) {
+        resultado.borrador = normalizarBorrador(datosParaBorrador, resBorrador.crudo);
       }
     }
-    const mensajeCrudo =
-      (errorGoogle && (errorGoogle.message || errorGoogle.status)) ||
-      cuerpoError ||
-      respuestaGemini.statusText ||
-      "provider_error";
-    return res.status(502).json({
-      error: "provider_error",
-      provider_status: respuestaGemini.status,
-      provider_message: sanitizarMensajeError(mensajeCrudo, clave)
-    });
   }
 
-  let payload;
-  try {
-    payload = await respuestaGemini.json();
-  } catch (e) {
-    return res.status(502).json({
-      error: "provider_error",
-      provider_status: respuestaGemini.status,
-      provider_message: sanitizarMensajeError(e && e.message, clave) || "invalid_provider_json"
-    });
-  }
-
-  const texto = extraerTextoRespuestaGemini(payload);
-  if (!texto) {
-    const detallePayload =
-      (payload && payload.error && (payload.error.message || payload.error.status)) ||
-      (payload && payload.promptFeedback && payload.promptFeedback.blockReason) ||
-      "missing_candidates";
-    return res.status(502).json({
-      error: "provider_error",
-      provider_status: respuestaGemini.status,
-      provider_message: sanitizarMensajeError(detallePayload, clave)
-    });
-  }
-
-  const crudo = extraerJsonSeguro(texto);
-  if (!crudo) {
-    return res.status(502).json({ error: "invalid_response" });
-  }
-
-  const resultado = normalizarRespuestaChat(entrada, crudo);
-  if (!resultado) {
-    return res.status(502).json({ error: "invalid_response" });
-  }
-
+  const totalMs = Date.now() - tInicio;
+  fijarHeaderTiming(res, decisionMs, borradorMs, totalMs);
+  resultado.timing = {
+    decision_ms: decisionMs,
+    borrador_ms: borradorMs,
+    total_ms: totalMs
+  };
   return res.status(200).json(resultado);
 }
 
 handler._test = {
   MODELO,
-  TIMEOUT_MS,
+  TIMEOUT_TOTAL_MS,
+  TIMEOUT_DECISION_MS,
+  TIMEOUT_BORRADOR_MAX_MS,
+  MAX_TOKENS_DECISION,
   MAX_OUTPUT_TOKENS,
   quitarGuionesLargos,
   limpiarRespuestaNatural,
   normalizarDatosEntrada,
   normalizarMensajesEntrada,
-  construirPromptChat,
-  normalizarRespuestaChat
+  construirPromptDecision,
+  construirPromptChat: construirPromptDecision,
+  normalizarDecisionChat,
+  normalizarRespuestaChat: normalizarDecisionChat
 };
 
 module.exports = handler;

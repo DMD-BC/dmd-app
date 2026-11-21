@@ -2013,9 +2013,10 @@
         }
       };
 
+      const TIMEOUT_CHAT_CLIENTE_MS = 20000;
       const controlador = typeof AbortController === "function" ? new AbortController() : null;
       const temporizador = controlador
-        ? window.setTimeout(() => controlador.abort(), 48000)
+        ? window.setTimeout(() => controlador.abort(), TIMEOUT_CHAT_CLIENTE_MS)
         : null;
       try {
         const resp = await window.fetch("/api/chat", {
