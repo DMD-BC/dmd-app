@@ -32,6 +32,20 @@ return String(correo || "").trim().toLowerCase();
 function esCorreoValido(correo) {
 return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo);
 }
+function normalizarTelefono(valor) {
+const crudo = String(valor || "").trim();
+if (!crudo) return "";
+const tieneMas = crudo.startsWith("+");
+const digitos = crudo.replace(/\D+/g, "");
+if (!digitos) return "";
+return tieneMas ? `+${digitos}` : digitos;
+}
+function esTelefonoValido(valor) {
+const limpio = normalizarTelefono(valor);
+if (!limpio) return false;
+const digitos = limpio.replace(/\D+/g, "");
+return digitos.length >= 10 && digitos.length <= 15;
+}
 (function limpiarResiduosAuthLocal() {
 try {
 if (window.localStorage) {
@@ -155,11 +169,14 @@ obtenerUltimoErrorFueTimeout() { return ultimoErrorFueTimeout; },
 esperarSesion() { return promesaVerificacionInicial.then(() => clonarSesion(sesionActual)); },
 verificarSesion() { return verificarSesionDesdeServidor("me"); },
 alCambiarSesion(callback) { if (typeof callback === "function") escuchasCambio.push(callback); },
-async crearCuenta({ nombre, correo, password }) {
+async crearCuenta({ nombre, correo, password, telefono }) {
 const nombreLimpio = limpiarTextoCuenta(nombre);
 const correoLimpio = normalizarCorreo(correo);
 const clave = String(password || "");
-const res = await solicitarAuth("/register", { method: "POST", body: { name: nombreLimpio, email: correoLimpio, password: clave } });
+const telefonoLimpio = normalizarTelefono(telefono);
+const payloadRegistro = { name: nombreLimpio, email: correoLimpio, password: clave };
+if (telefonoLimpio) payloadRegistro.phone = telefonoLimpio;
+const res = await solicitarAuth("/register", { method: "POST", body: payloadRegistro });
 if (!res.ok) return { ok: false, sinConexion: Boolean(res.sinConexion), campo: res.status === 409 ? "correo" : "", mensaje: res.status === 409 && !res.data ? "Ese correo ya tiene cuenta. Inicia sesión." : res.mensaje };
 const verif = await verificarSesionDesdeServidor("registro");
 if (verif.sesion) return { ok: true, sesion: verif.sesion };
@@ -248,6 +265,35 @@ if (verif.sesion) return { ok: true, sesion: verif.sesion };
 const usuarioDirecto = normalizarUsuarioServidor(res.data);
 if (usuarioDirecto) { sesionActual = usuarioDirecto; ultimoErrorServicio = ""; ultimoErrorFueTimeout = false; notificarCambioSesion("otp"); return { ok: true, sesion: clonarSesion(sesionActual) }; }
 return { ok: false, sinConexion: Boolean(verif.sinConexion), mensaje: verif.mensaje || "No se pudo confirmar la sesión con el servidor." };
+},
+async enviarCodigoSms(telefono) {
+const telefonoLimpio = normalizarTelefono(telefono);
+if (!esTelefonoValido(telefonoLimpio)) return { ok: false, campo: "telefono", mensaje: "Escribe un número de teléfono válido." };
+const res = await solicitarAuth("/phone-otp/send", { method: "POST", body: { phone: telefonoLimpio } });
+if (res.status === 404 || res.status === 405 || res.status === 501 || res.sinConexion) {
+return { ok: false, noDisponible: true, mensaje: "La confirmación por SMS aún no está disponible en el servicio de cuentas. Tu cuenta ya quedó creada con tu número guardado." };
+}
+if (!res.ok || (res.data && res.data.ok === false)) {
+return { ok: false, noDisponible: false, mensaje: res.mensaje || "No se pudo enviar el código SMS. Intenta de nuevo." };
+}
+const msgServidor = res.data && typeof res.data === "object" ? (res.data.message || res.data.mensaje || "") : "";
+return { ok: true, mensaje: msgServidor || `Te enviamos un código de 6 dígitos a ${telefonoLimpio}.` };
+},
+async verificarCodigoSms(telefono, codigo) {
+const telefonoLimpio = normalizarTelefono(telefono);
+const codigoLimpio = String(codigo || "").replace(/\D+/g, "").trim();
+if (!esTelefonoValido(telefonoLimpio)) return { ok: false, campo: "telefono", mensaje: "Escribe un número de teléfono válido." };
+if (!/^\d{6}$/.test(codigoLimpio)) return { ok: false, campo: "codigo", mensaje: "Escribe el código numérico de 6 dígitos." };
+const res = await solicitarAuth("/phone-otp/verify", { method: "POST", body: { phone: telefonoLimpio, code: codigoLimpio } });
+if (res.status === 404 || res.status === 405 || res.status === 501 || res.sinConexion) {
+return { ok: false, noDisponible: true, mensaje: "La confirmación por SMS aún no está disponible en el servicio de cuentas. Tu cuenta ya quedó creada con tu número guardado." };
+}
+if (!res.ok || (res.data && res.data.ok === false)) {
+return { ok: false, noDisponible: false, mensaje: res.mensaje || "Código incorrecto o expirado. Pide uno nuevo." };
+}
+await verificarSesionDesdeServidor("phone-otp");
+const msgServidor = res.data && typeof res.data === "object" ? (res.data.message || res.data.mensaje || "") : "";
+return { ok: true, mensaje: msgServidor || "Tu número de teléfono quedó confirmado." };
 }
 };
 window.dmdCuenta = dmdCuenta;
@@ -263,8 +309,11 @@ const errorServicioHint = document.getElementById("cuenta-error-servicio-hint");
 const btnReintentarAuth = document.getElementById("btn-reintentar-auth");
 const vistaInvitado = document.getElementById("cuenta-invitado");
 const vistaRecuperar = document.getElementById("vista-recuperar-password");
+const vistaVerificarTelefono = document.getElementById("vista-verificar-telefono");
 const vistaActiva = document.getElementById("cuenta-activa");
 let vistaRecuperarActiva = false;
+let vistaVerificarTelefonoActiva = false;
+let telefonoPendienteConfirmar = "";
 const estadoCuenta = document.getElementById("estado-cuenta");
 const tabLogin = document.getElementById("tab-login");
 const tabRegistro = document.getElementById("tab-registro");
@@ -278,11 +327,13 @@ const loginErrorPassword = document.getElementById("error-login-password");
 const btnIniciarSesion = document.getElementById("btn-iniciar-sesion");
 const regNombre = document.getElementById("reg-nombre");
 const regCorreo = document.getElementById("reg-correo");
+const regTelefono = document.getElementById("reg-telefono");
 const regPassword = document.getElementById("reg-password");
 const pistaRegPassword = document.getElementById("pista-reg-password");
 const regErrorGeneral = document.getElementById("error-reg-general");
 const regErrorNombre = document.getElementById("error-reg-nombre");
 const regErrorCorreo = document.getElementById("error-reg-correo");
+const regErrorTelefono = document.getElementById("error-reg-telefono");
 const regErrorPassword = document.getElementById("error-reg-password");
 const btnCrearCuenta = document.getElementById("btn-crear-cuenta");
 const sesionNombreEl = document.getElementById("sesion-nombre");
@@ -291,6 +342,92 @@ const sesionCuotaEl = document.getElementById("sesion-cuota");
 const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
 let enviando = false;
 let planEnUrl = "";
+function inicializarBloquesOtp(targetId, alCambiar) {
+const contenedor = document.querySelector(`[data-otp-blocks="${targetId}"]`);
+const hiddenInput = document.getElementById(targetId);
+const cajas = contenedor ? Array.from(contenedor.querySelectorAll(".otp-block-input")) : [];
+function sincronizar() {
+const valor = cajas.map((c) => String(c.value || "").replace(/\D+/g, "").slice(0, 1)).join("");
+if (hiddenInput) hiddenInput.value = valor;
+if (typeof alCambiar === "function") alCambiar(valor);
+return valor;
+}
+function rellenarDesde(indiceInicio, textoCrudo) {
+const digitos = String(textoCrudo || "").replace(/\D+/g, "");
+if (!digitos) { sincronizar(); return; }
+let pos = indiceInicio;
+for (let k = 0; k < digitos.length && pos < cajas.length; k += 1) {
+cajas[pos].value = digitos[k];
+pos += 1;
+}
+const destinoFoco = Math.min(pos, cajas.length - 1);
+if (cajas[destinoFoco]) cajas[destinoFoco].focus();
+sincronizar();
+}
+cajas.forEach((caja, idx) => {
+caja.addEventListener("input", () => {
+const digitos = String(caja.value || "").replace(/\D+/g, "");
+if (digitos.length > 1) {
+rellenarDesde(idx, digitos);
+return;
+}
+caja.value = digitos;
+if (digitos.length === 1 && idx < cajas.length - 1) cajas[idx + 1].focus();
+sincronizar();
+});
+caja.addEventListener("keydown", (e) => {
+if (e.key === "Backspace") {
+if (caja.value) {
+caja.value = "";
+sincronizar();
+return;
+}
+if (idx > 0) {
+e.preventDefault();
+cajas[idx - 1].value = "";
+cajas[idx - 1].focus();
+sincronizar();
+}
+} else if (e.key === "ArrowLeft" && idx > 0) {
+e.preventDefault();
+cajas[idx - 1].focus();
+} else if (e.key === "ArrowRight" && idx < cajas.length - 1) {
+e.preventDefault();
+cajas[idx + 1].focus();
+}
+});
+caja.addEventListener("paste", (e) => {
+const texto = (e.clipboardData && e.clipboardData.getData("text")) || "";
+const digitos = texto.replace(/\D+/g, "");
+if (!digitos) return;
+e.preventDefault();
+const inicio = digitos.length >= cajas.length ? 0 : idx;
+rellenarDesde(inicio, digitos);
+});
+caja.addEventListener("focus", () => {
+try { caja.select(); } catch (err) {}
+});
+});
+return {
+limpiar() {
+cajas.forEach((c) => { c.value = ""; c.classList.remove("is-invalid"); c.removeAttribute("aria-invalid"); });
+if (hiddenInput) hiddenInput.value = "";
+},
+enfocar() {
+if (cajas[0]) cajas[0].focus();
+},
+marcarError(tieneError) {
+cajas.forEach((c) => {
+c.classList.toggle("is-invalid", Boolean(tieneError));
+if (tieneError) c.setAttribute("aria-invalid", "true");
+else c.removeAttribute("aria-invalid");
+});
+},
+obtenerValor() {
+return cajas.length > 0 ? sincronizar() : String((hiddenInput && hiddenInput.value) || "").replace(/\D+/g, "");
+}
+};
+}
 function fijarError(input, nodoError, mensaje) {
 if (nodoError) nodoError.textContent = mensaje || "";
 if (input) {
@@ -304,6 +441,7 @@ fijarError(loginPassword, loginErrorPassword, "");
 loginErrorGeneral.textContent = ""; loginErrorGeneral.hidden = true;
 fijarError(regNombre, regErrorNombre, "");
 fijarError(regCorreo, regErrorCorreo, "");
+fijarError(regTelefono, regErrorTelefono, "");
 fijarError(regPassword, regErrorPassword, "");
 regErrorGeneral.textContent = ""; regErrorGeneral.hidden = true;
 }
@@ -355,10 +493,19 @@ if (errorServicioHint && dmdCuenta.obtenerUltimoErrorFueTimeout()) errorServicio
 errorServicioBox.hidden = false;
 } else { errorServicioMsg.textContent = ""; errorServicioBox.hidden = true; }
 }
-if (!verificada) { vistaInvitado.hidden = true; vistaActiva.hidden = true; if (vistaRecuperar) vistaRecuperar.hidden = true; return; }
+if (!verificada) {
+vistaInvitado.hidden = true; vistaActiva.hidden = true;
+if (vistaRecuperar) vistaRecuperar.hidden = true;
+if (vistaVerificarTelefono) vistaVerificarTelefono.hidden = true;
+return;
+}
 if (sesion) {
 vistaRecuperarActiva = false;
-vistaInvitado.hidden = true; vistaActiva.hidden = false; if (vistaRecuperar) vistaRecuperar.hidden = true;
+if (vistaRecuperar) vistaRecuperar.hidden = true;
+const mostrarSms = Boolean(vistaVerificarTelefono && vistaVerificarTelefonoActiva);
+vistaInvitado.hidden = true;
+if (vistaVerificarTelefono) vistaVerificarTelefono.hidden = !mostrarSms;
+vistaActiva.hidden = mostrarSms;
 actualizarEstadoDisponibleFormularios(false);
 sesionNombreEl.textContent = sesion.nombre;
 sesionCorreoEl.textContent = sesion.correo;
@@ -367,6 +514,8 @@ if (sesion.cuotaTexto) { sesionCuotaEl.textContent = `Cuota disponible: ${sesion
 else { sesionCuotaEl.textContent = ""; sesionCuotaEl.hidden = true; }
 }
 } else {
+vistaVerificarTelefonoActiva = false;
+if (vistaVerificarTelefono) vistaVerificarTelefono.hidden = true;
 const mostrarRec = Boolean(vistaRecuperar && vistaRecuperarActiva);
 vistaInvitado.hidden = mostrarRec;
 if (vistaRecuperar) vistaRecuperar.hidden = !mostrarRec;
@@ -381,23 +530,36 @@ if (dmdCuenta.obtenerUltimoErrorServicio()) { regErrorGeneral.textContent = "El 
 limpiarErroresAuth(); estadoCuenta.textContent = "";
 const nombre = limpiarTextoCuenta(regNombre.value);
 const correo = normalizarCorreo(regCorreo.value);
+const telefonoCrudo = String((regTelefono && regTelefono.value) || "").trim();
+const telefono = telefonoCrudo ? normalizarTelefono(telefonoCrudo) : "";
 const password = regPassword.value;
 let primero = null;
 if (nombre.length < 2) { fijarError(regNombre, regErrorNombre, "Escribe tu nombre."); primero = primero || regNombre; }
 if (!esCorreoValido(correo)) { fijarError(regCorreo, regErrorCorreo, "Escribe un correo válido."); primero = primero || regCorreo; }
+if (telefonoCrudo && !esTelefonoValido(telefonoCrudo)) { fijarError(regTelefono, regErrorTelefono, "Escribe un número válido de 10 dígitos (puedes incluir lada o +52)."); primero = primero || regTelefono; }
 if (password.length < 6) { fijarError(regPassword, regErrorPassword, "La contraseña debe tener al menos 6 caracteres."); primero = primero || regPassword; }
 if (primero) { primero.focus(); return; }
 enviando = true; btnCrearCuenta.disabled = true; btnCrearCuenta.textContent = "Creando cuenta...";
+if (telefono && vistaVerificarTelefono) {
+vistaVerificarTelefonoActiva = true;
+telefonoPendienteConfirmar = telefono;
+}
 try {
-const resultado = await dmdCuenta.crearCuenta({ nombre, correo, password });
+const resultado = await dmdCuenta.crearCuenta({ nombre, correo, password, telefono });
 if (!resultado.ok) {
+vistaVerificarTelefonoActiva = false;
+telefonoPendienteConfirmar = "";
 if (resultado.campo === "correo") { fijarError(regCorreo, regErrorCorreo, resultado.mensaje); regCorreo.focus(); }
 else { regErrorGeneral.textContent = resultado.mensaje; regErrorGeneral.hidden = false; }
 return;
 }
 formRegistro.reset(); actualizarPistaPasswordRegistro();
+if (telefono && vistaVerificarTelefono) {
+abrirVistaVerificarTelefono(telefono);
+} else {
 estadoCuenta.textContent = `Sesión iniciada: ${resultado.sesion.nombre}.`;
 actualizarVistaCuenta();
+}
 } finally {
 enviando = false;
 btnCrearCuenta.disabled = Boolean(dmdCuenta.obtenerUltimoErrorServicio());
@@ -533,10 +695,16 @@ const estadoRecGoogle = document.getElementById("estado-rec-google");
 const btnRecCrearCuenta = document.getElementById("btn-rec-crear-cuenta");
 let metodoRecuperacion = "enlace";
 let recOtpCorreoActivo = "";
+const otpBloquesRec = inicializarBloquesOtp("rec-otp-codigo", () => {
+if (errorRecOtpCodigo) errorRecOtpCodigo.textContent = "";
+otpBloquesRec.marcarError(false);
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
+});
 function limpiarMensajesRecuperacion() {
 fijarError(recCorreo, errorRecCorreo, "");
 fijarError(recOtpCorreo, errorRecOtpCorreo, "");
 fijarError(recOtpCodigo, errorRecOtpCodigo, "");
+otpBloquesRec.limpiar();
 if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
 if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
 if (recReenviarWrap) recReenviarWrap.hidden = true;
@@ -544,7 +712,6 @@ if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGenera
 if (estadoRecOtp) { estadoRecOtp.textContent = ""; estadoRecOtp.hidden = true; }
 if (formRecOtpEnviar) formRecOtpEnviar.hidden = false;
 if (formRecOtpVerificar) formRecOtpVerificar.hidden = true;
-if (recOtpCodigo) recOtpCodigo.value = "";
 recOtpCorreoActivo = "";
 }
 function fijarMetodoRecuperacion(nuevoMetodo, enfocar) {
@@ -644,7 +811,8 @@ estadoRecOtp.hidden = false;
 }
 if (formRecOtpEnviar) formRecOtpEnviar.hidden = true;
 if (formRecOtpVerificar) formRecOtpVerificar.hidden = false;
-if (recOtpCodigo) { recOtpCodigo.value = ""; recOtpCodigo.focus(); }
+otpBloquesRec.limpiar();
+otpBloquesRec.enfocar();
 } else {
 if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = res.mensaje; errorRecOtpGeneral.hidden = false; }
 }
@@ -657,17 +825,19 @@ async function manejarVerificarOtpRecuperacion(evento) {
 if (evento) { evento.preventDefault(); evento.stopPropagation(); }
 if (enviando || !recOtpCodigo) return;
 const correo = normalizarCorreo(recOtpCorreoActivo || (recOtpCorreo && recOtpCorreo.value) || "");
-const codigo = String(recOtpCodigo.value || "").replace(/\D+/g, "").trim();
+const codigo = otpBloquesRec.obtenerValor();
 fijarError(recOtpCodigo, errorRecOtpCodigo, "");
+otpBloquesRec.marcarError(false);
 if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
-if (!/^\d{6}$/.test(codigo)) { fijarError(recOtpCodigo, errorRecOtpCodigo, "Escribe el código numérico de 6 dígitos."); recOtpCodigo.focus(); return; }
+if (!/^\d{6}$/.test(codigo)) { fijarError(recOtpCodigo, errorRecOtpCodigo, "Escribe el código numérico de 6 dígitos."); otpBloquesRec.marcarError(true); otpBloquesRec.enfocar(); return; }
 enviando = true;
 if (btnRecOtpVerificar) { btnRecOtpVerificar.disabled = true; btnRecOtpVerificar.textContent = "Verificando..."; }
 try {
 const res = await dmdCuenta.verificarCodigoOtp(correo, codigo);
 if (!res.ok) {
 if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = res.mensaje; errorRecOtpGeneral.hidden = false; }
-recOtpCodigo.focus();
+otpBloquesRec.marcarError(true);
+otpBloquesRec.enfocar();
 return;
 }
 estadoCuenta.textContent = `Sesión iniciada: ${res.sesion.nombre}.`;
@@ -718,12 +888,6 @@ fijarError(recOtpCorreo, errorRecOtpCorreo, "");
 if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
 });
 }
-if (recOtpCodigo) {
-recOtpCodigo.addEventListener("input", () => {
-fijarError(recOtpCodigo, errorRecOtpCodigo, "");
-if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
-});
-}
 if (btnRecGoogle) {
 btnRecGoogle.addEventListener("click", async () => {
 if (enviando) return;
@@ -744,6 +908,99 @@ limpiarMensajesRecuperacion();
 cambiarPestana("registro");
 actualizarVistaCuenta();
 if (regNombre && !vistaInvitado.hidden) regNombre.focus();
+});
+}
+if (regTelefono) {
+regTelefono.addEventListener("input", () => fijarError(regTelefono, regErrorTelefono, ""));
+}
+const smsOtpNumeroEl = document.getElementById("sms-otp-numero");
+const errorSmsOtpGeneral = document.getElementById("error-sms-otp-general");
+const estadoSmsOtp = document.getElementById("estado-sms-otp");
+const formSmsOtpVerificar = document.getElementById("form-sms-otp-verificar");
+const errorSmsOtpCodigo = document.getElementById("error-sms-otp-codigo");
+const btnSmsOtpVerificar = document.getElementById("btn-sms-otp-verificar");
+const btnSmsOtpReenviar = document.getElementById("btn-sms-otp-reenviar");
+const btnSmsOtpContinuar = document.getElementById("btn-sms-otp-continuar");
+const otpBloquesSms = inicializarBloquesOtp("sms-otp-codigo", () => {
+if (errorSmsOtpCodigo) errorSmsOtpCodigo.textContent = "";
+otpBloquesSms.marcarError(false);
+if (errorSmsOtpGeneral) { errorSmsOtpGeneral.textContent = ""; errorSmsOtpGeneral.hidden = true; }
+});
+async function enviarSmsConfirmacion(telefono, esReenvio) {
+if (!telefono) return;
+if (errorSmsOtpGeneral) { errorSmsOtpGeneral.textContent = ""; errorSmsOtpGeneral.hidden = true; }
+if (estadoSmsOtp && !esReenvio) { estadoSmsOtp.textContent = ""; estadoSmsOtp.hidden = true; }
+if (btnSmsOtpReenviar) { btnSmsOtpReenviar.disabled = true; btnSmsOtpReenviar.textContent = "Enviando..."; }
+try {
+const res = await dmdCuenta.enviarCodigoSms(telefono);
+if (res.ok) {
+if (estadoSmsOtp) { estadoSmsOtp.textContent = res.mensaje; estadoSmsOtp.hidden = false; }
+otpBloquesSms.enfocar();
+} else {
+if (errorSmsOtpGeneral) { errorSmsOtpGeneral.textContent = res.mensaje; errorSmsOtpGeneral.hidden = false; }
+}
+} finally {
+if (btnSmsOtpReenviar) { btnSmsOtpReenviar.disabled = false; btnSmsOtpReenviar.textContent = "Reenviar código"; }
+}
+}
+function abrirVistaVerificarTelefono(telefono) {
+if (!vistaVerificarTelefono) return;
+vistaVerificarTelefonoActiva = true;
+telefonoPendienteConfirmar = telefono;
+otpBloquesSms.limpiar();
+if (errorSmsOtpCodigo) errorSmsOtpCodigo.textContent = "";
+if (errorSmsOtpGeneral) { errorSmsOtpGeneral.textContent = ""; errorSmsOtpGeneral.hidden = true; }
+if (estadoSmsOtp) { estadoSmsOtp.textContent = ""; estadoSmsOtp.hidden = true; }
+if (smsOtpNumeroEl) smsOtpNumeroEl.textContent = telefono;
+actualizarVistaCuenta();
+enviarSmsConfirmacion(telefono, false);
+}
+async function manejarVerificarSmsConfirmacion(evento) {
+if (evento) { evento.preventDefault(); evento.stopPropagation(); }
+if (enviando || !telefonoPendienteConfirmar) return;
+const codigo = otpBloquesSms.obtenerValor();
+if (errorSmsOtpCodigo) errorSmsOtpCodigo.textContent = "";
+otpBloquesSms.marcarError(false);
+if (errorSmsOtpGeneral) { errorSmsOtpGeneral.textContent = ""; errorSmsOtpGeneral.hidden = true; }
+if (!/^\d{6}$/.test(codigo)) {
+if (errorSmsOtpCodigo) errorSmsOtpCodigo.textContent = "Escribe el código numérico de 6 dígitos.";
+otpBloquesSms.marcarError(true);
+otpBloquesSms.enfocar();
+return;
+}
+enviando = true;
+if (btnSmsOtpVerificar) { btnSmsOtpVerificar.disabled = true; btnSmsOtpVerificar.textContent = "Verificando..."; }
+try {
+const res = await dmdCuenta.verificarCodigoSms(telefonoPendienteConfirmar, codigo);
+if (!res.ok) {
+if (errorSmsOtpGeneral) { errorSmsOtpGeneral.textContent = res.mensaje; errorSmsOtpGeneral.hidden = false; }
+if (!res.noDisponible) { otpBloquesSms.marcarError(true); otpBloquesSms.enfocar(); }
+return;
+}
+vistaVerificarTelefonoActiva = false;
+telefonoPendienteConfirmar = "";
+otpBloquesSms.limpiar();
+estadoCuenta.textContent = res.mensaje;
+actualizarVistaCuenta();
+} finally {
+enviando = false;
+if (btnSmsOtpVerificar) { btnSmsOtpVerificar.disabled = false; btnSmsOtpVerificar.textContent = "Confirmar número"; }
+}
+}
+if (formSmsOtpVerificar) {
+formSmsOtpVerificar.addEventListener("submit", manejarVerificarSmsConfirmacion);
+}
+if (btnSmsOtpReenviar) {
+btnSmsOtpReenviar.addEventListener("click", () => enviarSmsConfirmacion(telefonoPendienteConfirmar, true));
+}
+if (btnSmsOtpContinuar) {
+btnSmsOtpContinuar.addEventListener("click", () => {
+vistaVerificarTelefonoActiva = false;
+telefonoPendienteConfirmar = "";
+otpBloquesSms.limpiar();
+const ses = dmdCuenta.obtenerSesionActual();
+if (ses && estadoCuenta) estadoCuenta.textContent = `Sesión iniciada: ${ses.nombre}.`;
+actualizarVistaCuenta();
 });
 }
 const secMiSub = document.getElementById("seccion-mi-suscripcion");

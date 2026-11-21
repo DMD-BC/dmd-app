@@ -116,6 +116,12 @@ body { overflow-x: clip; }
 <p id="error-reg-correo" class="field-error" aria-live="polite"></p>
 </div>
 <div class="field">
+<label class="field-label" for="reg-telefono">Número de teléfono (opcional)</label>
+<input id="reg-telefono" name="phone" class="input" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="Ej. 33 1234 5678" aria-describedby="pista-reg-telefono error-reg-telefono">
+<p id="pista-reg-telefono" class="field-hint">Opcional. Si lo agregas, te pediremos confirmar tu número por SMS.</p>
+<p id="error-reg-telefono" class="field-error" aria-live="polite"></p>
+</div>
+<div class="field">
 <label class="field-label" for="reg-password">Contraseña <span class="required-mark" aria-hidden="true">*</span></label>
 <div class="password-field">
 <input id="reg-password" name="password" class="input password-input" type="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres" aria-describedby="pista-reg-password error-reg-password">
@@ -176,8 +182,16 @@ body { overflow-x: clip; }
 </form>
 <form id="form-rec-otp-verificar" class="form-grid" novalidate hidden>
 <div class="field">
-<label class="field-label" for="rec-otp-codigo">Código de 6 dígitos <span class="required-mark" aria-hidden="true">*</span></label>
-<input id="rec-otp-codigo" name="code" class="input input-otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-describedby="error-rec-otp-codigo">
+<span class="field-label" id="label-rec-otp-codigo">Código de 6 dígitos <span class="required-mark" aria-hidden="true">*</span></span>
+<div class="otp-blocks" data-otp-blocks="rec-otp-codigo" role="group" aria-labelledby="label-rec-otp-codigo" aria-describedby="error-rec-otp-codigo">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="Dígito 1 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 2 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 3 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 4 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 5 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 6 de 6">
+</div>
+<input id="rec-otp-codigo" name="code" type="hidden" value="">
 <p id="error-rec-otp-codigo" class="field-error" aria-live="polite"></p>
 </div>
 <div>
@@ -219,6 +233,39 @@ body { overflow-x: clip; }
 </div>
 <div class="recovery-last-resort">
 <p class="field-hint">¿Ya no tienes acceso a tu correo? <button id="btn-rec-crear-cuenta" class="text-link-btn" type="button">Crea una cuenta nueva</button></p>
+</div>
+</div>
+<div id="vista-verificar-telefono" class="recovery-view" hidden>
+<div class="recovery-view-head">
+<h2 class="recovery-view-title">Confirma tu número</h2>
+<p id="sms-otp-subtitulo" class="field-hint">Te enviamos un código a tu número <strong id="sms-otp-numero"></strong>.</p>
+</div>
+<div id="error-sms-otp-general" class="form-error-summary" role="alert" hidden></div>
+<p id="estado-sms-otp" class="recovery-confirm-box" role="status" aria-live="polite" hidden></p>
+<form id="form-sms-otp-verificar" class="form-grid" novalidate>
+<div class="field">
+<span class="field-label" id="label-sms-otp-codigo">Código de 6 dígitos <span class="required-mark" aria-hidden="true">*</span></span>
+<div class="otp-blocks" data-otp-blocks="sms-otp-codigo" role="group" aria-labelledby="label-sms-otp-codigo" aria-describedby="error-sms-otp-codigo">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="Dígito 1 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 2 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 3 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 4 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 5 de 6">
+<input class="input otp-block-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Dígito 6 de 6">
+</div>
+<input id="sms-otp-codigo" name="code" type="hidden" value="">
+<p id="error-sms-otp-codigo" class="field-error" aria-live="polite"></p>
+</div>
+<div>
+<button id="btn-sms-otp-verificar" class="btn btn-primary btn-full" type="submit">Confirmar número</button>
+</div>
+<div class="recovery-resend-row">
+<span class="field-hint">¿No llegó el SMS?</span>
+<button id="btn-sms-otp-reenviar" class="text-link-btn" type="button">Reenviar código</button>
+</div>
+</form>
+<div>
+<button id="btn-sms-otp-continuar" class="btn btn-secondary btn-full" type="button">Continuar a mi cuenta</button>
 </div>
 </div>
 <div id="cuenta-activa" hidden>

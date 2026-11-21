@@ -7888,5 +7888,56 @@ p {
   font-size: 0.72rem;
 }
 
+/* Entrada OTP en 6 bloques separados (correo y SMS) */
+.otp-blocks {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 420px) {
+  .otp-blocks {
+    gap: 8px;
+  }
+}
+
+.otp-block-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  height: 50px;
+  padding: 0;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--surface);
+  color: var(--ink);
+  caret-color: #0f5c4d;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.otp-block-input:focus {
+  outline: none;
+  border-color: #0f5c4d;
+  box-shadow: 0 0 0 3px rgba(15, 92, 77, 0.18);
+}
+
+.otp-block-input.is-invalid {
+  border-color: var(--error-ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  .otp-block-input:focus {
+    border-color: #5bc7ae;
+    box-shadow: 0 0 0 3px rgba(91, 199, 174, 0.22);
+  }
+}
+
+
 
 
