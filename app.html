@@ -29,8 +29,8 @@
   <div class="app-shell">
     <div id="sidebar-backdrop" class="sidebar-backdrop" hidden></div>
 
-    <!-- Barra lateral con DMD, búsqueda, secciones, borradores y configuración -->
-    <aside id="app-sidebar" class="app-sidebar" aria-label="Menú principal de DMD">
+    <!-- Barra lateral desplegable: solo marca DMD, búsqueda, conversaciones y Nueva conversación -->
+    <aside id="app-sidebar" class="app-sidebar" aria-label="Conversaciones de DMD">
       <div class="sidebar-head">
         <a class="brand brand-compact" href="index.html" aria-label="DMD, ir al inicio">
           <span class="brand-squares" aria-hidden="true">
@@ -49,93 +49,38 @@
         </button>
       </div>
 
-      <div class="sidebar-search-wrap">
-        <label class="sr-only" for="sidebar-buscar">Buscar conversaciones o páginas</label>
-        <input id="sidebar-buscar" class="sidebar-search-input" type="search" placeholder="Buscar chats o páginas..." autocomplete="off">
-      </div>
-
-      <nav class="sidebar-views-nav" aria-label="Secciones de la aplicación">
-        <button type="button" class="sidebar-nav-btn is-active" data-app-vista="chat">
+      <!-- Encabezado de la lista de conversaciones: píldora Buscar + botón redondo componer + engranaje de ajustes -->
+      <div class="sidebar-conv-header">
+        <div class="sidebar-search-pill">
+          <svg class="sidebar-search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+          <label class="sr-only" for="sidebar-buscar">Buscar conversaciones por nombre del negocio</label>
+          <input id="sidebar-buscar" class="sidebar-search-input" type="search" placeholder="Buscar" autocomplete="off">
+        </div>
+        <button id="btn-nueva-conv-icono" class="sidebar-round-btn sidebar-round-btn-primary" type="button" aria-label="Nueva conversación" title="Nueva conversación">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
           </svg>
-          <span>Chat principal</span>
         </button>
-        <button type="button" class="sidebar-nav-btn" data-app-vista="feed">
+        <button id="btn-sidebar-ajustes" class="sidebar-round-btn" type="button" aria-label="Ajustes" title="Ajustes">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
           </svg>
-          <span>Feed</span>
-        </button>
-        <button type="button" class="sidebar-nav-btn" data-app-vista="archivos">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"></path>
-          </svg>
-          <span>Archivos</span>
-        </button>
-        <button type="button" class="sidebar-nav-btn" data-app-vista="ideas">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 18h6"></path>
-            <path d="M10 22h4"></path>
-            <path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z"></path>
-          </svg>
-          <span>Ideas</span>
-        </button>
-        <button type="button" class="sidebar-nav-btn" data-app-vista="suscripcion">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-            <path d="M2 10h20"></path>
-          </svg>
-          <span>Mi suscripción</span>
-        </button>
-        <button type="button" class="sidebar-nav-btn" data-app-vista="biblioteca">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"></path>
-          </svg>
-          <span>Biblioteca</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-new-wrap">
-        <button id="btn-nueva-conv-sidebar" class="btn btn-primary btn-full btn-sm" type="button">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <path d="M12 5v14"></path>
-            <path d="M5 12h14"></path>
-          </svg>
-          <span>Nueva conversación</span>
         </button>
       </div>
 
       <div class="sidebar-scroll">
-        <div id="sidebar-storage-note" class="sidebar-storage-box">
-          <p class="sidebar-storage-title">
-            <span class="storage-dot" aria-hidden="true"></span>
-            <span id="sidebar-storage-label">Guardado en este navegador</span>
-          </p>
-          <p class="sidebar-storage-hint">
-            Tus cambios se conservan al recargar. Descarga un respaldo para llevarlos a otro dispositivo.
-          </p>
+        <div id="sidebar-undo-banner" class="sidebar-undo-banner" role="status" aria-live="polite" hidden>
+          <p id="sidebar-undo-texto" class="sidebar-undo-text"></p>
+          <div class="sidebar-undo-actions">
+            <button id="btn-sidebar-undo" class="btn btn-primary btn-sm" type="button">Deshacer borrado</button>
+            <button id="btn-sidebar-undo-cerrar" class="btn btn-secondary btn-sm" type="button">Cerrar</button>
+          </div>
         </div>
-
-        <section class="sidebar-section" aria-labelledby="titulo-hist-borradores">
-          <div class="sidebar-section-head">
-            <h2 id="titulo-hist-borradores">Páginas y borradores</h2>
-            <span id="contador-borradores" class="count-badge">0</span>
-          </div>
-          <div id="sidebar-undo-banner" class="sidebar-undo-banner" role="status" aria-live="polite" hidden>
-            <p id="sidebar-undo-texto" class="sidebar-undo-text"></p>
-            <div class="sidebar-undo-actions">
-              <button id="btn-sidebar-undo" class="btn btn-primary btn-sm" type="button">Deshacer borrado</button>
-              <button id="btn-sidebar-undo-cerrar" class="btn btn-secondary btn-sm" type="button">Cerrar</button>
-            </div>
-          </div>
-          <p id="borradores-vacio" class="sidebar-empty">Aún no tienes borradores guardados.</p>
-          <ul id="lista-borradores" class="sidebar-drafts" hidden></ul>
-        </section>
 
         <section class="sidebar-section" aria-labelledby="titulo-hist-conv">
           <div class="sidebar-section-head">
@@ -145,30 +90,16 @@
           <p id="conversaciones-vacio" class="sidebar-empty">Sin conversaciones guardadas.</p>
           <ul id="lista-conversaciones" class="sidebar-list" hidden></ul>
         </section>
-
-        <section class="sidebar-section" aria-labelledby="titulo-respaldo-sidebar">
-          <h2 id="titulo-respaldo-sidebar">Configuración y respaldo</h2>
-          <div class="sidebar-backup-actions">
-            <button id="btn-descargar-respaldo-sidebar" class="btn btn-secondary btn-sm" type="button">
-              Descargar JSON
-            </button>
-            <button id="btn-importar-respaldo-sidebar" class="btn btn-secondary btn-sm" type="button">
-              Importar JSON
-            </button>
-            <input id="input-importar-respaldo" type="file" accept="application/json,.json" hidden>
-          </div>
-          <p id="estado-respaldo-sidebar" class="sidebar-status" role="status" aria-live="polite"></p>
-        </section>
       </div>
 
-      <div class="sidebar-footer">
-        <div id="sidebar-cuenta-box" class="sidebar-account"></div>
-        <nav class="sidebar-links" aria-label="Configuración y accesos">
-          <a class="sidebar-link" href="index.html">Inicio</a>
-          <a class="sidebar-link" href="pago.html">Plan</a>
-          <a class="sidebar-link" href="legal.html">Legal</a>
-          <a class="sidebar-link" href="login.html">Cuenta</a>
-        </nav>
+      <div class="sidebar-new-footer">
+        <button id="btn-nueva-conv-sidebar" class="btn btn-primary btn-full btn-sm" type="button">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+          </svg>
+          <span>Nueva conversación</span>
+        </button>
       </div>
     </aside>
 
@@ -253,7 +184,7 @@
         <div id="editor-vacio" class="editor-empty-wrap">
           <div class="card">
             <h2>Aún no hay una página abierta</h2>
-            <p class="lead">Responde las preguntas del chat para generar tu primer borrador o reabre una página desde el menú lateral.</p>
+            <p class="lead">Responde las preguntas del chat para generar tu primer borrador o abre uno guardado desde Mis proyectos.</p>
             <div class="hero-actions">
               <button id="btn-editor-ir-chat" class="btn btn-primary btn-full" type="button">
                 Ir al chat para crear una página
@@ -668,36 +599,7 @@
         </div>
       </section>
 
-      <!-- Vista 3: Feed (catálogo de plantillas + tus páginas creadas y publicadas) -->
-      <section id="vista-feed" class="app-subview" aria-labelledby="titulo-vista-feed" hidden>
-        <div class="subview-inner">
-          <div class="subview-head">
-            <div>
-              <h2 id="titulo-vista-feed">Feed de páginas</h2>
-              <p class="field-hint">Plantillas listas para arrancar y las páginas que ya creaste en este navegador.</p>
-            </div>
-            <button id="btn-feed-nuevo" class="btn btn-primary btn-sm" type="button">Crear nueva página</button>
-          </div>
-
-          <section class="subview-block" aria-labelledby="titulo-feed-propias">
-            <div class="subview-block-head">
-              <h3 id="titulo-feed-propias">Tus páginas creadas</h3>
-              <span id="contador-feed-propias" class="count-badge">0</span>
-            </div>
-            <p id="feed-propias-vacio" class="empty-state-box">Aún no tienes páginas creadas. Empieza desde el chat o elige una plantilla abajo.</p>
-            <div id="grid-feed-propias" class="miniwindow-grid" hidden></div>
-          </section>
-
-          <section class="subview-block" aria-labelledby="titulo-feed-catalogo">
-            <div class="subview-block-head">
-              <h3 id="titulo-feed-catalogo">Catálogo de plantillas</h3>
-            </div>
-            <div id="grid-feed-catalogo" class="miniwindow-grid"></div>
-          </section>
-        </div>
-      </section>
-
-      <!-- Vista 4: Archivos (pestañas Archivos en miniventanas + Contenido multimedia real) -->
+      <!-- Vista 3: Archivos (pestañas Archivos en miniventanas + Contenido multimedia real) -->
       <section id="vista-archivos" class="app-subview" aria-labelledby="titulo-vista-archivos" hidden>
         <div class="subview-inner">
           <div class="subview-head">
@@ -736,31 +638,45 @@
         </div>
       </section>
 
-      <!-- Vista 5: Ideas (sugerencias reales según lo que falta en el borrador activo) -->
-      <section id="vista-ideas" class="app-subview" aria-labelledby="titulo-vista-ideas" hidden>
+      <!-- Vista 4: Mis proyectos (borradores y páginas publicadas reales del navegador) -->
+      <section id="vista-proyectos" class="app-subview" aria-labelledby="titulo-vista-proyectos" hidden>
         <div class="subview-inner">
           <div class="subview-head">
             <div>
-              <h2 id="titulo-vista-ideas">Ideas para tu página</h2>
-              <p id="ideas-subtitulo" class="field-hint">Sugerencias concretas basadas únicamente en lo que ya tiene tu borrador.</p>
+              <div class="subview-title-row">
+                <h2 id="titulo-vista-proyectos">Mis proyectos</h2>
+                <span id="contador-proyectos" class="count-badge">0</span>
+              </div>
+              <p class="field-hint">Tus borradores y páginas publicadas guardados en este navegador.</p>
+            </div>
+            <button id="btn-proyectos-nuevo" class="btn btn-primary btn-sm" type="button">Nuevo proyecto</button>
+          </div>
+
+          <div id="proyectos-undo-banner" class="sidebar-undo-banner" role="status" aria-live="polite" hidden>
+            <p id="proyectos-undo-texto" class="sidebar-undo-text"></p>
+            <div class="sidebar-undo-actions">
+              <button id="btn-proyectos-undo" class="btn btn-primary btn-sm" type="button">Deshacer borrado</button>
+              <button id="btn-proyectos-undo-cerrar" class="btn btn-secondary btn-sm" type="button">Cerrar</button>
             </div>
           </div>
-          <div id="ideas-vacio" class="empty-state-box" hidden>
-            <p><strong>Aún no tienes un borrador activo</strong></p>
-            <p class="field-hint">Crea tu primera página en el chat para ver recomendaciones reales sobre qué completar.</p>
-            <button id="btn-ideas-crear" class="btn btn-primary btn-sm" type="button">Crear borrador</button>
+
+          <div id="proyectos-vacio" class="empty-state-box" hidden>
+            <p><strong>Aún no tienes proyectos guardados</strong></p>
+            <p class="field-hint">Crea tu primera página desde el chat y aparecerá aquí para abrirla, editarla, duplicarla o eliminarla.</p>
+            <button id="btn-proyectos-ir-chat" class="btn btn-primary btn-sm" type="button">Ir al chat</button>
           </div>
-          <ul id="lista-ideas" class="ideas-list"></ul>
+
+          <ul id="lista-proyectos" class="projects-grid" hidden></ul>
         </div>
       </section>
 
-      <!-- Vista 6: Mi suscripción y Configuración -->
+      <!-- Vista 5: Suscripción y configuración -->
       <section id="vista-suscripcion" class="app-subview" aria-labelledby="titulo-vista-suscripcion" hidden>
         <div class="subview-inner">
           <div class="subview-head">
             <div>
-              <h2 id="titulo-vista-suscripcion">Mi suscripción y configuración</h2>
-              <p class="field-hint">Planes mensuales claros, respaldo de datos y acceso a tu cuenta.</p>
+              <h2 id="titulo-vista-suscripcion">Suscripción y ajustes</h2>
+              <p class="field-hint">Planes mensuales claros y respaldo de tus proyectos en archivo JSON.</p>
             </div>
           </div>
 
@@ -786,49 +702,133 @@
             </article>
           </div>
 
-          <div class="card subview-config-card">
-            <h3>Configuración y datos</h3>
+          <div id="configuracion-datos" class="card subview-config-card">
+            <h3>Ajustes y respaldo</h3>
+            <p class="field-hint">Tus cambios se conservan en este navegador. Descarga un respaldo para llevarlos a otro dispositivo.</p>
             <div class="subview-config-actions">
-              <a class="btn btn-secondary btn-sm" href="login.html">Gestionar cuenta y suscripción</a>
               <button id="btn-config-descargar" class="btn btn-secondary btn-sm" type="button">Descargar respaldo (.json)</button>
               <button id="btn-config-importar" class="btn btn-secondary btn-sm" type="button">Importar respaldo (.json)</button>
+              <input id="input-importar-respaldo" type="file" accept="application/json,.json" hidden>
               <a class="btn btn-secondary btn-sm" href="legal.html">Aviso legal y privacidad</a>
             </div>
+            <p id="estado-respaldo-sidebar" class="sidebar-status" role="status" aria-live="polite"></p>
           </div>
         </div>
       </section>
 
-      <!-- Vista 7: Biblioteca -->
-      <section id="vista-biblioteca" class="app-subview" aria-labelledby="titulo-vista-biblioteca" hidden>
+      <!-- Vista 6: Mi cuenta (datos reales de /api/auth/me, /api/usage y /subscription + mini login integrado) -->
+      <section id="vista-cuenta" class="app-subview" aria-labelledby="titulo-vista-cuenta" hidden>
         <div class="subview-inner">
           <div class="subview-head">
             <div>
-              <h2 id="titulo-vista-biblioteca">Biblioteca</h2>
-              <p class="field-hint">Accesos rápidos a plantillas, respaldos y guías cortas para mejorar tu página.</p>
+              <h2 id="titulo-vista-cuenta">Mi cuenta</h2>
+              <p id="cuenta-vista-subtitulo" class="field-hint">Consulta los datos reales de tu cuenta, uso de cambios y plan actual.</p>
             </div>
           </div>
 
-          <div class="library-grid">
-            <article class="card library-card">
-              <h3>Cambiar de plantilla</h3>
-              <p class="field-hint">Prueba Clásica, Editorial o Directa sin perder lo que ya escribiste.</p>
-              <button type="button" class="btn btn-secondary btn-sm" data-app-vista="feed">Explorar plantillas</button>
+          <div id="app-cuenta-cargando" class="card account-inline-card" role="status" aria-live="polite">
+            <div class="loading-inline">
+              <span class="spinner spinner-accent" aria-hidden="true"></span>
+              <span>Verificando tu sesión...</span>
+            </div>
+          </div>
+
+          <!-- Panel autenticado con datos reales -->
+          <div id="app-cuenta-autenticada" class="account-inline-stack" hidden>
+            <article class="card account-inline-card">
+              <div class="account-inline-head">
+                <div>
+                  <p class="field-hint">Cuenta activa</p>
+                  <h3 id="app-cuenta-nombre" class="account-inline-name"></h3>
+                  <p id="app-cuenta-correo" class="field-hint"></p>
+                </div>
+                <span id="app-cuenta-plan-badge" class="status-pill status-pill-muted">Consultando...</span>
+              </div>
+
+              <div class="account-metrics-grid">
+                <div class="account-metric-box">
+                  <span class="account-metric-label">Plan actual</span>
+                  <strong id="app-cuenta-plan" class="account-metric-value">Consultando...</strong>
+                  <span id="app-cuenta-plan-estado" class="field-hint"></span>
+                </div>
+                <div class="account-metric-box">
+                  <span class="account-metric-label">Uso de cambios</span>
+                  <strong id="app-cuenta-uso" class="account-metric-value">Consultando...</strong>
+                  <span id="app-cuenta-uso-detalle" class="field-hint"></span>
+                </div>
+              </div>
+
+              <p id="app-cuenta-plan-detalle" class="field-hint"></p>
+
+              <div class="account-inline-actions">
+                <button id="btn-app-cuenta-ver-planes" class="btn btn-primary btn-sm" type="button">Ver planes</button>
+                <button id="btn-app-cuenta-refrescar" class="btn btn-secondary btn-sm" type="button">Actualizar datos</button>
+                <button id="btn-app-cuenta-salir" class="btn btn-secondary btn-sm" type="button">Cerrar sesión</button>
+              </div>
+              <p id="app-cuenta-estado" class="status-banner" role="status" aria-live="polite"></p>
             </article>
-            <article class="card library-card">
-              <h3>Tus creaciones y fotos</h3>
-              <p class="field-hint">Consulta todas tus páginas en miniventanas y reutiliza tus imágenes subidas.</p>
-              <button type="button" class="btn btn-secondary btn-sm" data-app-vista="archivos">Abrir Archivos</button>
-            </article>
-            <article class="card library-card">
-              <h3>Respaldo en archivo JSON</h3>
-              <p class="field-hint">Guarda una copia en tu equipo para restaurarla cuando cambies de dispositivo.</p>
-              <button id="btn-biblio-descargar" type="button" class="btn btn-secondary btn-sm">Descargar respaldo</button>
+          </div>
+
+          <!-- Mini login integrado dentro de la app (sin salir de app.html) -->
+          <div id="app-cuenta-mini-login" class="account-inline-stack" hidden>
+            <div id="app-mini-login-aviso-servicio" class="service-notice" role="status" aria-live="polite" hidden>
+              <p id="app-mini-login-aviso-titulo" class="service-notice-title"></p>
+              <p class="service-notice-hint">Puedes seguir creando, editando y guardando proyectos en este navegador sin iniciar sesión.</p>
+              <div class="service-alert-actions">
+                <button id="btn-app-cuenta-reintentar" class="btn btn-secondary btn-sm" type="button">Comprobar de nuevo</button>
+              </div>
+            </div>
+
+            <article class="card account-inline-card">
+              <div class="account-mini-head">
+                <h3>Inicia sesión en tu cuenta</h3>
+                <p class="field-hint">Accede aquí mismo para ver tu plan activo y tu uso de cambios.</p>
+              </div>
+
+              <form id="form-mini-login" class="form-grid" novalidate>
+                <div id="mini-login-error-general" class="form-error-summary" role="alert" hidden></div>
+
+                <div class="field">
+                  <label class="field-label" for="mini-login-correo">Correo electrónico <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input id="mini-login-correo" name="email" class="input" type="email" required autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" aria-describedby="error-mini-login-correo">
+                  <p id="error-mini-login-correo" class="field-error" aria-live="polite"></p>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="mini-login-password">Contraseña <span class="required-mark" aria-hidden="true">*</span></label>
+                  <div class="password-field">
+                    <input id="mini-login-password" name="password" class="input password-input" type="password" required autocomplete="current-password" placeholder="Tu contraseña" aria-describedby="error-mini-login-password">
+                    <button id="btn-mini-toggle-password" type="button" class="password-toggle-btn" aria-label="Mostrar contraseña" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <p id="error-mini-login-password" class="field-error" aria-live="polite"></p>
+                </div>
+
+                <button id="btn-mini-login-entrar" class="btn btn-primary btn-full" type="submit">Iniciar sesión</button>
+              </form>
+
+              <div class="account-mini-divider" aria-hidden="true"><span>o</span></div>
+
+              <button id="btn-mini-login-google" class="btn btn-secondary btn-full account-google-btn" type="button">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path fill="currentColor" d="M21.8 12.23c0-.72-.06-1.41-.18-2.08H12v3.94h5.5a4.7 4.7 0 0 1-2.04 3.08v2.56h3.3c1.93-1.78 3.04-4.4 3.04-7.5Z"></path>
+                  <path fill="currentColor" d="M12 22c2.76 0 5.08-.91 6.77-2.47l-3.3-2.56c-.92.62-2.09.98-3.47.98-2.67 0-4.93-1.8-5.74-4.22H2.85v2.64A10.22 10.22 0 0 0 12 22Z"></path>
+                  <path fill="currentColor" d="M6.26 13.73a6.13 6.13 0 0 1 0-3.46V7.63H2.85a10.22 10.22 0 0 0 0 8.74l3.41-2.64Z"></path>
+                  <path fill="currentColor" d="M12 6.05c1.5 0 2.85.52 3.91 1.53l2.93-2.93C17.07 3 14.76 2 12 2a10.22 10.22 0 0 0-9.15 5.63l3.41 2.64c.81-2.42 3.07-4.22 5.74-4.22Z"></path>
+                </svg>
+                <span>Continuar con Google</span>
+              </button>
+              <p id="mini-login-google-estado" class="field-hint" role="status" aria-live="polite"></p>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- Barra inferior fija de 5 iconos (Chat, Archivos, Ideas, Suscripción, Biblioteca) -->
+      <!-- Barra inferior fija de 5 iconos (Chat, Archivos, Mis proyectos, Suscripción, Mi cuenta) -->
       <nav id="app-bottom-nav" class="app-bottom-nav" aria-label="Navegación principal inferior">
         <button type="button" class="bottom-nav-btn is-active" data-app-vista="chat" aria-current="page">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -842,13 +842,14 @@
           </svg>
           <span>Archivos</span>
         </button>
-        <button type="button" class="bottom-nav-btn" data-app-vista="ideas">
+        <button type="button" class="bottom-nav-btn" data-app-vista="proyectos">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 18h6"></path>
-            <path d="M10 22h4"></path>
-            <path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z"></path>
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
           </svg>
-          <span>Ideas</span>
+          <span>Mis proyectos</span>
         </button>
         <button type="button" class="bottom-nav-btn" data-app-vista="suscripcion">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -857,12 +858,12 @@
           </svg>
           <span>Suscripción</span>
         </button>
-        <button type="button" class="bottom-nav-btn" data-app-vista="biblioteca">
+        <button type="button" class="bottom-nav-btn" data-app-vista="cuenta">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"></path>
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 20a8 8 0 0 1 16 0"></path>
           </svg>
-          <span>Biblioteca</span>
+          <span>Mi cuenta</span>
         </button>
       </nav>
     </div>

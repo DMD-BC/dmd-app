@@ -7426,6 +7426,330 @@ p {
   }
 }
 
+/* ==========================================================================
+   Menú lateral solo conversaciones, Mis proyectos, Mi cuenta y auto-scroll
+   ========================================================================== */
 
+.sidebar-conv-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px calc(12px + var(--safe-left));
+  border-bottom: 1px solid var(--border);
+  background-color: var(--surface);
+}
 
+.sidebar-search-pill {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--bg);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
 
+.sidebar-search-pill:focus-within {
+  border-color: #0f5c4d;
+  box-shadow: 0 0 0 3px rgba(15, 92, 77, 0.14);
+}
+
+.sidebar-search-icon {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+}
+
+.sidebar-search-pill .sidebar-search-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--text-sm);
+  box-shadow: none;
+}
+
+.sidebar-search-pill .sidebar-search-input:focus {
+  outline: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.sidebar-round-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.sidebar-round-btn:hover {
+  background-color: var(--surface-subtle);
+  color: var(--ink);
+}
+
+.sidebar-round-btn-primary {
+  background-color: #0f5c4d;
+  border-color: #0f5c4d;
+  color: #ffffff;
+}
+
+.sidebar-round-btn-primary:hover {
+  background-color: #0b473b;
+  border-color: #0b473b;
+  color: #ffffff;
+}
+
+.sidebar-new-footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 12px calc(10px + var(--safe-bottom)) calc(12px + var(--safe-left));
+  background-color: var(--surface);
+}
+
+/* Etiquetas de 5 iconos ajustadas a 360px sin recortes */
+.bottom-nav-btn {
+  font-size: 0.62rem;
+  letter-spacing: -0.015em;
+  padding: 2px 1px;
+}
+
+/* Margen inferior de scroll para mensajes recientes del chat */
+.chat-thread > :last-child {
+  scroll-margin-bottom: calc(156px + var(--safe-bottom));
+}
+
+/* Vista Mis proyectos */
+.subview-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.projects-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 720px) {
+  .projects-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.project-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  min-width: 0;
+}
+
+.project-card.is-active {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 1px var(--accent-border);
+}
+
+.project-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.project-card-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background-color: var(--surface-subtle);
+}
+
+.project-card-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.project-card-name {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.project-card-meta {
+  margin: 0;
+}
+
+.project-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 520px) {
+  .project-card-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.project-card-actions .btn {
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+}
+
+.project-confirm-box {
+  margin-top: 2px;
+}
+
+/* Vista Mi cuenta + Mini login integrado */
+.account-inline-stack {
+  display: grid;
+  gap: 14px;
+  max-width: 34rem;
+}
+
+.account-inline-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.account-inline-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.account-inline-name {
+  margin: 2px 0 0;
+  font-size: 1.15rem;
+}
+
+.account-metrics-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 520px) {
+  .account-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.account-metric-box {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  min-width: 0;
+}
+
+.account-metric-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.account-metric-value {
+  font-size: var(--text-base);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.account-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.account-mini-head {
+  display: grid;
+  gap: 4px;
+}
+
+.account-mini-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.account-mini-divider::before,
+.account-mini-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--border);
+}
+
+.account-google-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.account-inline-card .password-field {
+  min-width: 0;
+}
+
+.account-inline-card .password-input {
+  min-width: 0;
+}
+
+.account-inline-card .password-toggle-btn {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar-round-btn-primary {
+    background-color: #0f5c4d;
+    border-color: #0f5c4d;
+    color: #ffffff;
+  }
+
+  .bottom-nav-btn.is-active {
+    color: #5bc7ae;
+  }
+
+  .bottom-nav-btn.is-active svg {
+    stroke: #5bc7ae;
+  }
+}

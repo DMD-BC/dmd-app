@@ -246,6 +246,8 @@
     const btnAbrirSidebar = document.getElementById("btn-abrir-sidebar");
     const btnCerrarSidebar = document.getElementById("btn-cerrar-sidebar");
     const btnNuevaSidebar = document.getElementById("btn-nueva-conv-sidebar");
+    const btnNuevaIcono = document.getElementById("btn-nueva-conv-icono");
+    const btnSidebarAjustes = document.getElementById("btn-sidebar-ajustes");
     const sidebarBuscar = document.getElementById("sidebar-buscar");
     const badgeBorradoresMobile = document.getElementById("badge-borradores-mobile");
     const sidebarStorageLabel = document.getElementById("sidebar-storage-label");
@@ -254,17 +256,10 @@
     const tabModoEditor = document.getElementById("tab-modo-editor");
     const vistaChat = document.getElementById("vista-chat");
     const vistaEditor = document.getElementById("vista-editor");
-    const vistaFeed = document.getElementById("vista-feed");
     const vistaArchivos = document.getElementById("vista-archivos");
-    const vistaIdeas = document.getElementById("vista-ideas");
+    const vistaProyectos = document.getElementById("vista-proyectos");
     const vistaSuscripcion = document.getElementById("vista-suscripcion");
-    const vistaBiblioteca = document.getElementById("vista-biblioteca");
-
-    const gridFeedPropias = document.getElementById("grid-feed-propias");
-    const feedPropiasVacio = document.getElementById("feed-propias-vacio");
-    const contadorFeedPropias = document.getElementById("contador-feed-propias");
-    const gridFeedCatalogo = document.getElementById("grid-feed-catalogo");
-    const btnFeedNuevo = document.getElementById("btn-feed-nuevo");
+    const vistaCuenta = document.getElementById("vista-cuenta");
 
     const panelArchivosPaginas = document.getElementById("panel-archivos-paginas");
     const panelArchivosMedia = document.getElementById("panel-archivos-media");
@@ -275,14 +270,50 @@
     const btnArchivosCrear = document.getElementById("btn-archivos-crear");
     const btnArchivosSubirIr = document.getElementById("btn-archivos-subir-ir");
 
-    const ideasSubtitulo = document.getElementById("ideas-subtitulo");
-    const ideasVacio = document.getElementById("ideas-vacio");
-    const listaIdeas = document.getElementById("lista-ideas");
-    const btnIdeasCrear = document.getElementById("btn-ideas-crear");
+    const contadorProyectos = document.getElementById("contador-proyectos");
+    const proyectosVacio = document.getElementById("proyectos-vacio");
+    const listaProyectos = document.getElementById("lista-proyectos");
+    const btnProyectosNuevo = document.getElementById("btn-proyectos-nuevo");
+    const btnProyectosIrChat = document.getElementById("btn-proyectos-ir-chat");
+    const proyectosUndoBanner = document.getElementById("proyectos-undo-banner");
+    const proyectosUndoTexto = document.getElementById("proyectos-undo-texto");
+    const btnProyectosUndo = document.getElementById("btn-proyectos-undo");
+    const btnProyectosUndoCerrar = document.getElementById("btn-proyectos-undo-cerrar");
 
     const btnConfigDescargar = document.getElementById("btn-config-descargar");
     const btnConfigImportar = document.getElementById("btn-config-importar");
-    const btnBiblioDescargar = document.getElementById("btn-biblio-descargar");
+    const inputImportar = document.getElementById("input-importar-respaldo");
+    const estadoRespaldo = document.getElementById("estado-respaldo-sidebar");
+
+    const appCuentaCargando = document.getElementById("app-cuenta-cargando");
+    const appCuentaAutenticada = document.getElementById("app-cuenta-autenticada");
+    const appCuentaMiniLogin = document.getElementById("app-cuenta-mini-login");
+    const appCuentaNombre = document.getElementById("app-cuenta-nombre");
+    const appCuentaCorreo = document.getElementById("app-cuenta-correo");
+    const appCuentaPlanBadge = document.getElementById("app-cuenta-plan-badge");
+    const appCuentaPlan = document.getElementById("app-cuenta-plan");
+    const appCuentaPlanEstado = document.getElementById("app-cuenta-plan-estado");
+    const appCuentaUso = document.getElementById("app-cuenta-uso");
+    const appCuentaUsoDetalle = document.getElementById("app-cuenta-uso-detalle");
+    const appCuentaPlanDetalle = document.getElementById("app-cuenta-plan-detalle");
+    const appCuentaEstado = document.getElementById("app-cuenta-estado");
+    const btnAppCuentaVerPlanes = document.getElementById("btn-app-cuenta-ver-planes");
+    const btnAppCuentaRefrescar = document.getElementById("btn-app-cuenta-refrescar");
+    const btnAppCuentaSalir = document.getElementById("btn-app-cuenta-salir");
+
+    const miniLoginAvisoServicio = document.getElementById("app-mini-login-aviso-servicio");
+    const miniLoginAvisoTitulo = document.getElementById("app-mini-login-aviso-titulo");
+    const btnAppCuentaReintentar = document.getElementById("btn-app-cuenta-reintentar");
+    const formMiniLogin = document.getElementById("form-mini-login");
+    const miniLoginErrorGeneral = document.getElementById("mini-login-error-general");
+    const miniLoginCorreo = document.getElementById("mini-login-correo");
+    const errorMiniLoginCorreo = document.getElementById("error-mini-login-correo");
+    const miniLoginPassword = document.getElementById("mini-login-password");
+    const errorMiniLoginPassword = document.getElementById("error-mini-login-password");
+    const btnMiniTogglePassword = document.getElementById("btn-mini-toggle-password");
+    const btnMiniLoginEntrar = document.getElementById("btn-mini-login-entrar");
+    const btnMiniLoginGoogle = document.getElementById("btn-mini-login-google");
+    const miniLoginGoogleEstado = document.getElementById("mini-login-google-estado");
 
     const modalMediaVisor = document.getElementById("modal-media-visor");
     const mediaModalImg = document.getElementById("media-modal-img");
@@ -298,16 +329,6 @@
     const contadorConv = document.getElementById("contador-conversaciones");
     const convVacio = document.getElementById("conversaciones-vacio");
     const listaConvEl = document.getElementById("lista-conversaciones");
-
-    const contadorBorradores = document.getElementById("contador-borradores");
-    const borradoresVacio = document.getElementById("borradores-vacio");
-    const listaBorradoresEl = document.getElementById("lista-borradores");
-    const cuentaSidebarBox = document.getElementById("sidebar-cuenta-box");
-
-    const btnDescRespaldo = document.getElementById("btn-descargar-respaldo-sidebar");
-    const btnImpRespaldo = document.getElementById("btn-importar-respaldo-sidebar");
-    const inputImportar = document.getElementById("input-importar-respaldo");
-    const estadoRespaldo = document.getElementById("estado-respaldo-sidebar");
 
     const progresoTexto = document.getElementById("chat-progreso-texto");
     const progresoPaso = document.getElementById("chat-progreso-porcentaje");
@@ -353,6 +374,9 @@
     let confirmandoBorrarConvId = null;
     let ultimoEliminado = null;
     let timerUndoToast = null;
+
+    let cuentaDatosCargadosParaId = "";
+    let miniLoginEnviando = false;
 
     let plantillaInicialUrl = "";
     try {
@@ -407,7 +431,7 @@
       if (mensaje !== undefined) {
         estadoChatEl.textContent = mensaje;
       }
-      renderizarHilo();
+      renderizarHilo({ scrollSuave: true, forzarScroll: true });
     }
 
     function ocultarUndoToast() {
@@ -421,6 +445,9 @@
       }
       if (sidebarUndoBanner) {
         sidebarUndoBanner.hidden = true;
+      }
+      if (proyectosUndoBanner) {
+        proyectosUndoBanner.hidden = true;
       }
     }
 
@@ -441,6 +468,12 @@
       }
       if (sidebarUndoBanner) {
         sidebarUndoBanner.hidden = false;
+      }
+      if (proyectosUndoTexto) {
+        proyectosUndoTexto.textContent = mensaje;
+      }
+      if (proyectosUndoBanner) {
+        proyectosUndoBanner.hidden = false;
       }
       timerUndoToast = window.setTimeout(() => {
         ocultarUndoToast();
@@ -959,7 +992,7 @@
     }
 
     function cambiarVistaApp(nuevaVista) {
-      const permitidas = ["chat", "editor", "feed", "archivos", "ideas", "suscripcion", "biblioteca"];
+      const permitidas = ["chat", "editor", "archivos", "proyectos", "suscripcion", "cuenta"];
       const destino = permitidas.includes(nuevaVista) ? nuevaVista : "chat";
       vistaActual = destino;
       modoActual = destino === "editor" ? "editor" : "chat";
@@ -967,11 +1000,10 @@
       const mapaVistas = {
         chat: vistaChat,
         editor: vistaEditor,
-        feed: vistaFeed,
         archivos: vistaArchivos,
-        ideas: vistaIdeas,
+        proyectos: vistaProyectos,
         suscripcion: vistaSuscripcion,
-        biblioteca: vistaBiblioteca
+        cuenta: vistaCuenta
       };
 
       Object.keys(mapaVistas).forEach((clave) => {
@@ -1007,12 +1039,14 @@
         } else {
           window.dmdEditor.cargarBorrador(reg, false);
         }
-      } else if (destino === "feed") {
-        renderizarFeed();
       } else if (destino === "archivos") {
         renderizarArchivos();
-      } else if (destino === "ideas") {
-        renderizarIdeas();
+      } else if (destino === "proyectos") {
+        renderizarMisProyectos();
+      } else if (destino === "cuenta") {
+        renderizarMiCuenta(false);
+      } else if (destino === "chat") {
+        desplazarChatAlFinal({ suave: false, forzar: true });
       }
 
       if (!esEscritorioApp()) {
@@ -1103,7 +1137,7 @@
       registro.actualizadoEn = new Date().toISOString();
       sincronizarPublicada(registro);
       guardarColecciones();
-      renderizarListaBorradores();
+      renderizarMisProyectos();
       renderizarHilo();
       if (window.dmdEditor && borradorActivoId === registro.id) {
         window.dmdEditor.cargarBorrador(registro, false);
@@ -1229,7 +1263,10 @@
       todosBorradores.unshift(copia);
       guardarColecciones();
       fijarBorradorActivo(copia.id);
-      renderizarListaBorradores();
+      renderizarMisProyectos();
+      if (vistaActual === "archivos") {
+        renderizarArchivos();
+      }
       estadoChatEl.textContent = `Se duplicó ${registro.datos.nombre}.`;
     }
 
@@ -1969,7 +2006,7 @@
           });
           conv.actualizadaEn = new Date().toISOString();
           guardarColecciones();
-          renderizarHilo();
+          renderizarHilo({ scrollSuave: true, forzarScroll: true });
           return;
         }
 
@@ -1991,7 +2028,7 @@
           });
           conv.actualizadaEn = new Date().toISOString();
           guardarColecciones();
-          renderizarTodo();
+          renderizarTodo({ scrollSuave: true, forzarScroll: true });
           return;
         }
 
@@ -2019,7 +2056,7 @@
               ? "Borrador listo y guardado en este navegador."
               : "Borrador listo y guardado."
           );
-          renderizarTodo();
+          renderizarTodo({ scrollSuave: true, forzarScroll: true });
         } catch (error) {
           conv.pasoIndice = PASOS.length - 1;
           fijarEstadoGeneracion(false, "");
@@ -2027,7 +2064,7 @@
             "Hubo un problema al armar tu borrador. Intenta de nuevo.",
             () => enviarMensajeUsuario(texto)
           );
-          renderizarTodo();
+          renderizarTodo({ scrollSuave: true, forzarScroll: true });
         }
         return;
       }
@@ -2052,8 +2089,9 @@
         tipo: "texto",
         texto
       });
-      renderizarHilo();
+      renderizarHilo({ scrollSuave: true, forzarScroll: true });
       await aplicarCambioSeguimiento(conv, texto);
+      desplazarChatAlFinal({ suave: true, forzar: true });
     }
 
     async function guardarEdicionMensajeUsuario(conv, msg, nuevoTexto) {
@@ -2589,7 +2627,73 @@
       }
     }
 
-    function renderizarHilo() {
+    function desplazarChatAlFinal(opciones) {
+      if (vistaActual !== "chat" || !hilo) {
+        return;
+      }
+      const suave = Boolean(opciones && opciones.suave);
+      const forzar = Boolean(opciones && opciones.forzar);
+      const comportamiento = suave ? "smooth" : "auto";
+
+      const ejecutar = () => {
+        if (vistaActual !== "chat" || !hilo) {
+          return;
+        }
+        if (hilo.scrollHeight > hilo.clientHeight + 2) {
+          hilo.scrollTop = hilo.scrollHeight;
+        }
+        const ultimo = hilo.lastElementChild;
+        if (!ultimo) {
+          return;
+        }
+
+        const vvHeight =
+          window.visualViewport && Number.isFinite(window.visualViewport.height)
+            ? window.visualViewport.height
+            : window.innerHeight;
+        const vvOffsetTop =
+          window.visualViewport && Number.isFinite(window.visualViewport.offsetTop)
+            ? window.visualViewport.offsetTop
+            : 0;
+        const topbar = document.querySelector(".app-topbar");
+        const composer = document.querySelector(".chat-composer-shell");
+        const bottomNav = document.getElementById("app-bottom-nav");
+        const alturaTopbar = topbar ? topbar.getBoundingClientRect().height : 58;
+        const alturaComposer = composer ? composer.getBoundingClientRect().height : 72;
+        const alturaBottomNav = bottomNav ? bottomNav.getBoundingClientRect().height : 63;
+
+        const rectUltimo = ultimo.getBoundingClientRect();
+        const limiteSuperior = vvOffsetTop + alturaTopbar + 12;
+        const limiteInferior = vvOffsetTop + vvHeight - alturaComposer - alturaBottomNav - 12;
+        const espacioDisponible = Math.max(80, limiteInferior - limiteSuperior);
+        const scrollActual = window.scrollY || window.pageYOffset || 0;
+
+        let destinoDoc = scrollActual;
+        if (rectUltimo.height > espacioDisponible) {
+          const deltaTop = rectUltimo.top - limiteSuperior;
+          if (Math.abs(deltaTop) > 4 || forzar) {
+            destinoDoc = Math.max(0, scrollActual + deltaTop);
+            window.scrollTo({ top: destinoDoc, behavior: comportamiento });
+          }
+        } else {
+          const deltaBottom = rectUltimo.bottom - limiteInferior;
+          if (deltaBottom > 2 || (forzar && deltaBottom !== 0)) {
+            destinoDoc = Math.max(0, scrollActual + deltaBottom);
+            window.scrollTo({ top: destinoDoc, behavior: comportamiento });
+          }
+        }
+      };
+
+      if (typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(ejecutar);
+        });
+      } else {
+        ejecutar();
+      }
+    }
+
+    function renderizarHilo(opciones) {
       const conv = obtenerConvActiva();
       hilo.textContent = "";
       if (!conv) {
@@ -2734,7 +2838,10 @@
             : "Pregunta algo o pide un ajuste (ej. cambia el tono o agrega tacos)...";
       }
 
-      hilo.scrollTop = hilo.scrollHeight;
+      desplazarChatAlFinal({
+        suave: Boolean(opciones && opciones.scrollSuave),
+        forzar: Boolean(opciones && opciones.forzarScroll)
+      });
     }
 
     function coincideBusquedaSidebar(texto) {
@@ -2750,17 +2857,25 @@
 
     function renderizarListaConversaciones() {
       const todas = convsDelPropietario();
-      const lista = todas.filter((conv) =>
-        coincideBusquedaSidebar(
-          `${conv.titulo || ""} ${(conv.datos && conv.datos.ciudad) || ""} ${(conv.datos && conv.datos.giroTexto) || ""}`
-        )
-      );
-      contadorConv.textContent = String(lista.length);
+      if (badgeBorradoresMobile) {
+        badgeBorradoresMobile.textContent = String(todas.length);
+        badgeBorradoresMobile.hidden = todas.length === 0;
+      }
+      const lista = todas.filter((conv) => {
+        const nombreNegocio = (conv.datos && conv.datos.nombre) || "";
+        return coincideBusquedaSidebar(`${nombreNegocio} ${conv.titulo || ""}`);
+      });
+      if (contadorConv) {
+        contadorConv.textContent = String(lista.length);
+      }
+      if (!listaConvEl || !convVacio) {
+        return;
+      }
       listaConvEl.textContent = "";
 
       if (lista.length === 0) {
         convVacio.textContent = terminoBusquedaSidebar
-          ? "Sin conversaciones que coincidan con tu búsqueda."
+          ? "Sin conversaciones que coincidan con ese negocio."
           : "Sin conversaciones guardadas.";
         convVacio.hidden = false;
         listaConvEl.hidden = true;
@@ -2783,7 +2898,7 @@
         btnAbrir.className = "sidebar-item-open";
         const t = document.createElement("span");
         t.className = "sidebar-item-title";
-        t.textContent = conv.titulo || "Nueva conversación";
+        t.textContent = (conv.datos && conv.datos.nombre) || conv.titulo || "Nueva conversación";
         const f = document.createElement("span");
         f.className = "sidebar-item-meta";
         f.textContent = formatearFecha(conv.actualizadaEn || conv.creadaEn);
@@ -2803,7 +2918,7 @@
         const btnDel = document.createElement("button");
         btnDel.type = "button";
         btnDel.className = "sidebar-item-del";
-        btnDel.setAttribute("aria-label", `Borrar conversación ${conv.titulo}`);
+        btnDel.setAttribute("aria-label", `Borrar conversación ${t.textContent}`);
         btnDel.textContent = "Borrar";
         btnDel.addEventListener("click", () => {
           confirmandoBorrarConvId = confirmandoBorrarConvId === conv.id ? null : conv.id;
@@ -2820,7 +2935,7 @@
           confirmBox.setAttribute("role", "alert");
 
           const msg = document.createElement("p");
-          msg.textContent = `¿Borrar la conversación "${conv.titulo || "Nueva conversación"}"?`;
+          msg.textContent = `¿Borrar la conversación "${t.textContent}"?`;
 
           const actions = document.createElement("div");
           actions.className = "confirm-actions";
@@ -2851,108 +2966,160 @@
       });
     }
 
-    function renderizarListaBorradores() {
-      const todos = borradoresDelPropietario();
-      const lista = todos.filter((reg) => {
-        const gTxt = obtenerEtiquetaGiroLimpia(reg.datos);
-        return coincideBusquedaSidebar(
-          `${(reg.datos && reg.datos.nombre) || ""} ${gTxt} ${(reg.datos && reg.datos.ciudad) || ""}`
-        );
-      });
-      contadorBorradores.textContent = String(lista.length);
-      if (badgeBorradoresMobile) {
-        badgeBorradoresMobile.textContent = String(todos.length);
-        badgeBorradoresMobile.hidden = todos.length === 0;
+    function renderizarMisProyectos() {
+      if (!listaProyectos) {
+        return;
       }
-      listaBorradoresEl.textContent = "";
+      const borradores = borradoresDelPropietario();
+      const slugsConBorrador = new Set(
+        borradores.map((b) => (b && b.publicadaSlug) || "").filter(Boolean)
+      );
+      const prop = propietarioActual();
+      const publicadasExtra = todasPublicadas.filter(
+        (p) => p && p.cuentaId === prop && p.slug && !slugsConBorrador.has(p.slug)
+      );
+      const total = borradores.length + publicadasExtra.length;
 
-      if (lista.length === 0) {
-        borradoresVacio.textContent = terminoBusquedaSidebar
-          ? "Sin páginas que coincidan con tu búsqueda."
-          : "Aún no tienes borradores guardados.";
-        borradoresVacio.hidden = false;
-        listaBorradoresEl.hidden = true;
+      if (contadorProyectos) {
+        contadorProyectos.textContent = String(total);
+      }
+      listaProyectos.textContent = "";
+
+      if (total === 0) {
+        if (proyectosVacio) {
+          proyectosVacio.hidden = false;
+        }
+        listaProyectos.hidden = true;
         return;
       }
 
-      borradoresVacio.hidden = true;
-      listaBorradoresEl.hidden = false;
+      if (proyectosVacio) {
+        proyectosVacio.hidden = true;
+      }
+      listaProyectos.hidden = false;
 
-      lista.forEach((reg) => {
+      borradores.forEach((reg) => {
+        const datos = reg.datos || {};
+        const borrador = reg.borrador || {};
+        const diseno = reg.diseno || {};
+        const portadaUrl =
+          diseno.portadaOrigen === "ninguna"
+            ? ""
+            : diseno.portadaDataUrl || (borrador.portada && borrador.portada.url) || "";
+
         const li = document.createElement("li");
         li.className =
-          reg.id === borradorActivoId ? "sidebar-draft-card is-active" : "sidebar-draft-card";
+          reg.id === borradorActivoId ? "card project-card is-active" : "card project-card";
+
+        const top = document.createElement("div");
+        top.className = "project-card-top";
+
+        if (portadaUrl) {
+          const thumb = document.createElement("img");
+          thumb.className = "project-card-thumb";
+          thumb.src = portadaUrl;
+          thumb.alt = "";
+          thumb.loading = "lazy";
+          top.appendChild(thumb);
+        }
+
+        const info = document.createElement("div");
+        info.className = "project-card-info";
 
         const head = document.createElement("div");
         head.className = "draft-title-row";
-        const nom = document.createElement("span");
-        nom.className = "draft-name";
-        nom.textContent = reg.datos.nombre;
+        const nom = document.createElement("h3");
+        nom.className = "project-card-name";
+        nom.textContent = datos.nombre || "Sin nombre";
         const pill = document.createElement("span");
-        pill.className = "draft-open-pill";
+        pill.className = reg.publicadaSlug ? "status-pill" : "status-pill status-pill-muted";
         pill.textContent = reg.publicadaSlug ? "Publicada" : "Borrador";
         head.appendChild(nom);
         head.appendChild(pill);
 
         const meta = document.createElement("p");
-        meta.className = "draft-meta";
-        const gTxt = obtenerEtiquetaGiroLimpia(reg.datos);
-        meta.textContent = `${gTxt} · ${reg.datos.ciudad}`;
+        meta.className = "field-hint project-card-meta";
+        const gTxt = obtenerEtiquetaGiroLimpia(datos);
+        const fechaTxt = formatearFecha(reg.actualizadoEn || reg.creadoEn);
+        meta.textContent = [gTxt, datos.ciudad, fechaTxt].filter(Boolean).join(" · ");
+
+        info.appendChild(head);
+        info.appendChild(meta);
+        top.appendChild(info);
+        li.appendChild(top);
 
         const acciones = document.createElement("div");
-        acciones.className = "sidebar-draft-actions";
+        acciones.className = "project-card-actions";
 
-        const bReabrir = document.createElement("button");
-        bReabrir.type = "button";
-        bReabrir.className = "btn btn-secondary btn-sm";
-        bReabrir.dataset.draftAction = "reabrir";
-        bReabrir.dataset.id = reg.id;
-        bReabrir.textContent = "Reabrir";
-        bReabrir.addEventListener("click", () => {
+        if (reg.publicadaSlug) {
+          const aAbrir = document.createElement("a");
+          aAbrir.className = "btn btn-primary btn-sm";
+          aAbrir.href = `ver.html?id=${encodeURIComponent(reg.publicadaSlug)}`;
+          aAbrir.target = "_blank";
+          aAbrir.rel = "noopener noreferrer";
+          aAbrir.dataset.projectAction = "abrir";
+          aAbrir.textContent = "Abrir";
+          acciones.appendChild(aAbrir);
+        } else {
+          const bAbrir = document.createElement("button");
+          bAbrir.type = "button";
+          bAbrir.className = "btn btn-primary btn-sm";
+          bAbrir.dataset.projectAction = "abrir";
+          bAbrir.textContent = "Abrir";
+          bAbrir.addEventListener("click", () => {
+            confirmandoBorrarDraftId = null;
+            fijarBorradorActivo(reg.id);
+            const convVinculada = convsDelPropietario().find((c) => c.borradorId === reg.id);
+            if (convVinculada) {
+              fijarConvActiva(convVinculada.id);
+              renderizarTodo();
+              cambiarVistaApp("chat");
+            } else {
+              abrirBorradorEnEditor(reg);
+            }
+          });
+          acciones.appendChild(bAbrir);
+        }
+
+        const bEditar = document.createElement("button");
+        bEditar.type = "button";
+        bEditar.className = "btn btn-secondary btn-sm";
+        bEditar.dataset.projectAction = "editar";
+        bEditar.textContent = "Editar";
+        bEditar.addEventListener("click", () => {
           confirmandoBorrarDraftId = null;
-          fijarBorradorActivo(reg.id);
-          const convVinculada = convsDelPropietario().find((c) => c.borradorId === reg.id);
-          if (convVinculada) {
-            fijarConvActiva(convVinculada.id);
-          }
-          renderizarTodo();
-          cambiarVistaApp("editor");
+          abrirBorradorEnEditor(reg);
         });
 
-        const bDup = document.createElement("button");
-        bDup.type = "button";
-        bDup.className = "btn btn-secondary btn-sm";
-        bDup.dataset.draftAction = "duplicar";
-        bDup.dataset.id = reg.id;
-        bDup.textContent = "Duplicar";
-        bDup.addEventListener("click", () => duplicarBorrador(reg));
+        const bDuplicar = document.createElement("button");
+        bDuplicar.type = "button";
+        bDuplicar.className = "btn btn-secondary btn-sm";
+        bDuplicar.dataset.projectAction = "duplicar";
+        bDuplicar.textContent = "Duplicar";
+        bDuplicar.addEventListener("click", () => duplicarBorrador(reg));
 
-        const bDel = document.createElement("button");
-        bDel.type = "button";
-        bDel.className = "btn btn-danger-ghost btn-sm";
-        bDel.dataset.draftAction = "borrar";
-        bDel.dataset.id = reg.id;
-        bDel.textContent = "Borrar";
-        bDel.addEventListener("click", () => {
+        const bEliminar = document.createElement("button");
+        bEliminar.type = "button";
+        bEliminar.className = "btn btn-danger-ghost btn-sm";
+        bEliminar.dataset.projectAction = "eliminar";
+        bEliminar.textContent = "Eliminar";
+        bEliminar.addEventListener("click", () => {
           confirmandoBorrarDraftId = confirmandoBorrarDraftId === reg.id ? null : reg.id;
-          renderizarListaBorradores();
+          renderizarMisProyectos();
         });
 
-        acciones.appendChild(bReabrir);
-        acciones.appendChild(bDup);
-        acciones.appendChild(bDel);
-
-        li.appendChild(head);
-        li.appendChild(meta);
+        acciones.appendChild(bEditar);
+        acciones.appendChild(bDuplicar);
+        acciones.appendChild(bEliminar);
         li.appendChild(acciones);
 
         if (confirmandoBorrarDraftId === reg.id) {
           const confirmBox = document.createElement("div");
-          confirmBox.className = "confirm-box sidebar-confirm-box";
+          confirmBox.className = "confirm-box project-confirm-box";
           confirmBox.setAttribute("role", "alert");
 
           const msg = document.createElement("p");
-          msg.textContent = `¿Borrar "${reg.datos.nombre}"? Podrás deshacerlo justo después.`;
+          msg.textContent = `¿Eliminar "${datos.nombre || "este proyecto"}"? Podrás deshacerlo justo después.`;
 
           const confActions = document.createElement("div");
           confActions.className = "confirm-actions";
@@ -2961,7 +3128,7 @@
           bSi.type = "button";
           bSi.className = "btn btn-danger-ghost btn-sm";
           bSi.dataset.draftConfirmDelete = reg.id;
-          bSi.textContent = "Sí, borrar";
+          bSi.textContent = "Sí, eliminar";
           bSi.addEventListener("click", () => borrarBorrador(reg.id));
 
           const bNo = document.createElement("button");
@@ -2970,7 +3137,7 @@
           bNo.textContent = "Cancelar";
           bNo.addEventListener("click", () => {
             confirmandoBorrarDraftId = null;
-            renderizarListaBorradores();
+            renderizarMisProyectos();
           });
 
           confActions.appendChild(bSi);
@@ -2980,7 +3147,103 @@
           li.appendChild(confirmBox);
         }
 
-        listaBorradoresEl.appendChild(li);
+        listaProyectos.appendChild(li);
+      });
+
+      // Páginas publicadas reales sin borrador asociado (si existen en este navegador)
+      publicadasExtra.forEach((pub) => {
+        const datos = pub.datos || {};
+        const li = document.createElement("li");
+        li.className = "card project-card";
+
+        const head = document.createElement("div");
+        head.className = "draft-title-row";
+        const nom = document.createElement("h3");
+        nom.className = "project-card-name";
+        nom.textContent = datos.nombre || pub.slug;
+        const pill = document.createElement("span");
+        pill.className = "status-pill";
+        pill.textContent = "Publicada";
+        head.appendChild(nom);
+        head.appendChild(pill);
+
+        const meta = document.createElement("p");
+        meta.className = "field-hint project-card-meta";
+        meta.textContent = [obtenerEtiquetaGiroLimpia(datos), datos.ciudad]
+          .filter(Boolean)
+          .join(" · ");
+
+        const acciones = document.createElement("div");
+        acciones.className = "project-card-actions";
+
+        const aAbrir = document.createElement("a");
+        aAbrir.className = "btn btn-primary btn-sm";
+        aAbrir.href = `ver.html?id=${encodeURIComponent(pub.slug)}`;
+        aAbrir.target = "_blank";
+        aAbrir.rel = "noopener noreferrer";
+        aAbrir.textContent = "Abrir";
+        acciones.appendChild(aAbrir);
+
+        const bEditar = document.createElement("button");
+        bEditar.type = "button";
+        bEditar.className = "btn btn-secondary btn-sm";
+        bEditar.textContent = "Editar";
+        bEditar.addEventListener("click", () => {
+          const nuevo = {
+            id: crearId("borrador"),
+            cuentaId: prop,
+            datos: clonar(pub.datos),
+            borrador: clonar(pub.borrador),
+            diseno: clonar(pub.diseno || {}),
+            publicadaSlug: pub.slug,
+            publicadaEn: pub.publicadaEn || new Date().toISOString(),
+            creadoEn: pub.publicadaEn || new Date().toISOString(),
+            actualizadoEn: new Date().toISOString()
+          };
+          todosBorradores.unshift(nuevo);
+          guardarColecciones();
+          abrirBorradorEnEditor(nuevo);
+        });
+        acciones.appendChild(bEditar);
+
+        const bDup = document.createElement("button");
+        bDup.type = "button";
+        bDup.className = "btn btn-secondary btn-sm";
+        bDup.textContent = "Duplicar";
+        bDup.addEventListener("click", () => {
+          const copia = {
+            id: crearId("borrador"),
+            cuentaId: prop,
+            datos: clonar(pub.datos),
+            borrador: clonar(pub.borrador),
+            diseno: clonar(pub.diseno || {}),
+            publicadaSlug: "",
+            publicadaEn: "",
+            creadoEn: new Date().toISOString(),
+            actualizadoEn: new Date().toISOString()
+          };
+          copia.datos.nombre = `${datos.nombre || "Página"} (copia)`;
+          todosBorradores.unshift(copia);
+          guardarColecciones();
+          renderizarMisProyectos();
+        });
+        acciones.appendChild(bDup);
+
+        const bEliminar = document.createElement("button");
+        bEliminar.type = "button";
+        bEliminar.className = "btn btn-danger-ghost btn-sm";
+        bEliminar.textContent = "Eliminar";
+        bEliminar.addEventListener("click", () => {
+          todasPublicadas = todasPublicadas.filter((p) => p && p.slug !== pub.slug);
+          guardarColecciones({ permitirVacio: true });
+          renderizarTodo();
+        });
+        acciones.appendChild(bEliminar);
+
+        li.appendChild(head);
+        li.appendChild(meta);
+        li.appendChild(acciones);
+        listaProyectos.appendChild(li);
       });
     }
 
@@ -3114,149 +3377,6 @@
       foot.appendChild(actionsCol);
       card.appendChild(foot);
       return card;
-    }
-
-    function renderizarFeed() {
-      if (!gridFeedPropias || !gridFeedCatalogo) {
-        return;
-      }
-      const propias = borradoresDelPropietario();
-      if (contadorFeedPropias) {
-        contadorFeedPropias.textContent = String(propias.length);
-      }
-      gridFeedPropias.textContent = "";
-      if (propias.length === 0) {
-        if (feedPropiasVacio) {
-          feedPropiasVacio.hidden = false;
-        }
-        gridFeedPropias.hidden = true;
-      } else {
-        if (feedPropiasVacio) {
-          feedPropiasVacio.hidden = true;
-        }
-        gridFeedPropias.hidden = false;
-        propias.forEach((reg) => {
-          gridFeedPropias.appendChild(construirMiniVentanaPagina(reg));
-        });
-      }
-
-      const plantillas = [
-        {
-          id: "clasica",
-          nombre: "Clásica",
-          ejemplo: "Panadería La Espiga",
-          ciudad: "Guadalajara",
-          giro: "Panadería y repostería",
-          foto: "img/ejemplo-panaderia.jpg",
-          titulo: "Conchas calientes y bolillo",
-          servicios: ["Conchas y cuernitos", "Pasteles sobre pedido"]
-        },
-        {
-          id: "editorial",
-          nombre: "Editorial",
-          ejemplo: "Ferretería El Tornillo",
-          ciudad: "Monterrey",
-          giro: "Ferretería",
-          foto: "img/ejemplo-ferreteria.jpg",
-          titulo: "Herramienta y material de obra",
-          servicios: ["Plomería y llaves", "Taladros y brocas"]
-        },
-        {
-          id: "directa",
-          nombre: "Directa",
-          ejemplo: "Taquería El Fogón",
-          ciudad: "Querétaro",
-          giro: "Taquería",
-          foto: "img/ejemplo-taqueria.jpg",
-          titulo: "Pastor al carbón y salsas frescas",
-          servicios: ["Tacos al pastor", "Gringas y quesadillas"]
-        }
-      ];
-
-      gridFeedCatalogo.textContent = "";
-      plantillas.forEach((tpl) => {
-        const card = document.createElement("article");
-        card.className = "miniwindow-card";
-
-        const vp = document.createElement("button");
-        vp.type = "button";
-        vp.className = `miniwindow-viewport biz-page biz-template-${tpl.id}`;
-        vp.setAttribute("aria-label", `Usar plantilla ${tpl.nombre}`);
-        vp.addEventListener("click", () => {
-          plantillaInicialUrl = tpl.id;
-          const activo = obtenerBorradorPorId(borradorActivoId);
-          if (activo) {
-            activo.diseno = activo.diseno || {};
-            activo.diseno.plantilla = tpl.id;
-            activo.actualizadoEn = new Date().toISOString();
-            sincronizarPublicada(activo);
-            guardarColecciones();
-            abrirBorradorEnEditor(activo);
-          } else {
-            crearNuevaConversacion();
-          }
-        });
-
-        const top = document.createElement("span");
-        top.className = "miniwindow-topbar biz-topbar";
-        const tn = document.createElement("span");
-        tn.className = "biz-topbar-name";
-        tn.textContent = tpl.ejemplo;
-        const tc = document.createElement("span");
-        tc.className = "biz-topbar-city";
-        tc.textContent = tpl.ciudad;
-        top.appendChild(tn);
-        top.appendChild(tc);
-        vp.appendChild(top);
-
-        const bd = document.createElement("span");
-        bd.className = "miniwindow-body";
-        const im = document.createElement("img");
-        im.className = "miniwindow-cover";
-        im.src = tpl.foto;
-        im.alt = "";
-        im.loading = "lazy";
-        bd.appendChild(im);
-        const tt = document.createElement("span");
-        tt.className = "miniwindow-title";
-        tt.textContent = tpl.titulo;
-        bd.appendChild(tt);
-        const chWrap = document.createElement("span");
-        chWrap.className = "miniwindow-chips";
-        tpl.servicios.forEach((sv) => {
-          const ch = document.createElement("span");
-          ch.className = "miniwindow-chip";
-          ch.textContent = sv;
-          chWrap.appendChild(ch);
-        });
-        bd.appendChild(chWrap);
-        vp.appendChild(bd);
-        card.appendChild(vp);
-
-        const ft = document.createElement("div");
-        ft.className = "miniwindow-foot";
-        const mc = document.createElement("div");
-        mc.className = "miniwindow-meta";
-        const h = document.createElement("h4");
-        h.className = "miniwindow-name";
-        h.textContent = `Plantilla ${tpl.nombre}`;
-        const p = document.createElement("p");
-        p.className = "miniwindow-sub";
-        p.textContent = tpl.giro;
-        mc.appendChild(h);
-        mc.appendChild(p);
-
-        const bUsar = document.createElement("button");
-        bUsar.type = "button";
-        bUsar.className = "btn btn-primary btn-sm";
-        bUsar.textContent = "Usar";
-        bUsar.addEventListener("click", () => vp.click());
-
-        ft.appendChild(mc);
-        ft.appendChild(bUsar);
-        card.appendChild(ft);
-        gridFeedCatalogo.appendChild(card);
-      });
     }
 
     function obtenerMediaSubidaUsuario() {
@@ -3400,194 +3520,434 @@
       }
     }
 
-    function renderizarIdeas() {
-      if (!listaIdeas) {
-        return;
-      }
-      const reg = obtenerBorradorPorId(borradorActivoId) || borradoresDelPropietario()[0] || null;
-      listaIdeas.textContent = "";
+    const API_MP_SUB_APP = "https://crear.dmdmx.dev/api/mp";
+    const API_USAGE_CANDIDATOS = [
+      "https://crear.dmdmx.dev/api/usage",
+      "https://login.dmdmx.dev/api/usage"
+    ];
+    const NOMBRES_PLAN_APP = {
+      pro: { nombre: "Plan Básico", precio: 79 },
+      pyme: { nombre: "Plan Emprendedor", precio: 189 },
+      elite: { nombre: "Plan Negocio", precio: 299 }
+    };
+    const ESTADOS_SUB_APP = {
+      authorized: "Activa",
+      active: "Activa",
+      pending: "Pendiente",
+      paused: "Pausada",
+      cancelled: "Cancelada",
+      canceled: "Cancelada"
+    };
 
-      if (!reg || !reg.datos) {
-        if (ideasVacio) {
-          ideasVacio.hidden = false;
+    function formatearUsoReal(data, sesion) {
+      if (data && typeof data === "object") {
+        const u =
+          data.usage && typeof data.usage === "object"
+            ? data.usage
+            : data.uso && typeof data.uso === "object"
+              ? data.uso
+              : data;
+        const usado =
+          u.used !== undefined
+            ? u.used
+            : u.usado !== undefined
+              ? u.usado
+              : u.cambiosUsados !== undefined
+                ? u.cambiosUsados
+                : u.count !== undefined
+                  ? u.count
+                  : null;
+        const limite =
+          u.limit !== undefined
+            ? u.limit
+            : u.limite !== undefined
+              ? u.limite
+              : u.total !== undefined
+                ? u.total
+                : u.max !== undefined
+                  ? u.max
+                  : null;
+        const restante =
+          u.remaining !== undefined
+            ? u.remaining
+            : u.restantes !== undefined
+              ? u.restantes
+              : u.disponible !== undefined
+                ? u.disponible
+                : null;
+        if (usado !== null && limite !== null) {
+          return {
+            principal: `${usado} de ${limite} cambios`,
+            detalle: restante !== null ? `Te quedan ${restante} disponibles.` : ""
+          };
         }
-        listaIdeas.hidden = true;
-        if (ideasSubtitulo) {
-          ideasSubtitulo.textContent = "Sugerencias concretas basadas únicamente en lo que ya tiene tu borrador.";
+        if (restante !== null && limite !== null) {
+          return {
+            principal: `${restante} de ${limite} disponibles`,
+            detalle: ""
+          };
         }
-        return;
+        if (usado !== null) {
+          return { principal: `${usado} cambios usados`, detalle: "" };
+        }
+        if (restante !== null) {
+          return { principal: `${restante} disponibles`, detalle: "" };
+        }
       }
-
-      if (ideasVacio) {
-        ideasVacio.hidden = true;
+      if (sesion && sesion.cuotaTexto) {
+        return { principal: sesion.cuotaTexto, detalle: "Dato reportado por tu cuenta." };
       }
-      listaIdeas.hidden = false;
-      if (ideasSubtitulo) {
-        ideasSubtitulo.textContent = `Revisión real de "${reg.datos.nombre}" según los datos que ya guardaste.`;
-      }
-
-      const ideas = [];
-      const diseno = reg.diseno || {};
-      const borrador = reg.borrador || {};
-
-      if (!gen.limpiarTexto(reg.datos.direccion || "")) {
-        ideas.push({
-          titulo: "Agregar calle o colonia",
-          desc: "Tus clientes podrán ubicar tu local más rápido sin que la página invente una dirección.",
-          accion: "Agregar en editor",
-          alClic: () => abrirBorradorEnEditor(reg)
-        });
-      }
-      if (!gen.limpiarTexto(reg.datos.horario || "")) {
-        ideas.push({
-          titulo: "Indicar horario de atención",
-          desc: "Anota tus días y horas reales para que aparezcan en la presentación y preguntas frecuentes.",
-          accion: "Definir horario",
-          alClic: () => abrirBorradorEnEditor(reg)
-        });
-      }
-      if (!diseno.logoDataUrl) {
-        ideas.push({
-          titulo: "Subir el logo de tu negocio",
-          desc: "Un logo propio refuerza tu marca en la barra superior de la página.",
-          accion: "Subir logo",
-          alClic: () => abrirBorradorEnEditor(reg)
-        });
-      }
-      if (diseno.portadaOrigen !== "propia") {
-        ideas.push({
-          titulo: "Usar una foto real de tu negocio",
-          desc: "Reemplaza la portada sugerida por una foto real de tus productos o local.",
-          accion: "Subir foto",
-          alClic: () => abrirBorradorEnEditor(reg)
-        });
-      }
-      if (!gen.limpiarDigitos(reg.datos.whatsapp || "")) {
-        ideas.push({
-          titulo: "Activar botón directo de WhatsApp (opcional)",
-          desc: "Si recibes pedidos por mensaje, agrega tu número con lada para habilitar el botón.",
-          accion: "Configurar",
-          alClic: () => abrirBorradorEnEditor(reg)
-        });
-      }
-      const cantServs = Array.isArray(borrador.servicios) ? borrador.servicios.length : 0;
-      if (cantServs < 3) {
-        ideas.push({
-          titulo: "Sumar más productos o servicios",
-          desc: `Ahora tienes ${cantServs} ${cantServs === 1 ? "tarjeta" : "tarjetas"}. Agregar 1 o 2 productos reales hace más clara tu oferta.`,
-          accion: "Pedir en chat",
-          alClic: () => {
-            cambiarVistaApp("chat");
-            if (entradaChat) {
-              entradaChat.focus();
-            }
-          }
-        });
-      }
-      if (!reg.publicadaSlug) {
-        ideas.push({
-          titulo: "Publicar tu página para obtener tu enlace",
-          desc: "Todavía está en borrador. Cuando termines de revisarla, publícala en un clic.",
-          accion: "Ir a publicar",
-          alClic: () => abrirBorradorEnEditor(reg)
-        });
-      }
-
-      if (ideas.length === 0) {
-        const liOk = document.createElement("li");
-        liOk.className = "idea-card idea-card-done";
-        const hOk = document.createElement("h4");
-        hOk.textContent = "Tu página tiene todos los datos clave completos";
-        const pOk = document.createElement("p");
-        pOk.className = "field-hint";
-        pOk.textContent = "Ya cuenta con dirección, horario, logo, foto propia, contacto y enlace publicado.";
-        liOk.appendChild(hOk);
-        liOk.appendChild(pOk);
-        listaIdeas.appendChild(liOk);
-        return;
-      }
-
-      ideas.forEach((idea) => {
-        const li = document.createElement("li");
-        li.className = "idea-card";
-
-        const body = document.createElement("div");
-        body.className = "idea-card-body";
-        const h = document.createElement("h4");
-        h.textContent = idea.titulo;
-        const p = document.createElement("p");
-        p.className = "field-hint";
-        p.textContent = idea.desc;
-        body.appendChild(h);
-        body.appendChild(p);
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn btn-secondary btn-sm";
-        btn.textContent = idea.accion;
-        btn.addEventListener("click", idea.alClic);
-
-        li.appendChild(body);
-        li.appendChild(btn);
-        listaIdeas.appendChild(li);
-      });
+      return null;
     }
 
-    function renderizarCuentaSidebar() {
-      cuentaSidebarBox.textContent = "";
-      const sesion =
-        window.dmdCuenta && typeof window.dmdCuenta.obtenerSesionActual === "function"
-          ? window.dmdCuenta.obtenerSesionActual()
-          : null;
-
-      if (sesion) {
-        const nom = document.createElement("p");
-        nom.className = "sidebar-user-name";
-        nom.textContent = sesion.nombre;
-        const cor = document.createElement("p");
-        cor.className = "sidebar-user-email";
-        cor.textContent = sesion.correo;
-
-        cuentaSidebarBox.appendChild(nom);
-        cuentaSidebarBox.appendChild(cor);
-
-        if (sesion.cuotaTexto) {
-          const cuotaEl = document.createElement("p");
-          cuotaEl.className = "sidebar-user-email";
-          cuotaEl.textContent = `Cuota: ${sesion.cuotaTexto}`;
-          cuentaSidebarBox.appendChild(cuotaEl);
+    async function solicitarJsonSeguro(url, opciones) {
+      const controlador = typeof AbortController === "function" ? new AbortController() : null;
+      const temporizador = controlador ? window.setTimeout(() => controlador.abort(), 8500) : null;
+      try {
+        const resp = await window.fetch(url, {
+          method: (opciones && opciones.method) || "GET",
+          credentials: "include",
+          headers: Object.assign(
+            { Accept: "application/json" },
+            opciones && opciones.headers ? opciones.headers : {}
+          ),
+          body: opciones && opciones.body !== undefined ? opciones.body : undefined,
+          signal: controlador ? controlador.signal : undefined
+        });
+        let data = null;
+        try {
+          const txt = await resp.text();
+          data = txt ? JSON.parse(txt) : null;
+        } catch (err) {
+          data = null;
         }
+        return { ok: resp.ok, status: resp.status, data };
+      } catch (err) {
+        return { ok: false, status: 0, data: null, errorRed: true };
+      } finally {
+        if (temporizador) {
+          window.clearTimeout(temporizador);
+        }
+      }
+    }
 
-        const row = document.createElement("div");
-        row.className = "sidebar-user-actions";
-        const aCuenta = document.createElement("a");
-        aCuenta.className = "btn btn-secondary btn-sm";
-        aCuenta.href = "login.html";
-        aCuenta.textContent = "Mi cuenta";
-        const bSalir = document.createElement("button");
-        bSalir.type = "button";
-        bSalir.className = "btn btn-secondary btn-sm";
-        bSalir.textContent = "Salir";
-        bSalir.addEventListener("click", async () => {
-          if (!window.dmdCuenta) {
+    async function consultarUsoCuenta(sesion) {
+      if (!appCuentaUso) {
+        return;
+      }
+      appCuentaUso.textContent = "Consultando...";
+      if (appCuentaUsoDetalle) {
+        appCuentaUsoDetalle.textContent = "";
+      }
+      for (let i = 0; i < API_USAGE_CANDIDATOS.length; i += 1) {
+        const res = await solicitarJsonSeguro(API_USAGE_CANDIDATOS[i], { method: "GET" });
+        if (res.ok && res.data) {
+          const uso = formatearUsoReal(res.data, sesion);
+          if (uso) {
+            appCuentaUso.textContent = uso.principal;
+            if (appCuentaUsoDetalle) {
+              appCuentaUsoDetalle.textContent = uso.detalle;
+            }
             return;
           }
-          bSalir.disabled = true;
-          try {
-            await window.dmdCuenta.cerrarSesion();
-          } finally {
-            bSalir.disabled = false;
-          }
-        });
-        row.appendChild(aCuenta);
-        row.appendChild(bSalir);
-        cuentaSidebarBox.appendChild(row);
+        }
+      }
+      const respaldoSesion = formatearUsoReal(null, sesion);
+      if (respaldoSesion) {
+        appCuentaUso.textContent = respaldoSesion.principal;
+        if (appCuentaUsoDetalle) {
+          appCuentaUsoDetalle.textContent = respaldoSesion.detalle;
+        }
       } else {
-        const aLogin = document.createElement("a");
-        aLogin.className = "btn btn-secondary btn-full btn-sm";
-        aLogin.href = "login.html";
-        aLogin.textContent = "Iniciar sesión";
-        cuentaSidebarBox.appendChild(aLogin);
+        appCuentaUso.textContent = "No disponible ahora";
+        if (appCuentaUsoDetalle) {
+          appCuentaUsoDetalle.textContent = "No se pudo consultar el contador de cambios.";
+        }
+      }
+    }
+
+    async function consultarPlanCuenta() {
+      if (!appCuentaPlan) {
+        return;
+      }
+      appCuentaPlan.textContent = "Consultando...";
+      if (appCuentaPlanEstado) {
+        appCuentaPlanEstado.textContent = "";
+      }
+      if (appCuentaPlanDetalle) {
+        appCuentaPlanDetalle.textContent = "";
+      }
+      if (appCuentaPlanBadge) {
+        appCuentaPlanBadge.textContent = "Consultando...";
+        appCuentaPlanBadge.classList.add("status-pill-muted");
+      }
+
+      const res = await solicitarJsonSeguro(`${API_MP_SUB_APP}/subscription`, { method: "GET" });
+      if (res.status === 404) {
+        appCuentaPlan.textContent = "Sin plan activo";
+        if (appCuentaPlanEstado) {
+          appCuentaPlanEstado.textContent = "Cuenta gratuita";
+        }
+        if (appCuentaPlanBadge) {
+          appCuentaPlanBadge.textContent = "Sin plan";
+          appCuentaPlanBadge.classList.add("status-pill-muted");
+        }
+        if (appCuentaPlanDetalle) {
+          appCuentaPlanDetalle.textContent =
+            "Todavía no tienes un plan mensual activo en esta cuenta.";
+        }
+        return;
+      }
+      if (!res.ok || !res.data) {
+        appCuentaPlan.textContent = "No disponible ahora";
+        if (appCuentaPlanEstado) {
+          appCuentaPlanEstado.textContent = "Sin respuesta del servicio";
+        }
+        if (appCuentaPlanBadge) {
+          appCuentaPlanBadge.textContent = "No disponible";
+          appCuentaPlanBadge.classList.add("status-pill-muted");
+        }
+        if (appCuentaPlanDetalle) {
+          appCuentaPlanDetalle.textContent =
+            "No pudimos consultar tu suscripción en este intento. Intenta actualizar más tarde.";
+        }
+        return;
+      }
+
+      const sub =
+        res.data.subscription && typeof res.data.subscription === "object"
+          ? res.data.subscription
+          : res.data.suscripcion && typeof res.data.suscripcion === "object"
+            ? res.data.suscripcion
+            : res.data;
+      const planId = String(sub.plan || sub.plan_id || sub.planId || "").trim().toLowerCase();
+      const statusRaw = String(sub.status || sub.estado || "").trim().toLowerCase();
+      if (!planId && !statusRaw) {
+        appCuentaPlan.textContent = "Sin plan activo";
+        if (appCuentaPlanEstado) {
+          appCuentaPlanEstado.textContent = "Sin plan contratado";
+        }
+        if (appCuentaPlanBadge) {
+          appCuentaPlanBadge.textContent = "Sin plan";
+          appCuentaPlanBadge.classList.add("status-pill-muted");
+        }
+        return;
+      }
+      const def = NOMBRES_PLAN_APP[planId];
+      appCuentaPlan.textContent = def
+        ? `${def.nombre} ($${def.precio} MXN al mes)`
+        : planId || "Plan dmd";
+      const estadoLabel = ESTADOS_SUB_APP[statusRaw] || statusRaw || "Sin estado";
+      const activa = statusRaw === "authorized" || statusRaw === "active";
+      if (appCuentaPlanEstado) {
+        appCuentaPlanEstado.textContent = `Estado: ${estadoLabel}`;
+      }
+      if (appCuentaPlanBadge) {
+        appCuentaPlanBadge.textContent = estadoLabel;
+        appCuentaPlanBadge.classList.toggle("status-pill-muted", !activa);
+      }
+      if (appCuentaPlanDetalle) {
+        appCuentaPlanDetalle.textContent = activa
+          ? "Tu suscripción está activa en Mercado Pago."
+          : "Consulta los planes disponibles si deseas cambiar o reactivar tu suscripción.";
+      }
+    }
+
+    function fijarErrorMiniCampo(inputEl, errEl, mensaje) {
+      if (errEl) {
+        errEl.textContent = mensaje || "";
+      }
+      if (inputEl) {
+        if (mensaje) {
+          inputEl.setAttribute("aria-invalid", "true");
+        } else {
+          inputEl.removeAttribute("aria-invalid");
+        }
+      }
+    }
+
+    function renderizarMiCuenta(forzarConsulta) {
+      if (!vistaCuenta) {
+        return;
+      }
+      const dmdCuenta = window.dmdCuenta;
+      const verificada =
+        dmdCuenta && typeof dmdCuenta.estaVerificada === "function"
+          ? dmdCuenta.estaVerificada()
+          : true;
+      const sesion =
+        dmdCuenta && typeof dmdCuenta.obtenerSesionActual === "function"
+          ? dmdCuenta.obtenerSesionActual()
+          : null;
+      const errorSrv =
+        dmdCuenta && typeof dmdCuenta.obtenerUltimoErrorServicio === "function"
+          ? dmdCuenta.obtenerUltimoErrorServicio()
+          : "";
+
+      if (!verificada) {
+        if (appCuentaCargando) {
+          appCuentaCargando.hidden = false;
+        }
+        if (appCuentaAutenticada) {
+          appCuentaAutenticada.hidden = true;
+        }
+        if (appCuentaMiniLogin) {
+          appCuentaMiniLogin.hidden = true;
+        }
+        return;
+      }
+
+      if (appCuentaCargando) {
+        appCuentaCargando.hidden = true;
+      }
+
+      if (sesion) {
+        if (appCuentaAutenticada) {
+          appCuentaAutenticada.hidden = false;
+        }
+        if (appCuentaMiniLogin) {
+          appCuentaMiniLogin.hidden = true;
+        }
+        if (appCuentaNombre) {
+          appCuentaNombre.textContent = sesion.nombre || "Tu cuenta";
+        }
+        if (appCuentaCorreo) {
+          appCuentaCorreo.textContent = sesion.correo || "";
+        }
+        if (forzarConsulta || cuentaDatosCargadosParaId !== sesion.id) {
+          cuentaDatosCargadosParaId = sesion.id;
+          consultarUsoCuenta(sesion);
+          consultarPlanCuenta();
+        }
+        return;
+      }
+
+      cuentaDatosCargadosParaId = "";
+      if (appCuentaAutenticada) {
+        appCuentaAutenticada.hidden = true;
+      }
+      if (appCuentaMiniLogin) {
+        appCuentaMiniLogin.hidden = false;
+      }
+      if (miniLoginAvisoServicio) {
+        miniLoginAvisoServicio.hidden = !errorSrv;
+      }
+      if (miniLoginAvisoTitulo && errorSrv) {
+        miniLoginAvisoTitulo.textContent = errorSrv;
+      }
+    }
+
+    async function manejarMiniLoginSubmit(e) {
+      if (e) {
+        e.preventDefault();
+      }
+      if (miniLoginEnviando || !window.dmdCuenta) {
+        return;
+      }
+      const correo = String((miniLoginCorreo && miniLoginCorreo.value) || "")
+        .trim()
+        .toLowerCase();
+      const password = String((miniLoginPassword && miniLoginPassword.value) || "");
+
+      fijarErrorMiniCampo(miniLoginCorreo, errorMiniLoginCorreo, "");
+      fijarErrorMiniCampo(miniLoginPassword, errorMiniLoginPassword, "");
+      if (miniLoginErrorGeneral) {
+        miniLoginErrorGeneral.textContent = "";
+        miniLoginErrorGeneral.hidden = true;
+      }
+
+      let primero = null;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) {
+        fijarErrorMiniCampo(miniLoginCorreo, errorMiniLoginCorreo, "Escribe un correo válido.");
+        primero = primero || miniLoginCorreo;
+      }
+      if (!password) {
+        fijarErrorMiniCampo(miniLoginPassword, errorMiniLoginPassword, "Escribe tu contraseña.");
+        primero = primero || miniLoginPassword;
+      }
+      if (primero) {
+        primero.focus();
+        return;
+      }
+
+      miniLoginEnviando = true;
+      if (btnMiniLoginEntrar) {
+        btnMiniLoginEntrar.disabled = true;
+        btnMiniLoginEntrar.textContent = "Entrando...";
+      }
+      try {
+        const res = await window.dmdCuenta.iniciarSesion({ correo, password });
+        if (!res || !res.ok) {
+          if (miniLoginErrorGeneral) {
+            miniLoginErrorGeneral.textContent =
+              (res && res.mensaje) || "No se pudo iniciar sesión. Revisa tus datos.";
+            miniLoginErrorGeneral.hidden = false;
+          }
+          if (miniLoginPassword) {
+            miniLoginPassword.focus();
+          }
+          return;
+        }
+        if (miniLoginPassword) {
+          miniLoginPassword.value = "";
+        }
+        cuentaDatosCargadosParaId = "";
+        renderizarMiCuenta(true);
+      } finally {
+        miniLoginEnviando = false;
+        if (btnMiniLoginEntrar) {
+          btnMiniLoginEntrar.disabled = false;
+          btnMiniLoginEntrar.textContent = "Iniciar sesión";
+        }
+      }
+    }
+
+    async function manejarMiniLoginGoogle() {
+      if (miniLoginEnviando || !window.dmdCuenta) {
+        return;
+      }
+      miniLoginEnviando = true;
+      if (btnMiniLoginGoogle) {
+        btnMiniLoginGoogle.disabled = true;
+      }
+      if (miniLoginGoogleEstado) {
+        miniLoginGoogleEstado.textContent = "Conectando con Google...";
+      }
+      try {
+        const baseAuth = window.dmdCuenta.apiAuthBase || "https://login.dmdmx.dev/api/auth";
+        const resPost = await solicitarJsonSeguro(`${baseAuth}/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ return_to: window.location.href })
+        });
+        if (resPost.ok && resPost.data) {
+          const redir =
+            resPost.data.url || resPost.data.redirectUrl || resPost.data.authUrl || "";
+          if (typeof redir === "string" && /^https?:\/\//i.test(redir)) {
+            window.location.assign(redir);
+            return;
+          }
+          const verif = await window.dmdCuenta.verificarSesion();
+          if (verif && verif.sesion) {
+            cuentaDatosCargadosParaId = "";
+            renderizarMiCuenta(true);
+            return;
+          }
+        }
+        const resSso = await window.dmdCuenta.iniciarAccesoGoogle();
+        if (resSso && !resSso.ok && miniLoginGoogleEstado) {
+          miniLoginGoogleEstado.textContent = resSso.mensaje;
+        } else if (resSso && resSso.yaAutenticado) {
+          cuentaDatosCargadosParaId = "";
+          renderizarMiCuenta(true);
+        } else if (resSso && resSso.redirigiendo && miniLoginGoogleEstado) {
+          miniLoginGoogleEstado.textContent = "Abriendo acceso con Google...";
+        }
+      } finally {
+        miniLoginEnviando = false;
+        if (btnMiniLoginGoogle) {
+          btnMiniLoginGoogle.disabled = false;
+        }
       }
     }
 
@@ -3679,17 +4039,15 @@
       lector.readAsText(archivo);
     }
 
-    function renderizarTodo() {
-      renderizarCuentaSidebar();
+    function renderizarTodo(opciones) {
       renderizarListaConversaciones();
-      renderizarListaBorradores();
-      renderizarHilo();
-      if (vistaActual === "feed") {
-        renderizarFeed();
-      } else if (vistaActual === "archivos") {
+      renderizarHilo(opciones);
+      if (vistaActual === "archivos") {
         renderizarArchivos();
-      } else if (vistaActual === "ideas") {
-        renderizarIdeas();
+      } else if (vistaActual === "proyectos") {
+        renderizarMisProyectos();
+      } else if (vistaActual === "cuenta") {
+        renderizarMiCuenta(false);
       }
     }
 
@@ -3760,14 +4118,11 @@
           }
           sincronizarPublicada(regActualizado);
           guardarColecciones();
-          renderizarListaBorradores();
           renderizarHilo();
           if (vistaActual === "archivos") {
             renderizarArchivos();
-          } else if (vistaActual === "feed") {
-            renderizarFeed();
-          } else if (vistaActual === "ideas") {
-            renderizarIdeas();
+          } else if (vistaActual === "proyectos") {
+            renderizarMisProyectos();
           }
         },
         alPublicarBorrador(reg) {
@@ -3780,7 +4135,9 @@
           descargarRespaldoJson();
         },
         alPedirImportar() {
-          inputImportar.click();
+          if (inputImportar) {
+            inputImportar.click();
+          }
         }
       });
     }
@@ -3798,7 +4155,24 @@
           .replace(/[\u0300-\u036f]/g, "")
           .trim();
         renderizarListaConversaciones();
-        renderizarListaBorradores();
+      });
+    }
+
+    if (btnNuevaIcono) {
+      btnNuevaIcono.addEventListener("click", () =>
+        ejecutarCuandoHidrate(crearNuevaConversacion)
+      );
+    }
+
+    if (btnSidebarAjustes) {
+      btnSidebarAjustes.addEventListener("click", () => {
+        cambiarVistaApp("suscripcion");
+        const bloqueConfig = document.getElementById("configuracion-datos");
+        if (bloqueConfig && typeof bloqueConfig.scrollIntoView === "function") {
+          window.requestAnimationFrame(() => {
+            bloqueConfig.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        }
       });
     }
 
@@ -3817,26 +4191,113 @@
       });
     });
 
-    if (btnFeedNuevo) {
-      btnFeedNuevo.addEventListener("click", () => ejecutarCuandoHidrate(crearNuevaConversacion));
-    }
     if (btnArchivosCrear) {
       btnArchivosCrear.addEventListener("click", () => cambiarVistaApp("chat"));
     }
     if (btnArchivosSubirIr) {
       btnArchivosSubirIr.addEventListener("click", () => cambiarVistaApp("editor"));
     }
-    if (btnIdeasCrear) {
-      btnIdeasCrear.addEventListener("click", () => ejecutarCuandoHidrate(crearNuevaConversacion));
+    if (btnProyectosNuevo) {
+      btnProyectosNuevo.addEventListener("click", () =>
+        ejecutarCuandoHidrate(crearNuevaConversacion)
+      );
+    }
+    if (btnProyectosIrChat) {
+      btnProyectosIrChat.addEventListener("click", () => cambiarVistaApp("chat"));
+    }
+    if (btnProyectosUndo) {
+      btnProyectosUndo.addEventListener("click", deshacerUltimoBorrado);
+    }
+    if (btnProyectosUndoCerrar) {
+      btnProyectosUndoCerrar.addEventListener("click", ocultarUndoToast);
     }
     if (btnConfigDescargar) {
       btnConfigDescargar.addEventListener("click", descargarRespaldoJson);
     }
-    if (btnConfigImportar) {
+    if (btnConfigImportar && inputImportar) {
       btnConfigImportar.addEventListener("click", () => inputImportar.click());
     }
-    if (btnBiblioDescargar) {
-      btnBiblioDescargar.addEventListener("click", descargarRespaldoJson);
+
+    if (btnAppCuentaVerPlanes) {
+      btnAppCuentaVerPlanes.addEventListener("click", () => cambiarVistaApp("suscripcion"));
+    }
+    if (btnAppCuentaRefrescar) {
+      btnAppCuentaRefrescar.addEventListener("click", async () => {
+        if (!window.dmdCuenta) {
+          return;
+        }
+        btnAppCuentaRefrescar.disabled = true;
+        if (appCuentaEstado) {
+          appCuentaEstado.textContent = "Actualizando datos de tu cuenta...";
+        }
+        try {
+          await window.dmdCuenta.verificarSesion();
+          cuentaDatosCargadosParaId = "";
+          renderizarMiCuenta(true);
+          if (appCuentaEstado) {
+            appCuentaEstado.textContent = "Datos actualizados.";
+          }
+        } finally {
+          btnAppCuentaRefrescar.disabled = false;
+        }
+      });
+    }
+    if (btnAppCuentaSalir) {
+      btnAppCuentaSalir.addEventListener("click", async () => {
+        if (!window.dmdCuenta) {
+          return;
+        }
+        btnAppCuentaSalir.disabled = true;
+        try {
+          await window.dmdCuenta.cerrarSesion();
+          cuentaDatosCargadosParaId = "";
+          renderizarMiCuenta(false);
+        } finally {
+          btnAppCuentaSalir.disabled = false;
+        }
+      });
+    }
+    if (btnAppCuentaReintentar) {
+      btnAppCuentaReintentar.addEventListener("click", async () => {
+        if (!window.dmdCuenta) {
+          return;
+        }
+        btnAppCuentaReintentar.disabled = true;
+        try {
+          await window.dmdCuenta.verificarSesion();
+          renderizarMiCuenta(true);
+        } finally {
+          btnAppCuentaReintentar.disabled = false;
+        }
+      });
+    }
+    if (formMiniLogin) {
+      formMiniLogin.addEventListener("submit", manejarMiniLoginSubmit);
+    }
+    if (miniLoginCorreo) {
+      miniLoginCorreo.addEventListener("input", () =>
+        fijarErrorMiniCampo(miniLoginCorreo, errorMiniLoginCorreo, "")
+      );
+    }
+    if (miniLoginPassword) {
+      miniLoginPassword.addEventListener("input", () =>
+        fijarErrorMiniCampo(miniLoginPassword, errorMiniLoginPassword, "")
+      );
+    }
+    if (btnMiniTogglePassword && miniLoginPassword) {
+      btnMiniTogglePassword.addEventListener("click", () => {
+        const visible = miniLoginPassword.type === "text";
+        miniLoginPassword.type = visible ? "password" : "text";
+        btnMiniTogglePassword.setAttribute(
+          "aria-label",
+          visible ? "Mostrar contraseña" : "Ocultar contraseña"
+        );
+        btnMiniTogglePassword.setAttribute("aria-pressed", visible ? "false" : "true");
+        miniLoginPassword.focus();
+      });
+    }
+    if (btnMiniLoginGoogle) {
+      btnMiniLoginGoogle.addEventListener("click", manejarMiniLoginGoogle);
     }
 
     if (btnCerrarMediaModal) {
@@ -3895,9 +4356,11 @@
       }
     });
 
-    btnNuevaSidebar.addEventListener("click", () =>
-      ejecutarCuandoHidrate(crearNuevaConversacion)
-    );
+    if (btnNuevaSidebar) {
+      btnNuevaSidebar.addEventListener("click", () =>
+        ejecutarCuandoHidrate(crearNuevaConversacion)
+      );
+    }
 
     if (btnChatReintentar) {
       btnChatReintentar.addEventListener("click", () => {
@@ -3943,22 +4406,38 @@
       entradaChat.style.height = "auto";
       entradaChat.style.height = `${Math.min(entradaChat.scrollHeight, 120)}px`;
     });
-
-    btnDescRespaldo.addEventListener("click", descargarRespaldoJson);
-    btnImpRespaldo.addEventListener("click", () => inputImportar.click());
-    inputImportar.addEventListener("change", () => {
-      if (inputImportar.files && inputImportar.files[0]) {
-        importarRespaldoJson(inputImportar.files[0]);
-      }
+    entradaChat.addEventListener("focus", () => {
+      window.setTimeout(() => {
+        desplazarChatAlFinal({ suave: false });
+      }, 180);
     });
+    if (window.visualViewport && typeof window.visualViewport.addEventListener === "function") {
+      window.visualViewport.addEventListener("resize", () => {
+        if (vistaActual === "chat") {
+          desplazarChatAlFinal({ suave: false });
+        }
+      });
+    }
+
+    if (inputImportar) {
+      inputImportar.addEventListener("change", () => {
+        if (inputImportar.files && inputImportar.files[0]) {
+          importarRespaldoJson(inputImportar.files[0]);
+        }
+      });
+    }
 
     if (window.dmdCuenta && typeof window.dmdCuenta.alCambiarSesion === "function") {
       window.dmdCuenta.alCambiarSesion((_sesion, motivo) => {
+        cuentaDatosCargadosParaId = "";
         const hidratado =
           !window.dmdAlmacen ||
           typeof window.dmdAlmacen.estaHidratado !== "function" ||
           window.dmdAlmacen.estaHidratado();
         restaurarEstadoCompleto(motivo !== "hidratacion" && hidratado);
+        if (vistaActual === "cuenta") {
+          renderizarMiCuenta(true);
+        }
       });
     }
 
