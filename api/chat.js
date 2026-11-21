@@ -2,13 +2,13 @@
 
 /* ==========================================================================
    dmd - api/chat.js (función serverless de Vercel)
-   Razonamiento conversacional en dos fases con Gemini 3.8 Flash:
+   Razonamiento conversacional en dos fases con Llama 3.3 70B en Groq:
    1) Decisión corta (pocos tokens, timeout acotado): clasifica intención,
       extrae datos reales y decide preguntar, responder, generar, actualizar
       o dar por completo.
    2) Generación de borrador (presupuesto completo de tokens): solo corre
       cuando la fase 1 decide generar o actualizar el borrador.
-   La clave vive SOLO en GEMINI_API_KEY en el servidor.
+   La clave vive SOLO en GROQ_API_KEY en el servidor.
    ========================================================================== */
 
 const generateHandler = require("./generate");
@@ -23,8 +23,7 @@ const {
   normalizarBorrador
 } = generateHandler._test;
 
-const URL_GEMINI =
-  "https://generativelanguage.googleapis.com/v1beta/models/" + MODELO + ":generateContent";
+const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const TIMEOUT_TOTAL_MS = 45000;
 const TIMEOUT_DECISION_MS = 15000;
 const TIMEOUT_BORRADOR_MAX_MS = 22000;
@@ -76,6 +75,7 @@ function sanitizarMensajeError(valor, clave) {
       texto = texto.split(claveLimpia).join("[redacted]");
     }
   }
+  texto = texto.replace(/gsk_[0-9A-Za-z_-]{10,}/g, "[redacted]");
   texto = texto.replace(/AIza[0-9A-Za-z_-]{10,}/g, "[redacted]");
   return texto.trim().slice(0, 1000);
 }
@@ -356,27 +356,23 @@ function normalizarDecisionChat(entrada, crudo) {
 
 async function invocarGeminiJson({ clave, prompt, maxOutputTokens, temperature, timeoutMs }) {
   const t0 = Date.now();
-  let respuestaGemini;
+  let respuestaGroq;
   try {
     const controlador = new AbortController();
     const temporizador = setTimeout(() => controlador.abort(), timeoutMs);
     try {
-      respuestaGemini = await fetch(URL_GEMINI, {
+      respuestaGroq = await fetch(URL_GROQ, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": clave
+          Authorization: "Bearer " + clave
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature,
-            maxOutputTokens,
-            thinkingConfig: {
-              thinkingLevel: "low"
-            }
-          }
+          model: MODELO,
+          messages: [{ role: "user", content: prompt }],
+          temperature,
+          max_tokens: maxOutputTokens,
+          response_format: { type: "json_object" }
         }),
         signal: controlador.signal
       });
@@ -400,45 +396,45 @@ async function invocarGeminiJson({ clave, prompt, maxOutputTokens, temperature, 
     };
   }
 
-  if (!respuestaGemini.ok) {
+  if (!respuestaGroq.ok) {
     const elapsedMs = Date.now() - t0;
     let cuerpoError = "";
     try {
-      cuerpoError = await respuestaGemini.text();
+      cuerpoError = await respuestaGroq.text();
     } catch (e) {
       cuerpoError = "";
     }
-    let errorGoogle = null;
+    let errorProveedor = null;
     if (cuerpoError) {
       try {
         const parsed = JSON.parse(cuerpoError);
         if (parsed && typeof parsed === "object") {
           if (parsed.error && typeof parsed.error === "object") {
-            errorGoogle = parsed.error;
+            errorProveedor = parsed.error;
           } else if (
             Array.isArray(parsed) &&
             parsed[0] &&
             parsed[0].error &&
             typeof parsed[0].error === "object"
           ) {
-            errorGoogle = parsed[0].error;
+            errorProveedor = parsed[0].error;
           }
         }
       } catch (e) {
-        errorGoogle = null;
+        errorProveedor = null;
       }
     }
     const mensajeCrudo =
-      (errorGoogle && (errorGoogle.message || errorGoogle.status)) ||
+      (errorProveedor && (errorProveedor.message || errorProveedor.type || errorProveedor.code || errorProveedor.status)) ||
       cuerpoError ||
-      respuestaGemini.statusText ||
+      respuestaGroq.statusText ||
       "provider_error";
-    const esCuota = respuestaGemini.status === 429;
+    const esCuota = respuestaGroq.status === 429;
     return {
       ok: false,
       httpStatus: esCuota ? 429 : 502,
       error: esCuota ? "quota_exceeded" : "provider_error",
-      providerStatus: respuestaGemini.status,
+      providerStatus: respuestaGroq.status,
       providerMessage: sanitizarMensajeError(mensajeCrudo, clave),
       elapsedMs
     };
@@ -446,13 +442,13 @@ async function invocarGeminiJson({ clave, prompt, maxOutputTokens, temperature, 
 
   let payload;
   try {
-    payload = await respuestaGemini.json();
+    payload = await respuestaGroq.json();
   } catch (e) {
     return {
       ok: false,
       httpStatus: 502,
       error: "provider_error",
-      providerStatus: respuestaGemini.status,
+      providerStatus: respuestaGroq.status,
       providerMessage: sanitizarMensajeError(e && e.message, clave) || "invalid_provider_json",
       elapsedMs: Date.now() - t0
     };
@@ -461,14 +457,13 @@ async function invocarGeminiJson({ clave, prompt, maxOutputTokens, temperature, 
   const texto = extraerTextoRespuestaGemini(payload);
   if (!texto) {
     const detallePayload =
-      (payload && payload.error && (payload.error.message || payload.error.status)) ||
-      (payload && payload.promptFeedback && payload.promptFeedback.blockReason) ||
-      "missing_candidates";
+      (payload && payload.error && (payload.error.message || payload.error.type || payload.error.code || payload.error.status)) ||
+      "missing_choices";
     return {
       ok: false,
       httpStatus: 502,
       error: "provider_error",
-      providerStatus: respuestaGemini.status,
+      providerStatus: respuestaGroq.status,
       providerMessage: sanitizarMensajeError(detallePayload, clave),
       elapsedMs: Date.now() - t0
     };
@@ -480,7 +475,7 @@ async function invocarGeminiJson({ clave, prompt, maxOutputTokens, temperature, 
       ok: false,
       httpStatus: 502,
       error: "invalid_response",
-      providerStatus: respuestaGemini.status,
+      providerStatus: respuestaGroq.status,
       providerMessage: "invalid_json",
       elapsedMs: Date.now() - t0
     };
@@ -508,7 +503,7 @@ async function handler(req, res) {
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
-  const clave = process.env.GEMINI_API_KEY;
+  const clave = process.env.GROQ_API_KEY;
   if (!clave) {
     return res.status(503).json({ error: "not_configured" });
   }
@@ -614,6 +609,7 @@ async function handler(req, res) {
 
 handler._test = {
   MODELO,
+  URL_GROQ,
   TIMEOUT_TOTAL_MS,
   TIMEOUT_DECISION_MS,
   TIMEOUT_BORRADOR_MAX_MS,

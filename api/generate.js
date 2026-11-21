@@ -2,15 +2,15 @@
 
 /* ==========================================================================
    dmd - api/generate.js (función serverless de Vercel)
-   Genera el borrador de la página de un negocio con Gemini 3.8 Flash.
-   La clave vive SOLO en la variable de entorno GEMINI_API_KEY del servidor.
+   Genera el borrador de la página de un negocio con Llama 3.3 70B en Groq.
+   La clave vive SOLO en la variable de entorno GROQ_API_KEY del servidor.
    Nunca se envía al navegador, nunca se guarda en ningún archivo ni en
    ningún registro. Sin clave configurada, responde 503 y el cliente usa
    el generador local como respaldo.
    ========================================================================== */
 
-const MODELO = "gemini-3.8-flash";
-const URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/" + MODELO + ":generateContent";
+const MODELO = "llama-3.3-70b-versatile";
+const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const MAX_OUTPUT_TOKENS = 2500;
 
 const PERFILES_DISENO_GIRO = {
@@ -238,32 +238,32 @@ function sanitizarMensajeError(valor, clave) {
       texto = texto.split(claveLimpia).join("[redacted]");
     }
   }
+  texto = texto.replace(/gsk_[0-9A-Za-z_-]{10,}/g, "[redacted]");
   texto = texto.replace(/AIza[0-9A-Za-z_-]{10,}/g, "[redacted]");
   return texto.trim().slice(0, 1000);
 }
 
-function extraerTextoRespuestaGemini(payload) {
-  if (!payload || !Array.isArray(payload.candidates) || !payload.candidates[0]) {
+function extraerTextoRespuestaGroq(payload) {
+  if (!payload || typeof payload !== "object") {
     return "";
   }
-  const content = payload.candidates[0].content;
-  const parts = content && Array.isArray(content.parts) ? content.parts : [];
-  if (parts.length === 0) {
-    return "";
+  if (Array.isArray(payload.choices) && payload.choices[0]) {
+    const mensaje = payload.choices[0].message;
+    if (mensaje && typeof mensaje.content === "string") {
+      return mensaje.content.trim();
+    }
+    if (mensaje && Array.isArray(mensaje.content)) {
+      return mensaje.content
+        .filter((p) => p && typeof p.text === "string")
+        .map((p) => p.text)
+        .join("\n")
+        .trim();
+    }
   }
-  // En modelos con pensamiento (Gemini 3.x), ignorar bloques internos thought: true
-  const visibles = parts
-    .filter((p) => p && !p.thought && typeof p.text === "string")
-    .map((p) => p.text);
-  if (visibles.length > 0) {
-    return visibles.join("\n").trim();
-  }
-  return parts
-    .filter((p) => p && typeof p.text === "string")
-    .map((p) => p.text)
-    .join("\n")
-    .trim();
+  return "";
 }
+
+const extraerTextoRespuestaGemini = extraerTextoRespuestaGroq;
 
 function extraerBloqueJsonBalanceado(texto) {
   const inicio = texto.indexOf("{");
@@ -630,7 +630,7 @@ async function handler(req, res) {
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
-  const clave = process.env.GEMINI_API_KEY;
+  const clave = process.env.GROQ_API_KEY;
   if (!clave) {
     return res.status(503).json({ error: "not_configured" });
   }
@@ -663,27 +663,23 @@ async function handler(req, res) {
     return res.status(400).json({ error: "missing_fields" });
   }
 
-  let respuestaGemini;
+  let respuestaGroq;
   try {
     const controlador = new AbortController();
     const temporizador = setTimeout(() => controlador.abort(), 45000);
     try {
-      respuestaGemini = await fetch(URL_GEMINI, {
+      respuestaGroq = await fetch(URL_GROQ, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": clave
+          Authorization: "Bearer " + clave
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: construirPrompt(datos) }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.7,
-            maxOutputTokens: MAX_OUTPUT_TOKENS,
-            thinkingConfig: {
-              thinkingLevel: "low"
-            }
-          }
+          model: MODELO,
+          messages: [{ role: "user", content: construirPrompt(datos) }],
+          temperature: 0.7,
+          max_tokens: MAX_OUTPUT_TOKENS,
+          response_format: { type: "json_object" }
         }),
         signal: controlador.signal
       });
@@ -703,64 +699,65 @@ async function handler(req, res) {
     });
   }
 
-  if (!respuestaGemini.ok) {
+  if (!respuestaGroq.ok) {
     let cuerpoError = "";
     try {
-      cuerpoError = await respuestaGemini.text();
+      cuerpoError = await respuestaGroq.text();
     } catch (e) {
       cuerpoError = "";
     }
-    let errorGoogle = null;
+    let errorProveedor = null;
     if (cuerpoError) {
       try {
         const parsed = JSON.parse(cuerpoError);
         if (parsed && typeof parsed === "object") {
           if (parsed.error && typeof parsed.error === "object") {
-            errorGoogle = parsed.error;
+            errorProveedor = parsed.error;
           } else if (Array.isArray(parsed) && parsed[0] && parsed[0].error && typeof parsed[0].error === "object") {
-            errorGoogle = parsed[0].error;
+            errorProveedor = parsed[0].error;
           }
         }
       } catch (e) {
-        errorGoogle = null;
+        errorProveedor = null;
       }
     }
     const mensajeCrudo =
-      (errorGoogle && (errorGoogle.message || errorGoogle.status)) ||
+      (errorProveedor && (errorProveedor.message || errorProveedor.type || errorProveedor.code || errorProveedor.status)) ||
       cuerpoError ||
-      respuestaGemini.statusText ||
+      respuestaGroq.statusText ||
       "provider_error";
     const respuestaError = {
       error: "provider_error",
-      provider_status: respuestaGemini.status,
+      provider_status: respuestaGroq.status,
       provider_message: sanitizarMensajeError(mensajeCrudo, clave)
     };
-    if (errorGoogle && typeof errorGoogle.status === "string" && errorGoogle.status.trim()) {
-      respuestaError.provider_error_status = sanitizarMensajeError(errorGoogle.status, clave);
+    const estadoProveedor =
+      errorProveedor && (errorProveedor.code || errorProveedor.type || errorProveedor.status);
+    if (typeof estadoProveedor === "string" && estadoProveedor.trim()) {
+      respuestaError.provider_error_status = sanitizarMensajeError(estadoProveedor, clave);
     }
     return res.status(502).json(respuestaError);
   }
 
   let payload;
   try {
-    payload = await respuestaGemini.json();
+    payload = await respuestaGroq.json();
   } catch (e) {
     return res.status(502).json({
       error: "provider_error",
-      provider_status: respuestaGemini.status,
+      provider_status: respuestaGroq.status,
       provider_message: sanitizarMensajeError(e && e.message, clave) || "invalid_provider_json"
     });
   }
 
-  const texto = extraerTextoRespuestaGemini(payload);
+  const texto = extraerTextoRespuestaGroq(payload);
   if (!texto) {
     const detallePayload =
-      (payload && payload.error && (payload.error.message || payload.error.status)) ||
-      (payload && payload.promptFeedback && payload.promptFeedback.blockReason) ||
-      "missing_candidates";
+      (payload && payload.error && (payload.error.message || payload.error.type || payload.error.code || payload.error.status)) ||
+      "missing_choices";
     return res.status(502).json({
       error: "provider_error",
-      provider_status: respuestaGemini.status,
+      provider_status: respuestaGroq.status,
       provider_message: sanitizarMensajeError(detallePayload, clave)
     });
   }
@@ -779,10 +776,12 @@ async function handler(req, res) {
 
 handler._test = {
   MODELO,
+  URL_GROQ,
   MAX_OUTPUT_TOKENS,
   PERFILES_DISENO_GIRO,
   detectarPerfilGiro,
   construirPrompt,
+  extraerTextoRespuestaGroq,
   extraerTextoRespuestaGemini,
   extraerJsonSeguro,
   normalizarBorrador
