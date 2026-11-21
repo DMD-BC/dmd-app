@@ -4953,15 +4953,115 @@
       );
     }
 
+    function encontrarContenedorScroll(elemento) {
+      let actual = elemento ? elemento.parentElement : null;
+      while (actual && actual !== document.body && actual !== document.documentElement) {
+        const estilo = window.getComputedStyle ? window.getComputedStyle(actual) : null;
+        const oy = estilo ? estilo.overflowY : "";
+        if (
+          (oy === "auto" || oy === "scroll" || oy === "overlay") &&
+          actual.scrollHeight > actual.clientHeight + 2
+        ) {
+          return actual;
+        }
+        actual = actual.parentElement;
+      }
+      return document.scrollingElement || document.documentElement || document.body;
+    }
+
+    function desplazarInstantaneoAElemento(elemento) {
+      if (!elemento || typeof elemento.getBoundingClientRect !== "function") {
+        return false;
+      }
+      const rect = elemento.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) {
+        return false;
+      }
+      const contenedor = encontrarContenedorScroll(elemento);
+      const topbar = document.querySelector(".app-topbar");
+      const altoTopbar = topbar ? topbar.getBoundingClientRect().height : 0;
+      const margenSuperior = Math.round(altoTopbar) + 12;
+
+      const esDocumento =
+        !contenedor ||
+        contenedor === document.scrollingElement ||
+        contenedor === document.documentElement ||
+        contenedor === document.body;
+
+      if (esDocumento) {
+        const raizScroll = document.scrollingElement || document.documentElement || document.body;
+        const scrollActual =
+          window.pageYOffset !== undefined
+            ? window.pageYOffset
+            : (raizScroll && raizScroll.scrollTop) || 0;
+        const maxScroll = raizScroll
+          ? Math.max(0, raizScroll.scrollHeight - window.innerHeight)
+          : 0;
+        const destinoBruto = Math.max(0, Math.round(rect.top + scrollActual - margenSuperior));
+        const destino = maxScroll > 0 ? Math.min(destinoBruto, maxScroll) : destinoBruto;
+        const htmlEl = document.documentElement;
+        const scrollBehaviorPrevio = htmlEl ? htmlEl.style.scrollBehavior : "";
+        if (htmlEl) {
+          htmlEl.style.scrollBehavior = "auto";
+        }
+        try {
+          window.scrollTo({ top: destino, left: 0, behavior: "instant" });
+        } catch (error) {
+          window.scrollTo(0, destino);
+        }
+        if (document.scrollingElement) {
+          document.scrollingElement.scrollTop = destino;
+        }
+        if (document.documentElement) {
+          document.documentElement.scrollTop = destino;
+        }
+        if (document.body) {
+          document.body.scrollTop = destino;
+        }
+        if (htmlEl) {
+          htmlEl.style.scrollBehavior = scrollBehaviorPrevio;
+        }
+        return true;
+      }
+
+      const rectCont = contenedor.getBoundingClientRect();
+      const destinoCont = Math.max(
+        0,
+        Math.round(contenedor.scrollTop + (rect.top - rectCont.top) - 12)
+      );
+      const prevContBehavior = contenedor.style.scrollBehavior;
+      contenedor.style.scrollBehavior = "auto";
+      contenedor.scrollTop = destinoCont;
+      contenedor.style.scrollBehavior = prevContBehavior;
+      return true;
+    }
+
     if (btnSidebarAjustes) {
       btnSidebarAjustes.addEventListener("click", () => {
+        if (typeof btnSidebarAjustes.blur === "function") {
+          btnSidebarAjustes.blur();
+        }
+        if (!esEscritorioApp()) {
+          abrirSidebar(false);
+        }
         cambiarVistaApp("suscripcion");
         const bloqueConfig = document.getElementById("configuracion-datos");
-        if (bloqueConfig && typeof bloqueConfig.scrollIntoView === "function") {
-          window.requestAnimationFrame(() => {
-            bloqueConfig.scrollIntoView({ behavior: "smooth", block: "start" });
-          });
+        if (!bloqueConfig) {
+          return;
         }
+        const irAConfig = () => {
+          if (vistaActual !== "suscripcion") {
+            return;
+          }
+          desplazarInstantaneoAElemento(bloqueConfig);
+        };
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            irAConfig();
+          });
+        });
+        window.setTimeout(irAConfig, 120);
+        window.setTimeout(irAConfig, 240);
       });
     }
 
