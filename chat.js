@@ -4274,10 +4274,24 @@
     if (formMiniLogin) {
       formMiniLogin.addEventListener("submit", manejarMiniLoginSubmit);
     }
+    const linkMiniRecuperar = document.getElementById("link-mini-recuperar");
+    const sincronizarEnlaceMiniRecuperar = () => {
+      if (!linkMiniRecuperar) {
+        return;
+      }
+      const correoActual = String((miniLoginCorreo && miniLoginCorreo.value) || "").trim();
+      linkMiniRecuperar.href = correoActual
+        ? `login.html?modo=recuperar&correo=${encodeURIComponent(correoActual)}`
+        : "login.html?modo=recuperar";
+    };
     if (miniLoginCorreo) {
-      miniLoginCorreo.addEventListener("input", () =>
-        fijarErrorMiniCampo(miniLoginCorreo, errorMiniLoginCorreo, "")
-      );
+      miniLoginCorreo.addEventListener("input", () => {
+        fijarErrorMiniCampo(miniLoginCorreo, errorMiniLoginCorreo, "");
+        sincronizarEnlaceMiniRecuperar();
+      });
+    }
+    if (linkMiniRecuperar) {
+      linkMiniRecuperar.addEventListener("click", sincronizarEnlaceMiniRecuperar);
     }
     if (miniLoginPassword) {
       miniLoginPassword.addEventListener("input", () =>

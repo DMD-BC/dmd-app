@@ -10,8 +10,7 @@ credentials include, sin cuentas locales ni en localStorage.
 ========================================================================== */
 const API_AUTH_BASE = "https://login.dmdmx.dev/api/auth";
 const URL_LOGIN_GOOGLE_SSO = "https://login.dmdmx.dev/";
-const SOPORTA_FORGOT_PASSWORD = false;
-const MENSAJE_FORGOT_NO_HABILITADO = "El restablecimiento de contraseña todavía no está habilitado en el servicio de cuentas. Cuando esté disponible, podrás solicitarlo desde el portal de cuentas.";
+const SOPORTA_FORGOT_PASSWORD = true;
 function construirUrlGoogleSso() {
 try {
 const url = new URL(URL_LOGIN_GOOGLE_SSO);
@@ -204,9 +203,6 @@ window.location.assign(construirUrlGoogleSso());
 return { ok: true, redirigiendo: true };
 },
 async solicitarRecuperacionPassword(correo) {
-if (!SOPORTA_FORGOT_PASSWORD) {
-return { ok: false, mensaje: MENSAJE_FORGOT_NO_HABILITADO };
-}
 const correoLimpio = normalizarCorreo(correo);
 if (!esCorreoValido(correoLimpio)) return { ok: false, campo: "correo", mensaje: "Escribe un correo válido." };
 const res = await solicitarAuth("/forgot-password", { method: "POST", body: { email: correoLimpio } });
@@ -214,10 +210,11 @@ if (res.sinConexion) {
 ultimoErrorServicio = res.mensaje;
 ultimoErrorFueTimeout = Boolean(res.timeout);
 notificarCambioSesion("error");
-return { ok: false, sinConexion: true, mensaje: "El servicio de cuentas no está disponible en este momento, por lo que no se puede enviar el correo de recuperación." };
+return { ok: false, sinConexion: true, mensaje: res.mensaje || "El servicio de cuentas no está disponible en este momento." };
 }
-if (!res.ok) return { ok: false, sinConexion: false, mensaje: res.mensaje || "No fue posible procesar la recuperación de contraseña con ese correo." };
-return { ok: true, mensaje: "Si ese correo está registrado, recibirás instrucciones para restablecer tu contraseña." };
+if (!res.ok) return { ok: false, sinConexion: false, mensaje: res.mensaje || "No se pudo enviar las instrucciones a ese correo." };
+const msgServidor = res.data && typeof res.data === "object" ? (res.data.message || res.data.mensaje || "") : "";
+return { ok: true, mensaje: msgServidor || "Revisa tu correo. Si esa dirección está registrada, te enviamos instrucciones para restablecer tu contraseña." };
 }
 };
 window.dmdCuenta = dmdCuenta;
@@ -232,7 +229,9 @@ const errorServicioMsg = document.getElementById("cuenta-error-servicio-msg");
 const errorServicioHint = document.getElementById("cuenta-error-servicio-hint");
 const btnReintentarAuth = document.getElementById("btn-reintentar-auth");
 const vistaInvitado = document.getElementById("cuenta-invitado");
+const vistaRecuperar = document.getElementById("vista-recuperar-password");
 const vistaActiva = document.getElementById("cuenta-activa");
+let vistaRecuperarActiva = false;
 const estadoCuenta = document.getElementById("estado-cuenta");
 const tabLogin = document.getElementById("tab-login");
 const tabRegistro = document.getElementById("tab-registro");
@@ -303,8 +302,8 @@ if (vistaInvitado) vistaInvitado.classList.toggle("auth-forms-offline", Boolean(
 if (btnIniciarSesion && !enviando) btnIniciarSesion.textContent = "Iniciar sesión";
 if (btnCrearCuenta && !enviando) btnCrearCuenta.textContent = "Crear cuenta";
 if (estadoGoogleEl) estadoGoogleEl.textContent = servicioCaido ? "No disponible temporalmente mientras el servicio de cuentas está fuera de línea." : "Acceso rápido con tu cuenta de Google a través del servicio de cuentas de dmd.";
-if (estadoRecEl && servicioCaido) estadoRecEl.textContent = "La recuperación de contraseña no está disponible mientras el servicio de cuentas esté fuera de línea.";
-else if (estadoRecEl && !servicioCaido && /fuera de línea/i.test(estadoRecEl.textContent || "")) estadoRecEl.textContent = "";
+if (estadoRecEl && servicioCaido) { estadoRecEl.textContent = "La recuperación de contraseña no está disponible mientras el servicio de cuentas esté fuera de línea."; estadoRecEl.hidden = false; }
+else if (estadoRecEl && !servicioCaido && /fuera de línea/i.test(estadoRecEl.textContent || "")) { estadoRecEl.textContent = ""; estadoRecEl.hidden = true; }
 }
 function actualizarVistaCuenta() {
 const verificada = dmdCuenta.estaVerificada();
@@ -319,9 +318,10 @@ if (errorServicioHint && dmdCuenta.obtenerUltimoErrorFueTimeout()) errorServicio
 errorServicioBox.hidden = false;
 } else { errorServicioMsg.textContent = ""; errorServicioBox.hidden = true; }
 }
-if (!verificada) { vistaInvitado.hidden = true; vistaActiva.hidden = true; return; }
+if (!verificada) { vistaInvitado.hidden = true; vistaActiva.hidden = true; if (vistaRecuperar) vistaRecuperar.hidden = true; return; }
 if (sesion) {
-vistaInvitado.hidden = true; vistaActiva.hidden = false;
+vistaRecuperarActiva = false;
+vistaInvitado.hidden = true; vistaActiva.hidden = false; if (vistaRecuperar) vistaRecuperar.hidden = true;
 actualizarEstadoDisponibleFormularios(false);
 sesionNombreEl.textContent = sesion.nombre;
 sesionCorreoEl.textContent = sesion.correo;
@@ -330,7 +330,10 @@ if (sesion.cuotaTexto) { sesionCuotaEl.textContent = `Cuota disponible: ${sesion
 else { sesionCuotaEl.textContent = ""; sesionCuotaEl.hidden = true; }
 }
 } else {
-vistaInvitado.hidden = false; vistaActiva.hidden = true;
+const mostrarRec = Boolean(vistaRecuperar && vistaRecuperarActiva);
+vistaInvitado.hidden = mostrarRec;
+if (vistaRecuperar) vistaRecuperar.hidden = !mostrarRec;
+vistaActiva.hidden = true;
 actualizarEstadoDisponibleFormularios(servicioCaido);
 }
 }
@@ -464,44 +467,73 @@ campo.focus();
 });
 });
 const btnAbrirRecuperar = document.getElementById("btn-abrir-recuperar");
-const bloqueRecuperar = document.getElementById("bloque-recuperar-password");
+const formRecuperar = document.getElementById("form-recuperar-password");
 const btnCerrarRecuperar = document.getElementById("btn-cerrar-recuperar");
 const recCorreo = document.getElementById("rec-correo");
+const errorRecGeneral = document.getElementById("error-rec-general");
 const errorRecCorreo = document.getElementById("error-rec-correo");
 const estadoRecPassword = document.getElementById("estado-rec-password");
 const btnEnviarRecuperacion = document.getElementById("btn-enviar-recuperacion");
-async function manejarRecuperacionPassword() {
+function abrirVistaRecuperacion(correoInicial) {
+if (!vistaRecuperar) return;
+vistaRecuperarActiva = true;
+fijarError(recCorreo, errorRecCorreo, "");
+if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
+if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
+if (recCorreo) {
+const valorPrevio = limpiarTextoCuenta(correoInicial || (loginCorreo && loginCorreo.value) || "");
+if (valorPrevio) recCorreo.value = valorPrevio;
+}
+actualizarVistaCuenta();
+if (recCorreo && !vistaRecuperar.hidden) recCorreo.focus();
+}
+function cerrarVistaRecuperacion() {
+vistaRecuperarActiva = false;
+fijarError(recCorreo, errorRecCorreo, "");
+if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
+if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
+actualizarVistaCuenta();
+if (loginCorreo && !vistaInvitado.hidden) loginCorreo.focus();
+}
+async function manejarRecuperacionPassword(evento) {
+if (evento) { evento.preventDefault(); evento.stopPropagation(); }
 if (enviando || !recCorreo) return;
 const correo = normalizarCorreo(recCorreo.value);
 fijarError(recCorreo, errorRecCorreo, "");
-if (estadoRecPassword) estadoRecPassword.textContent = "";
+if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
+if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
 if (!esCorreoValido(correo)) { fijarError(recCorreo, errorRecCorreo, "Escribe un correo válido para recuperar tu acceso."); recCorreo.focus(); return; }
 enviando = true;
 if (btnEnviarRecuperacion) { btnEnviarRecuperacion.disabled = true; btnEnviarRecuperacion.textContent = "Enviando..."; }
 try {
 const res = await dmdCuenta.solicitarRecuperacionPassword(correo);
-if (estadoRecPassword) estadoRecPassword.textContent = res.mensaje;
-if (res.ok) recCorreo.value = "";
+if (res.ok) {
+if (estadoRecPassword) { estadoRecPassword.textContent = res.mensaje; estadoRecPassword.hidden = false; }
+} else {
+if (errorRecGeneral) { errorRecGeneral.textContent = res.mensaje; errorRecGeneral.hidden = false; }
+else if (estadoRecPassword) { estadoRecPassword.textContent = res.mensaje; estadoRecPassword.hidden = false; }
+}
 } finally {
 enviando = false;
-if (btnEnviarRecuperacion) { btnEnviarRecuperacion.disabled = false; btnEnviarRecuperacion.textContent = "Enviar instrucciones"; }
+if (btnEnviarRecuperacion) { btnEnviarRecuperacion.disabled = Boolean(dmdCuenta.obtenerUltimoErrorServicio()); btnEnviarRecuperacion.textContent = "Enviar instrucciones"; }
 }
 }
-if (btnAbrirRecuperar && bloqueRecuperar) {
-btnAbrirRecuperar.addEventListener("click", () => {
-const abierto = !bloqueRecuperar.hidden;
-bloqueRecuperar.hidden = abierto;
-btnAbrirRecuperar.setAttribute("aria-expanded", abierto ? "false" : "true");
-if (!abierto && recCorreo) { if (!recCorreo.value && loginCorreo && loginCorreo.value) recCorreo.value = loginCorreo.value.trim(); recCorreo.focus(); }
-});
+if (btnAbrirRecuperar && vistaRecuperar) {
+btnAbrirRecuperar.addEventListener("click", () => abrirVistaRecuperacion());
 }
-if (btnCerrarRecuperar && bloqueRecuperar && btnAbrirRecuperar) {
-btnCerrarRecuperar.addEventListener("click", () => { bloqueRecuperar.hidden = true; btnAbrirRecuperar.setAttribute("aria-expanded", "false"); btnAbrirRecuperar.focus(); });
+if (btnCerrarRecuperar && vistaRecuperar) {
+btnCerrarRecuperar.addEventListener("click", cerrarVistaRecuperacion);
 }
-if (btnEnviarRecuperacion) btnEnviarRecuperacion.addEventListener("click", manejarRecuperacionPassword);
+if (formRecuperar) {
+formRecuperar.addEventListener("submit", manejarRecuperacionPassword);
+} else if (btnEnviarRecuperacion) {
+btnEnviarRecuperacion.addEventListener("click", manejarRecuperacionPassword);
+}
 if (recCorreo) {
-recCorreo.addEventListener("input", () => fijarError(recCorreo, errorRecCorreo, ""));
-recCorreo.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); manejarRecuperacionPassword(); } });
+recCorreo.addEventListener("input", () => {
+fijarError(recCorreo, errorRecCorreo, "");
+if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
+});
 }
 const secMiSub = document.getElementById("seccion-mi-suscripcion");
 const miSubBadge = document.getElementById("mi-sub-badge");
@@ -631,7 +663,9 @@ if (res && res.sinConexion && miSubAviso) miSubAviso.textContent = "El servicio 
 }
 try {
 const params = new URLSearchParams(window.location.search);
-if (params.get("modo") === "registro") cambiarPestana("registro");
+const modoParam = params.get("modo");
+if (modoParam === "registro") cambiarPestana("registro");
+else if (modoParam === "recuperar") abrirVistaRecuperacion(params.get("correo") || "");
 const planParam = params.get("plan");
 if (planParam && /^[A-Za-z0-9-]+$/.test(planParam)) { planEnUrl = planParam; aplicarPlanAEnlacesPago(planParam); }
 } catch (error) {}

@@ -7753,3 +7753,38 @@ p {
     stroke: #5bc7ae;
   }
 }
+
+/* Vista independiente de recuperación de contraseña en login.html */
+.recovery-view {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.recovery-view-head {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.recovery-back-btn {
+  min-height: 44px;
+}
+
+.recovery-view-title {
+  margin: 4px 0 0;
+  font-size: var(--text-h2);
+}
+
+.recovery-confirm-box {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-border);
+  background-color: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.48;
+}
+

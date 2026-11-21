@@ -91,27 +91,13 @@ body { overflow-x: clip; }
 <div class="field">
 <div class="field-label-row">
 <label class="field-label" for="login-password">Contraseña <span class="required-mark" aria-hidden="true">*</span></label>
-<button id="btn-abrir-recuperar" class="text-link-btn" type="button" aria-expanded="false" aria-controls="bloque-recuperar-password">¿Olvidaste tu contraseña?</button>
+<button id="btn-abrir-recuperar" class="text-link-btn" type="button" aria-controls="vista-recuperar-password">¿Olvidaste tu contraseña?</button>
 </div>
 <div class="password-field">
 <input id="login-password" name="password" class="input password-input" type="password" required autocomplete="current-password" placeholder="Tu contraseña" aria-describedby="error-login-password">
 <button type="button" class="password-toggle-btn" data-toggle-password="login-password" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
 </div>
 <p id="error-login-password" class="field-error" aria-live="polite"></p>
-</div>
-<div id="bloque-recuperar-password" class="recovery-box" hidden>
-<p class="recovery-title">Recuperar contraseña</p>
-<p class="field-hint">El restablecimiento de contraseña todavía no está habilitado en el servicio de cuentas. Cuando esté disponible, podrás solicitarlo desde aquí.</p>
-<div class="field">
-<label class="field-label" for="rec-correo">Correo registrado</label>
-<input id="rec-correo" name="email" class="input" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" aria-describedby="error-rec-correo">
-<p id="error-rec-correo" class="field-error" aria-live="polite"></p>
-</div>
-<p id="estado-rec-password" class="field-hint" role="status" aria-live="polite"></p>
-<div class="recovery-actions">
-<button id="btn-enviar-recuperacion" class="btn btn-primary btn-sm" type="button">Enviar instrucciones</button>
-<button id="btn-cerrar-recuperar" class="btn btn-secondary btn-sm" type="button">Cerrar</button>
-</div>
 </div>
 <div>
 <button id="btn-iniciar-sesion" class="btn btn-primary btn-full" type="submit">Iniciar sesión</button>
@@ -150,6 +136,25 @@ body { overflow-x: clip; }
 </button>
 <p id="estado-google-sso" class="field-hint" role="status" aria-live="polite">Acceso rápido con tu cuenta de Google a través del servicio de cuentas de dmd.</p>
 </div>
+</div>
+<div id="vista-recuperar-password" class="recovery-view" hidden>
+<div class="recovery-view-head">
+<button id="btn-cerrar-recuperar" class="btn btn-secondary btn-sm recovery-back-btn" type="button">Volver al acceso</button>
+<h2 class="recovery-view-title">Recuperar contraseña</h2>
+<p class="field-hint">Escribe el correo de tu cuenta y te enviaremos instrucciones para restablecer tu contraseña.</p>
+</div>
+<form id="form-recuperar-password" class="form-grid" novalidate>
+<div id="error-rec-general" class="form-error-summary" role="alert" hidden></div>
+<div class="field">
+<label class="field-label" for="rec-correo">Correo electrónico <span class="required-mark" aria-hidden="true">*</span></label>
+<input id="rec-correo" name="email" class="input" type="email" required autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" aria-describedby="error-rec-correo">
+<p id="error-rec-correo" class="field-error" aria-live="polite"></p>
+</div>
+<p id="estado-rec-password" class="recovery-confirm-box" role="status" aria-live="polite" hidden></p>
+<div>
+<button id="btn-enviar-recuperacion" class="btn btn-primary btn-full" type="submit">Enviar instrucciones</button>
+</div>
+</form>
 </div>
 <div id="cuenta-activa" hidden>
 <div class="session-header">
