@@ -679,7 +679,10 @@ async function handler(req, res) {
           generationConfig: {
             responseMimeType: "application/json",
             temperature: 0.7,
-            maxOutputTokens: MAX_OUTPUT_TOKENS
+            maxOutputTokens: MAX_OUTPUT_TOKENS,
+            thinkingConfig: {
+              thinkingLevel: "low"
+            }
           }
         }),
         signal: controlador.signal
