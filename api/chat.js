@@ -146,82 +146,53 @@ function construirPromptChat({
 }) {
   const perfilClave = detectarPerfilGiro(datos);
   const perfil = PERFILES_DISENO_GIRO[perfilClave] || PERFILES_DISENO_GIRO.otro;
+  const editorInfo = estadoEditor && typeof estadoEditor === "object" ? estadoEditor : {};
 
   const resumenDatos = [
-    "nombre: " + (datos.nombre || "(falta)"),
-    "giro: " + (datos.giroTexto || datos.giro || "(falta)"),
-    "ciudad: " + (datos.ciudad || "(falta)"),
-    "oferta: " + (datos.oferta || "(falta)"),
-    "direccion: " + (datos.direccion || "(no indicada)"),
-    "horario: " + (datos.horario || "(no indicado)"),
-    "whatsapp: " + (datos.whatsapp || "(no indicado)"),
-    "tono: " + (datos.tono || "(predeterminado cercano)")
-  ];
+    "nombre=" + (datos.nombre || "falta"),
+    "giro=" + (datos.giroTexto || datos.giro || "falta"),
+    "ciudad=" + (datos.ciudad || "falta"),
+    "oferta=" + (datos.oferta || "falta"),
+    "direccion=" + (datos.direccion || "vacio"),
+    "horario=" + (datos.horario || "vacio"),
+    "whatsapp=" + (datos.whatsapp || "vacio"),
+    "tono=" + (datos.tono || "cercano")
+  ].join(" | ");
 
-  const editorInfo = estadoEditor && typeof estadoEditor === "object" ? estadoEditor : {};
-  const resumenEditor = [
-    "tieneBorrador: " + (tieneBorrador ? "sí" : "no"),
-    "tieneLogo: " + (editorInfo.tieneLogo ? "sí" : "no"),
-    "portadaOrigen: " + (textoLimpio(editorInfo.portadaOrigen || "ninguna", 30) || "ninguna"),
-    "plantilla: " + (textoLimpio(editorInfo.plantilla || "clasica", 30) || "clasica"),
-    "publicadaUrl: " + (textoLimpio(editorInfo.publicadaUrl || "", 180) || "(no publicada)"),
-    "camposOmitidosPorUsuario: " + (camposOmitidos.length > 0 ? camposOmitidos.join(", ") : "(ninguno)")
-  ];
+  const resumenEstado = [
+    "tieneBorrador=" + (tieneBorrador ? "si" : "no"),
+    "tieneLogo=" + (editorInfo.tieneLogo ? "si" : "no"),
+    "plantilla=" + (textoLimpio(editorInfo.plantilla || "clasica", 20) || "clasica"),
+    "omitidos=" + (camposOmitidos.length > 0 ? camposOmitidos.join(",") : "ninguno")
+  ].join(" | ");
 
-  const historialLineas = mensajes.map(
-    (m) => (m.rol === "usuario" ? "Usuario: " : "Asistente: ") + m.texto
-  );
+  const historialLineas = mensajes
+    .slice(-10)
+    .map((m) => (m.rol === "usuario" ? "U: " : "A: ") + m.texto);
 
   return [
-    "Eres el asistente conversacional de DMD para crear y ajustar la página web de un negocio local en México.",
-    "Hablas en español natural de México, con frases cortas, claras y directas.",
-    "NO uses un guion fijo ni numeres pasos. En cada turno razona qué información falta, qué quiere hacer el usuario y qué conviene responder.",
+    "Eres el asistente de DMD para crear y ajustar la página web de un negocio en México.",
+    "Español natural de México, frases cortas y directas. Sin guiones largos, sin clichés de IA ('¡Excelente!', '¡Por supuesto!'), sin mencionar IA ni marcas.",
+    "Nunca inventes precios, horarios, calles ni teléfonos. Si whatsapp=vacio, no menciones WhatsApp en el borrador.",
     "",
-    "Reglas de estilo obligatorias:",
-    "1. Haz SOLO UNA pregunta a la vez cuando pidas un dato faltante.",
-    "2. Prohibido usar guiones largos o rayas tipográficas en cualquier texto.",
-    "3. Prohibido usar frases hechas de IA como '¡Excelente!', '¡Por supuesto!', '¡Claro que sí!', 'Como asistente de IA' o mencionar IA, modelos, constructores ni especificaciones de diseño.",
-    "4. Usa SOLO datos reales del usuario. Nunca inventes precios, horarios, calles, promociones ni teléfonos.",
-    "5. Si WhatsApp está vacío, NO menciones WhatsApp ni escribir por mensaje dentro del borrador.",
+    "Intención del último mensaje (tolera faltas de ortografía):",
+    "- pregunta/saludo/ambiguo: accion='responder', datosExtraidos={}, borrador=null. Nunca pegues texto literal al borrador.",
+    "- quitar: usa camposQuitar (whatsapp|horario|direccion), ajusteDiseno (quitarLogo|quitarPortada) o limpia oferta.",
+    "- cambiar/agregar: actualiza datosExtraidos sin palabras de relleno (si pide precios sin montos, responde pidiendo precios reales); si solo cambia plantilla/portada usa ajusteDiseno y borrador=null.",
+    "- datos: extrae todos los datos que dio el usuario. Mínimos para generar: nombre, ciudad y oferta (deduce giro si es obvio). Opcionales: direccion, horario, whatsapp, tono. No repitas datos ya guardados u omitidos.",
+    "- Si falta un mínimo: accion='preguntar', UNA sola pregunta corta, borrador=null.",
+    "- Si ya tienes nombre, ciudad y oferta y tieneBorrador=no: genera ahora (accion='generar' con borrador) o haz UNA pregunta opcional breve con sugerencia 'Armar borrador ya'.",
+    "- Si tieneBorrador=si y cambiaron datos: accion='actualizar' con borrador. Si el usuario dice que ya quedó: accion='completo', borrador=null.",
     "",
-    "Clasificación de intención (evalúa el último mensaje del usuario con tolerancia a faltas de ortografía):",
-    "- 'pregunta': el usuario pregunta algo sobre el logo, foto, WhatsApp, horario, dirección, precios, plantilla, tono, cómo publicar o cómo usar la app. Usa accion='responder', deja datosExtraidos={} y borrador=null. NUNCA pegues una pregunta en oferta ni edites el borrador.",
-    "- 'saludo': saludo corto o agradecimiento sin datos nuevos. Usa accion='responder', datosExtraidos={} y borrador=null.",
-    "- 'ambiguo': mensaje confuso o con demasiados errores donde no queda claro qué cambiar o agregar. Usa accion='responder', pide aclaración breve, datosExtraidos={} y borrador=null. NUNCA pegues texto literal al borrador.",
-    "- 'quitar': pide quitar WhatsApp, horario, dirección, logo, portada o un producto específico. Para campos usa camposQuitar (['whatsapp'|'horario'|'direccion']); para logo/portada usa ajusteDiseno; para quitar un producto entrega la oferta restante limpia en datosExtraidos.oferta.",
-    "- 'cambiar': pide cambiar nombre, ciudad, horario, dirección, WhatsApp, tono (cercano|profesional|formal), plantilla (clasica|editorial|directa), portada o precios. Si pide poner precios sin indicar montos, usa accion='responder' y pide los precios reales sin inventarlos.",
-    "- 'agregar': pide sumar productos o servicios. Limpia palabras de relleno ('agrega', 'ponle', 'también vendemos') y devuelve la oferta completa actualizada en datosExtraidos.oferta.",
-    "- 'completo': el usuario indica que el borrador ya quedó listo. Si tieneBorrador=sí, usa accion='completo' y borrador=null.",
-    "- 'datos': el usuario da información del negocio (puede dar uno o varios datos en el mismo mensaje, incluso con faltas de ortografía). Extrae TODOS los datos que mencionó en datosExtraidos sin copiar frases de relleno.",
-    "",
-    "Reglas para decidir accion:",
-    "- Datos mínimos indispensables para generar un borrador: nombre, ciudad y oferta. Si giro se deduce del nombre u oferta (ej. Panadería La Espiga -> panaderia), extráelo sin preguntar por él.",
-    "- Datos útiles opcionales: direccion (calle o colonia), horario, whatsapp (10 a 15 dígitos) y tono. NO preguntes por un dato que ya está en datos o en camposOmitidosPorUsuario. Si el usuario dice que no tiene o prefiere omitir un dato opcional, inclúyelo en camposOmitidos.",
-    "- Si falta algún dato indispensable (nombre, ciudad u oferta), usa accion='preguntar', borrador=null y haz UNA sola pregunta corta para el siguiente dato que falte.",
-    "- Si ya tienes nombre, ciudad y oferta y tieneBorrador=no:",
-    "  * Si el usuario ya dio algún dato opcional (direccion, horario o whatsapp), o ya omitió opcionales, o pidió armar el borrador ya, usa accion='generar' y devuelve el objeto 'borrador' completo en este mismo JSON.",
-    "  * Si todavía no da ningún dato opcional ni pidió generar ya, puedes hacer UNA pregunta breve por un dato opcional útil (horario, calle o WhatsApp) e incluir 'Armar borrador ya' en sugerencias, O generar directamente si ya dio bastante contexto.",
-    "- Si tieneBorrador=sí y hubo un cambio real en datos (cambiar, agregar, quitar campo/producto o datos nuevos), usa accion='actualizar' y devuelve el objeto 'borrador' actualizado en este mismo JSON.",
-    "- Si solo cambió diseño (plantilla, quitarLogo, quitarPortada o cambiarPortada), usa accion='responder' con ajusteDiseno y borrador=null.",
-    "",
-    "Guía editorial cuando generes o actualices 'borrador' (" + perfil.etiqueta + "):",
-    "- Sí hacer: " + perfil.siHacer.join(" "),
-    "- No hacer: " + perfil.noHacer.join(" "),
-    "- Varía longitud y estructura entre tarjetas de servicios (3 a 5 servicios, 3 a 4 beneficios, 2 a 4 preguntasFrecuentes).",
-    "",
-    "Estado actual del negocio:",
-    ...resumenDatos,
-    "",
-    "Estado de la página y editor:",
-    ...resumenEditor,
-    "",
-    "Conversación:",
+    "Estilo de borrador (" + perfil.etiqueta + "): " + perfil.siHacer[0] + " " + perfil.noHacer[0],
+    "Datos actuales: " + resumenDatos,
+    "Estado: " + resumenEstado,
+    "Historial:",
     ...historialLineas,
     "",
-    "Devuelve UNICAMENTE un objeto JSON válido con este esquema exacto (sin markdown ni texto extra):",
+    "Devuelve SOLO JSON válido sin markdown:",
     '{"accion":"preguntar|generar|actualizar|responder|completo","intencion":"datos|pregunta|cambiar|agregar|quitar|saludo|ambiguo|completo","respuesta":"...","datosExtraidos":{"nombre":"","giro":"","giroTexto":"","ciudad":"","direccion":"","horario":"","oferta":"","tono":"","whatsapp":""},"camposQuitar":[],"camposOmitidos":[],"ajusteDiseno":{"plantilla":"","quitarLogo":false,"quitarPortada":false,"cambiarPortada":false},"sugerencias":[],"borrador":null}',
-    "Cuando accion sea 'generar' o 'actualizar', 'borrador' DEBE ser el objeto completo: {\"titulo\":\"...\",\"presentacion\":\"...\",\"servicios\":[{\"titulo\":\"...\",\"descripcion\":\"...\"}],\"beneficios\":[\"...\"],\"preguntasFrecuentes\":[{\"pregunta\":\"...\",\"respuesta\":\"...\"}]}. En cualquier otra acción, borrador debe ser null.",
-    "En 'sugerencias' incluye de 0 a 3 chips cortos opcionales (máximo 30 caracteres cada uno) solo si ayudan al usuario."
+    'Si accion es generar o actualizar, borrador debe ser {"titulo":"...","presentacion":"...","servicios":[{"titulo":"...","descripcion":"..."}],"beneficios":["..."],"preguntasFrecuentes":[{"pregunta":"...","respuesta":"..."}]} (3-5 servicios, 3-4 beneficios, 2-4 preguntas). Si no, borrador:null.'
   ].join("\n");
 }
 
