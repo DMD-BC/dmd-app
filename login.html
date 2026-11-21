@@ -140,9 +140,10 @@ body { overflow-x: clip; }
 <div id="vista-recuperar-password" class="recovery-view" hidden>
 <div class="recovery-view-head">
 <button id="btn-cerrar-recuperar" class="btn btn-secondary btn-sm recovery-back-btn" type="button">Volver al acceso</button>
-<h2 class="recovery-view-title">Recuperar contraseña</h2>
-<p class="field-hint">Escribe el correo de tu cuenta y te enviaremos instrucciones para restablecer tu contraseña.</p>
+<h2 class="recovery-view-title">Recuperar acceso</h2>
+<p id="rec-subtitulo" class="field-hint">Te enviaremos un enlace a tu correo para restablecer tu contraseña.</p>
 </div>
+<div id="rec-metodo-enlace" class="recovery-method-panel">
 <form id="form-recuperar-password" class="form-grid" novalidate>
 <div id="error-rec-general" class="form-error-summary" role="alert" hidden></div>
 <div class="field">
@@ -151,10 +152,57 @@ body { overflow-x: clip; }
 <p id="error-rec-correo" class="field-error" aria-live="polite"></p>
 </div>
 <p id="estado-rec-password" class="recovery-confirm-box" role="status" aria-live="polite" hidden></p>
+<div id="rec-reenviar-wrap" class="recovery-resend-row" hidden>
+<span class="field-hint">¿No llegó el correo?</span>
+<button id="btn-rec-reenviar" class="text-link-btn" type="button">Reenviar correo</button>
+</div>
 <div>
-<button id="btn-enviar-recuperacion" class="btn btn-primary btn-full" type="submit">Enviar instrucciones</button>
+<button id="btn-enviar-recuperacion" class="btn btn-primary btn-full" type="submit">Enviar enlace por correo</button>
 </div>
 </form>
+</div>
+<div id="rec-metodo-otp" class="recovery-method-panel" hidden>
+<div id="error-rec-otp-general" class="form-error-summary" role="alert" hidden></div>
+<p id="estado-rec-otp" class="recovery-confirm-box" role="status" aria-live="polite" hidden></p>
+<form id="form-rec-otp-enviar" class="form-grid" novalidate>
+<div class="field">
+<label class="field-label" for="rec-otp-correo">Correo electrónico <span class="required-mark" aria-hidden="true">*</span></label>
+<input id="rec-otp-correo" name="email" class="input" type="email" required autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" aria-describedby="error-rec-otp-correo">
+<p id="error-rec-otp-correo" class="field-error" aria-live="polite"></p>
+</div>
+<div>
+<button id="btn-rec-otp-enviar" class="btn btn-primary btn-full" type="submit">Enviar código de 6 dígitos</button>
+</div>
+</form>
+<form id="form-rec-otp-verificar" class="form-grid" novalidate hidden>
+<div class="field">
+<label class="field-label" for="rec-otp-codigo">Código de 6 dígitos <span class="required-mark" aria-hidden="true">*</span></label>
+<input id="rec-otp-codigo" name="code" class="input input-otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-describedby="error-rec-otp-codigo">
+<p id="error-rec-otp-codigo" class="field-error" aria-live="polite"></p>
+</div>
+<div>
+<button id="btn-rec-otp-verificar" class="btn btn-primary btn-full" type="submit">Verificar y entrar</button>
+</div>
+<div class="recovery-resend-row">
+<span class="field-hint">¿No llegó el código?</span>
+<button id="btn-rec-otp-reenviar" class="text-link-btn" type="button">Reenviar código</button>
+</div>
+</form>
+</div>
+<div class="recovery-alt-switch">
+<button id="btn-rec-cambiar-metodo" class="text-link-btn recovery-alt-btn" type="button">Probar de otra manera: recibir un código de 6 dígitos por correo</button>
+</div>
+<div class="auth-divider" aria-hidden="true"><span>o</span></div>
+<div class="auth-google-box">
+<button id="btn-rec-google" class="btn btn-secondary btn-full" type="button">
+<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.35 11.1h-9.18v2.98h5.27c-.23 1.46-1.74 4.28-5.27 4.28-3.17 0-5.76-2.59-5.76-5.76s2.59-5.76 5.76-5.76c1.55 0 2.94.62 3.96 1.62l2.2-2.2C17.9 1.19 15.24 0 12.17 0 5.45 0 .06 5.39.06 12.1s5.39 12.1 12.11 12.1c6.98 0 11.58-4.91 11.58-11.82 0-.79-.08-1.39-.4-2.28z"/></svg>
+<span>Entrar con Google</span>
+</button>
+<p id="estado-rec-google" class="field-hint" role="status" aria-live="polite">Para cuentas creadas con Google.</p>
+</div>
+<div class="recovery-last-resort">
+<p class="field-hint">¿Ya no tienes acceso a tu correo? <button id="btn-rec-crear-cuenta" class="text-link-btn" type="button">Crea una cuenta nueva</button></p>
+</div>
 </div>
 <div id="cuenta-activa" hidden>
 <div class="session-header">

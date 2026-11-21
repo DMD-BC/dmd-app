@@ -214,7 +214,40 @@ return { ok: false, sinConexion: true, mensaje: res.mensaje || "El servicio de c
 }
 if (!res.ok) return { ok: false, sinConexion: false, mensaje: res.mensaje || "No se pudo enviar las instrucciones a ese correo." };
 const msgServidor = res.data && typeof res.data === "object" ? (res.data.message || res.data.mensaje || "") : "";
-return { ok: true, mensaje: msgServidor || "Revisa tu correo. Si esa dirección está registrada, te enviamos instrucciones para restablecer tu contraseña." };
+return { ok: true, mensaje: msgServidor || "Revisa tu correo. Si esa dirección está registrada, te enviamos un enlace para restablecer tu contraseña." };
+},
+async enviarCodigoOtp(correo) {
+const correoLimpio = normalizarCorreo(correo);
+if (!esCorreoValido(correoLimpio)) return { ok: false, campo: "correo", mensaje: "Escribe un correo válido." };
+const res = await solicitarAuth("/otp", { method: "POST", body: { action: "send", email: correoLimpio } });
+if (res.sinConexion) {
+ultimoErrorServicio = res.mensaje;
+ultimoErrorFueTimeout = Boolean(res.timeout);
+notificarCambioSesion("error");
+return { ok: false, sinConexion: true, mensaje: res.mensaje || "El servicio de cuentas no está disponible en este momento." };
+}
+if (!res.ok || (res.data && res.data.ok === false)) return { ok: false, sinConexion: false, mensaje: res.mensaje || "No se pudo enviar el código. Inténtalo de nuevo." };
+const msgServidor = res.data && typeof res.data === "object" ? (res.data.message || res.data.mensaje || "") : "";
+return { ok: true, mensaje: msgServidor || "Si tu correo está registrado, te llegará un código de 6 dígitos." };
+},
+async verificarCodigoOtp(correo, codigo) {
+const correoLimpio = normalizarCorreo(correo);
+const codigoLimpio = String(codigo || "").replace(/\D+/g, "").trim();
+if (!esCorreoValido(correoLimpio)) return { ok: false, campo: "correo", mensaje: "Escribe un correo válido." };
+if (!/^\d{6}$/.test(codigoLimpio)) return { ok: false, campo: "codigo", mensaje: "Escribe el código numérico de 6 dígitos." };
+const res = await solicitarAuth("/otp", { method: "POST", body: { action: "verify", email: correoLimpio, code: codigoLimpio } });
+if (res.sinConexion) {
+ultimoErrorServicio = res.mensaje;
+ultimoErrorFueTimeout = Boolean(res.timeout);
+notificarCambioSesion("error");
+return { ok: false, sinConexion: true, mensaje: res.mensaje || "El servicio de cuentas no está disponible en este momento." };
+}
+if (!res.ok || (res.data && res.data.ok === false)) return { ok: false, sinConexion: false, mensaje: res.mensaje || "Código incorrecto o expirado. Pide uno nuevo." };
+const verif = await verificarSesionDesdeServidor("otp");
+if (verif.sesion) return { ok: true, sesion: verif.sesion };
+const usuarioDirecto = normalizarUsuarioServidor(res.data);
+if (usuarioDirecto) { sesionActual = usuarioDirecto; ultimoErrorServicio = ""; ultimoErrorFueTimeout = false; notificarCambioSesion("otp"); return { ok: true, sesion: clonarSesion(sesionActual) }; }
+return { ok: false, sinConexion: Boolean(verif.sinConexion), mensaje: verif.mensaje || "No se pudo confirmar la sesión con el servidor." };
 }
 };
 window.dmdCuenta = dmdCuenta;
@@ -292,13 +325,17 @@ else if (len < 6) pistaRegPassword.textContent = `Faltan ${6 - len} caracteres p
 else pistaRegPassword.textContent = "Longitud válida (6 caracteres o más).";
 }
 function actualizarEstadoDisponibleFormularios(servicioCaido) {
-const recCorreoEl = document.getElementById("rec-correo");
 const btnEnviarRec = document.getElementById("btn-enviar-recuperacion");
+const btnRecReenviar = document.getElementById("btn-rec-reenviar");
+const btnRecOtpEnviar = document.getElementById("btn-rec-otp-enviar");
+const btnRecOtpVerificar = document.getElementById("btn-rec-otp-verificar");
+const btnRecOtpReenviar = document.getElementById("btn-rec-otp-reenviar");
+const btnRecGoogleEl = document.getElementById("btn-rec-google");
 const estadoRecEl = document.getElementById("estado-rec-password");
 const btnGoogleEl = document.getElementById("btn-login-google-sso");
 const estadoGoogleEl = document.getElementById("estado-google-sso");
 if (vistaInvitado) vistaInvitado.classList.toggle("auth-forms-offline", Boolean(servicioCaido));
-[btnIniciarSesion, btnCrearCuenta, btnEnviarRec, btnGoogleEl].forEach((el) => { if (el) el.disabled = Boolean(servicioCaido); });
+[btnIniciarSesion, btnCrearCuenta, btnEnviarRec, btnRecReenviar, btnRecOtpEnviar, btnRecOtpVerificar, btnRecOtpReenviar, btnRecGoogleEl, btnGoogleEl].forEach((el) => { if (el) el.disabled = Boolean(servicioCaido); });
 if (btnIniciarSesion && !enviando) btnIniciarSesion.textContent = "Iniciar sesión";
 if (btnCrearCuenta && !enviando) btnCrearCuenta.textContent = "Crear cuenta";
 if (estadoGoogleEl) estadoGoogleEl.textContent = servicioCaido ? "No disponible temporalmente mientras el servicio de cuentas está fuera de línea." : "Acceso rápido con tu cuenta de Google a través del servicio de cuentas de dmd.";
@@ -467,55 +504,178 @@ campo.focus();
 });
 });
 const btnAbrirRecuperar = document.getElementById("btn-abrir-recuperar");
-const formRecuperar = document.getElementById("form-recuperar-password");
 const btnCerrarRecuperar = document.getElementById("btn-cerrar-recuperar");
+const recSubtitulo = document.getElementById("rec-subtitulo");
+const recMetodoEnlace = document.getElementById("rec-metodo-enlace");
+const recMetodoOtp = document.getElementById("rec-metodo-otp");
+const btnRecCambiarMetodo = document.getElementById("btn-rec-cambiar-metodo");
+const formRecuperar = document.getElementById("form-recuperar-password");
 const recCorreo = document.getElementById("rec-correo");
 const errorRecGeneral = document.getElementById("error-rec-general");
 const errorRecCorreo = document.getElementById("error-rec-correo");
 const estadoRecPassword = document.getElementById("estado-rec-password");
+const recReenviarWrap = document.getElementById("rec-reenviar-wrap");
+const btnRecReenviar = document.getElementById("btn-rec-reenviar");
 const btnEnviarRecuperacion = document.getElementById("btn-enviar-recuperacion");
+const errorRecOtpGeneral = document.getElementById("error-rec-otp-general");
+const estadoRecOtp = document.getElementById("estado-rec-otp");
+const formRecOtpEnviar = document.getElementById("form-rec-otp-enviar");
+const recOtpCorreo = document.getElementById("rec-otp-correo");
+const errorRecOtpCorreo = document.getElementById("error-rec-otp-correo");
+const btnRecOtpEnviar = document.getElementById("btn-rec-otp-enviar");
+const formRecOtpVerificar = document.getElementById("form-rec-otp-verificar");
+const recOtpCodigo = document.getElementById("rec-otp-codigo");
+const errorRecOtpCodigo = document.getElementById("error-rec-otp-codigo");
+const btnRecOtpVerificar = document.getElementById("btn-rec-otp-verificar");
+const btnRecOtpReenviar = document.getElementById("btn-rec-otp-reenviar");
+const btnRecGoogle = document.getElementById("btn-rec-google");
+const estadoRecGoogle = document.getElementById("estado-rec-google");
+const btnRecCrearCuenta = document.getElementById("btn-rec-crear-cuenta");
+let metodoRecuperacion = "enlace";
+let recOtpCorreoActivo = "";
+function limpiarMensajesRecuperacion() {
+fijarError(recCorreo, errorRecCorreo, "");
+fijarError(recOtpCorreo, errorRecOtpCorreo, "");
+fijarError(recOtpCodigo, errorRecOtpCodigo, "");
+if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
+if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
+if (recReenviarWrap) recReenviarWrap.hidden = true;
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
+if (estadoRecOtp) { estadoRecOtp.textContent = ""; estadoRecOtp.hidden = true; }
+if (formRecOtpEnviar) formRecOtpEnviar.hidden = false;
+if (formRecOtpVerificar) formRecOtpVerificar.hidden = true;
+if (recOtpCodigo) recOtpCodigo.value = "";
+recOtpCorreoActivo = "";
+}
+function fijarMetodoRecuperacion(nuevoMetodo, enfocar) {
+metodoRecuperacion = nuevoMetodo === "otp" ? "otp" : "enlace";
+const esOtp = metodoRecuperacion === "otp";
+if (recMetodoEnlace) recMetodoEnlace.hidden = esOtp;
+if (recMetodoOtp) recMetodoOtp.hidden = !esOtp;
+if (recSubtitulo) {
+recSubtitulo.textContent = esOtp
+? "Te enviaremos un código de 6 dígitos a tu correo para entrar sin tu contraseña."
+: "Te enviaremos un enlace a tu correo para restablecer tu contraseña.";
+}
+if (btnRecCambiarMetodo) {
+btnRecCambiarMetodo.textContent = esOtp
+? "Probar de otra manera: enviar enlace por correo"
+: "Probar de otra manera: recibir un código de 6 dígitos por correo";
+}
+if (esOtp && recOtpCorreo && recCorreo && recCorreo.value.trim() && !recOtpCorreo.value.trim()) {
+recOtpCorreo.value = recCorreo.value.trim();
+} else if (!esOtp && recCorreo && recOtpCorreo && recOtpCorreo.value.trim() && !recCorreo.value.trim()) {
+recCorreo.value = recOtpCorreo.value.trim();
+}
+if (enfocar && vistaRecuperar && !vistaRecuperar.hidden) {
+if (esOtp && recOtpCorreo) recOtpCorreo.focus();
+else if (!esOtp && recCorreo) recCorreo.focus();
+}
+}
 function abrirVistaRecuperacion(correoInicial) {
 if (!vistaRecuperar) return;
 vistaRecuperarActiva = true;
-fijarError(recCorreo, errorRecCorreo, "");
-if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
-if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
-if (recCorreo) {
+limpiarMensajesRecuperacion();
 const valorPrevio = limpiarTextoCuenta(correoInicial || (loginCorreo && loginCorreo.value) || "");
-if (valorPrevio) recCorreo.value = valorPrevio;
+if (valorPrevio) {
+if (recCorreo) recCorreo.value = valorPrevio;
+if (recOtpCorreo) recOtpCorreo.value = valorPrevio;
 }
+fijarMetodoRecuperacion("enlace", false);
 actualizarVistaCuenta();
 if (recCorreo && !vistaRecuperar.hidden) recCorreo.focus();
 }
 function cerrarVistaRecuperacion() {
 vistaRecuperarActiva = false;
-fijarError(recCorreo, errorRecCorreo, "");
-if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
-if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
+limpiarMensajesRecuperacion();
 actualizarVistaCuenta();
 if (loginCorreo && !vistaInvitado.hidden) loginCorreo.focus();
 }
-async function manejarRecuperacionPassword(evento) {
-if (evento) { evento.preventDefault(); evento.stopPropagation(); }
+async function enviarEnlaceRecuperacion(esReenvio) {
 if (enviando || !recCorreo) return;
 const correo = normalizarCorreo(recCorreo.value);
 fijarError(recCorreo, errorRecCorreo, "");
 if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
-if (estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
+if (!esReenvio && estadoRecPassword) { estadoRecPassword.textContent = ""; estadoRecPassword.hidden = true; }
 if (!esCorreoValido(correo)) { fijarError(recCorreo, errorRecCorreo, "Escribe un correo válido para recuperar tu acceso."); recCorreo.focus(); return; }
 enviando = true;
-if (btnEnviarRecuperacion) { btnEnviarRecuperacion.disabled = true; btnEnviarRecuperacion.textContent = "Enviando..."; }
+const btnActivo = esReenvio ? btnRecReenviar : btnEnviarRecuperacion;
+const textoReposo = esReenvio ? "Reenviar correo" : "Enviar enlace por correo";
+if (btnActivo) { btnActivo.disabled = true; btnActivo.textContent = "Enviando..."; }
 try {
 const res = await dmdCuenta.solicitarRecuperacionPassword(correo);
 if (res.ok) {
-if (estadoRecPassword) { estadoRecPassword.textContent = res.mensaje; estadoRecPassword.hidden = false; }
+if (estadoRecPassword) {
+estadoRecPassword.textContent = esReenvio
+? `Reenviamos las instrucciones a ${correo}. Revisa tu bandeja de entrada o correo no deseado.`
+: res.mensaje;
+estadoRecPassword.hidden = false;
+}
+if (recReenviarWrap) recReenviarWrap.hidden = false;
 } else {
 if (errorRecGeneral) { errorRecGeneral.textContent = res.mensaje; errorRecGeneral.hidden = false; }
 else if (estadoRecPassword) { estadoRecPassword.textContent = res.mensaje; estadoRecPassword.hidden = false; }
 }
 } finally {
 enviando = false;
-if (btnEnviarRecuperacion) { btnEnviarRecuperacion.disabled = Boolean(dmdCuenta.obtenerUltimoErrorServicio()); btnEnviarRecuperacion.textContent = "Enviar instrucciones"; }
+if (btnActivo) { btnActivo.disabled = Boolean(dmdCuenta.obtenerUltimoErrorServicio()); btnActivo.textContent = textoReposo; }
+}
+}
+async function manejarEnvioOtpRecuperacion(esReenvio) {
+if (enviando || !recOtpCorreo) return;
+const correo = normalizarCorreo(esReenvio ? (recOtpCorreoActivo || recOtpCorreo.value) : recOtpCorreo.value);
+fijarError(recOtpCorreo, errorRecOtpCorreo, "");
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
+if (!esReenvio && estadoRecOtp) { estadoRecOtp.textContent = ""; estadoRecOtp.hidden = true; }
+if (!esCorreoValido(correo)) { fijarError(recOtpCorreo, errorRecOtpCorreo, "Escribe un correo válido."); recOtpCorreo.focus(); return; }
+enviando = true;
+const btnActivo = esReenvio ? btnRecOtpReenviar : btnRecOtpEnviar;
+const textoReposo = esReenvio ? "Reenviar código" : "Enviar código de 6 dígitos";
+if (btnActivo) { btnActivo.disabled = true; btnActivo.textContent = "Enviando..."; }
+try {
+const res = await dmdCuenta.enviarCodigoOtp(correo);
+if (res.ok) {
+recOtpCorreoActivo = correo;
+if (estadoRecOtp) {
+estadoRecOtp.textContent = esReenvio
+? `Enviamos un nuevo código de 6 dígitos a ${correo}. Revisa tu correo.`
+: res.mensaje;
+estadoRecOtp.hidden = false;
+}
+if (formRecOtpEnviar) formRecOtpEnviar.hidden = true;
+if (formRecOtpVerificar) formRecOtpVerificar.hidden = false;
+if (recOtpCodigo) { recOtpCodigo.value = ""; recOtpCodigo.focus(); }
+} else {
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = res.mensaje; errorRecOtpGeneral.hidden = false; }
+}
+} finally {
+enviando = false;
+if (btnActivo) { btnActivo.disabled = Boolean(dmdCuenta.obtenerUltimoErrorServicio()); btnActivo.textContent = textoReposo; }
+}
+}
+async function manejarVerificarOtpRecuperacion(evento) {
+if (evento) { evento.preventDefault(); evento.stopPropagation(); }
+if (enviando || !recOtpCodigo) return;
+const correo = normalizarCorreo(recOtpCorreoActivo || (recOtpCorreo && recOtpCorreo.value) || "");
+const codigo = String(recOtpCodigo.value || "").replace(/\D+/g, "").trim();
+fijarError(recOtpCodigo, errorRecOtpCodigo, "");
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
+if (!/^\d{6}$/.test(codigo)) { fijarError(recOtpCodigo, errorRecOtpCodigo, "Escribe el código numérico de 6 dígitos."); recOtpCodigo.focus(); return; }
+enviando = true;
+if (btnRecOtpVerificar) { btnRecOtpVerificar.disabled = true; btnRecOtpVerificar.textContent = "Verificando..."; }
+try {
+const res = await dmdCuenta.verificarCodigoOtp(correo, codigo);
+if (!res.ok) {
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = res.mensaje; errorRecOtpGeneral.hidden = false; }
+recOtpCodigo.focus();
+return;
+}
+estadoCuenta.textContent = `Sesión iniciada: ${res.sesion.nombre}.`;
+vistaRecuperarActiva = false;
+actualizarVistaCuenta();
+} finally {
+enviando = false;
+if (btnRecOtpVerificar) { btnRecOtpVerificar.disabled = Boolean(dmdCuenta.obtenerUltimoErrorServicio()); btnRecOtpVerificar.textContent = "Verificar y entrar"; }
 }
 }
 if (btnAbrirRecuperar && vistaRecuperar) {
@@ -524,15 +684,66 @@ btnAbrirRecuperar.addEventListener("click", () => abrirVistaRecuperacion());
 if (btnCerrarRecuperar && vistaRecuperar) {
 btnCerrarRecuperar.addEventListener("click", cerrarVistaRecuperacion);
 }
+if (btnRecCambiarMetodo) {
+btnRecCambiarMetodo.addEventListener("click", () => {
+fijarMetodoRecuperacion(metodoRecuperacion === "enlace" ? "otp" : "enlace", true);
+});
+}
 if (formRecuperar) {
-formRecuperar.addEventListener("submit", manejarRecuperacionPassword);
+formRecuperar.addEventListener("submit", (e) => { e.preventDefault(); e.stopPropagation(); enviarEnlaceRecuperacion(false); });
 } else if (btnEnviarRecuperacion) {
-btnEnviarRecuperacion.addEventListener("click", manejarRecuperacionPassword);
+btnEnviarRecuperacion.addEventListener("click", () => enviarEnlaceRecuperacion(false));
+}
+if (btnRecReenviar) {
+btnRecReenviar.addEventListener("click", () => enviarEnlaceRecuperacion(true));
 }
 if (recCorreo) {
 recCorreo.addEventListener("input", () => {
 fijarError(recCorreo, errorRecCorreo, "");
 if (errorRecGeneral) { errorRecGeneral.textContent = ""; errorRecGeneral.hidden = true; }
+});
+}
+if (formRecOtpEnviar) {
+formRecOtpEnviar.addEventListener("submit", (e) => { e.preventDefault(); e.stopPropagation(); manejarEnvioOtpRecuperacion(false); });
+}
+if (btnRecOtpReenviar) {
+btnRecOtpReenviar.addEventListener("click", () => manejarEnvioOtpRecuperacion(true));
+}
+if (formRecOtpVerificar) {
+formRecOtpVerificar.addEventListener("submit", manejarVerificarOtpRecuperacion);
+}
+if (recOtpCorreo) {
+recOtpCorreo.addEventListener("input", () => {
+fijarError(recOtpCorreo, errorRecOtpCorreo, "");
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
+});
+}
+if (recOtpCodigo) {
+recOtpCodigo.addEventListener("input", () => {
+fijarError(recOtpCodigo, errorRecOtpCodigo, "");
+if (errorRecOtpGeneral) { errorRecOtpGeneral.textContent = ""; errorRecOtpGeneral.hidden = true; }
+});
+}
+if (btnRecGoogle) {
+btnRecGoogle.addEventListener("click", async () => {
+if (enviando) return;
+enviando = true; btnRecGoogle.disabled = true;
+if (estadoRecGoogle) estadoRecGoogle.textContent = "Comprobando acceso con Google...";
+try {
+const res = await dmdCuenta.iniciarAccesoGoogle();
+if (!res.ok && estadoRecGoogle) estadoRecGoogle.textContent = res.mensaje;
+else if (res.yaAutenticado) { vistaRecuperarActiva = false; actualizarVistaCuenta(); }
+else if (res.redirigiendo && estadoRecGoogle) estadoRecGoogle.textContent = "Abriendo acceso seguro de tu cuenta dmd...";
+} finally { enviando = false; btnRecGoogle.disabled = Boolean(dmdCuenta.obtenerUltimoErrorServicio()); }
+});
+}
+if (btnRecCrearCuenta) {
+btnRecCrearCuenta.addEventListener("click", () => {
+vistaRecuperarActiva = false;
+limpiarMensajesRecuperacion();
+cambiarPestana("registro");
+actualizarVistaCuenta();
+if (regNombre && !vistaInvitado.hidden) regNombre.focus();
 });
 }
 const secMiSub = document.getElementById("seccion-mi-suscripcion");

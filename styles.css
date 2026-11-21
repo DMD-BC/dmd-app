@@ -7788,3 +7788,50 @@ p {
   line-height: 1.48;
 }
 
+.recovery-method-panel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.recovery-resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recovery-alt-switch {
+  display: flex;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+.recovery-alt-btn {
+  min-height: 44px;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.input-otp {
+  letter-spacing: 0.32em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: center;
+}
+
+.recovery-last-resort {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.recovery-last-resort .text-link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+
