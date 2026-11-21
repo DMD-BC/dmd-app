@@ -9,7 +9,7 @@
    el generador local como respaldo.
    ========================================================================== */
 
-const MODELO = "llama-3.3-70b-versatile";
+const MODELO = "openai/gpt-oss-120b";
 const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const MAX_OUTPUT_TOKENS = 2500;
 

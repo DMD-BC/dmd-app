@@ -13,7 +13,6 @@
 
 const generateHandler = require("./generate");
 const {
-  MODELO,
   MAX_OUTPUT_TOKENS,
   PERFILES_DISENO_GIRO,
   detectarPerfilGiro,
@@ -23,6 +22,7 @@ const {
   normalizarBorrador
 } = generateHandler._test;
 
+const MODELO = "openai/gpt-oss-120b";
 const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const TIMEOUT_TOTAL_MS = 45000;
 const TIMEOUT_DECISION_MS = 15000;
