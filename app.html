@@ -137,18 +137,8 @@
         </div>
       </header>
 
-      <!-- Vista 1: Chat guiado -->
+      <!-- Vista 1: Chat -->
       <section id="vista-chat" class="chat-view" aria-label="Chat de DMD">
-        <div id="chat-progreso" class="chat-progress-bar-wrap" aria-live="polite">
-          <div class="chat-progress-meta">
-            <span id="chat-progreso-texto" class="chat-progress-label">Paso 1 de 8 · Nombre del negocio</span>
-            <span id="chat-progreso-porcentaje" class="chat-progress-step">1/8</span>
-          </div>
-          <div class="chat-progress-track" aria-hidden="true">
-            <div id="chat-progreso-barra" class="chat-progress-fill" style="width: 12%;"></div>
-          </div>
-        </div>
-
         <div id="chat-mensajes" class="chat-thread" role="log" aria-live="polite" aria-relevant="additions"></div>
 
         <div class="chat-composer-shell">
@@ -164,12 +154,12 @@
           <p id="chat-estado" class="chat-status" role="status" aria-live="polite"></p>
 
           <form id="form-chat" class="chat-composer" novalidate onsubmit="return false;">
-            <label class="sr-only" for="chat-entrada">Escribe tu respuesta</label>
+            <label class="sr-only" for="chat-entrada">Escribe tu mensaje</label>
             <textarea
               id="chat-entrada"
               class="chat-input"
               rows="1"
-              placeholder="Escribe tu respuesta aquí..."
+              placeholder="Cuéntame de tu negocio o pide un ajuste..."
               maxlength="400"
             ></textarea>
             <button id="btn-chat-enviar" class="btn btn-primary chat-send-btn" type="button" aria-label="Enviar mensaje">

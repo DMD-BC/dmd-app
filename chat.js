@@ -2,8 +2,8 @@
 
 /* ==========================================================================
    dmd - Controlador de chat de dmd (app.html)
-   Conversación guiada paso a paso con indicador de progreso, estado de carga,
-   un solo borrador agrupado por conversación, sanitización de rellenos y
+   Chat conversacional con razonamiento en el backend (/api/chat), estado de
+   carga, un solo borrador agrupado por conversación, sanitización de rellenos,
    capitalización de nombres propios, confirmación y Deshacer al borrar.
    ========================================================================== */
 
@@ -14,56 +14,8 @@
   const KEY_BORRADOR_ACTIVO = "dmd_borrador_activo_v1";
   const KEY_PUBLICADAS = "dmd_paginas_publicadas_v1";
 
-  const PASOS = [
-    {
-      campo: "nombre",
-      etiqueta: "Nombre del negocio",
-      pregunta: "¿Cómo se llama tu negocio?",
-      chips: []
-    },
-    {
-      campo: "giro",
-      etiqueta: "Giro del negocio",
-      pregunta: "¿Cuál es el giro de tu negocio?",
-      chips: ["Panadería", "Ferretería", "Cafetería", "Taquería", "Estética", "Servicios"]
-    },
-    {
-      campo: "ciudad",
-      etiqueta: "Ciudad",
-      pregunta: "¿En qué ciudad estás?",
-      chips: []
-    },
-    {
-      campo: "direccion",
-      etiqueta: "Calle o colonia (opcional)",
-      pregunta: "¿En qué calle o colonia estás? (opcional, o toca Continuar sin dirección)",
-      chips: ["Continuar sin dirección"]
-    },
-    {
-      campo: "horario",
-      etiqueta: "Horario (opcional)",
-      pregunta: "¿Cuál es tu horario de atención? (ej. Lunes a viernes de 9 a 6 y sábado de 9 a 2, o toca Continuar sin horario)",
-      chips: ["Continuar sin horario"]
-    },
-    {
-      campo: "oferta",
-      etiqueta: "Productos o servicios",
-      pregunta: "¿Qué vendes o qué servicios ofreces?",
-      chips: []
-    },
-    {
-      campo: "tono",
-      etiqueta: "Tono del texto",
-      pregunta: "¿Qué tono prefieres?",
-      chips: ["Cercano", "Profesional", "Formal"]
-    },
-    {
-      campo: "whatsapp",
-      etiqueta: "WhatsApp (opcional)",
-      pregunta: "¿Cuál es tu WhatsApp? (opcional, con lada ej. 528112345678, o toca Continuar sin teléfono)",
-      chips: ["Continuar sin teléfono"]
-    }
-  ];
+  const MENSAJE_BIENVENIDA_CHAT =
+    "Hola. Cuéntame de tu negocio para armar tu página: cómo se llama, qué ofreces o en qué ciudad estás.";
 
   const RESPUESTAS_NO_OFERTA = new Set([
     "omitir",
@@ -372,10 +324,6 @@
     const contadorConv = document.getElementById("contador-conversaciones");
     const convVacio = document.getElementById("conversaciones-vacio");
     const listaConvEl = document.getElementById("lista-conversaciones");
-
-    const progresoTexto = document.getElementById("chat-progreso-texto");
-    const progresoPaso = document.getElementById("chat-progreso-porcentaje");
-    const progresoBarra = document.getElementById("chat-progreso-barra");
 
     const chatErrorBanner = document.getElementById("chat-error-banner");
     const chatErrorTexto = document.getElementById("chat-error-texto");
@@ -766,13 +714,8 @@
           c.datos.giroTexto = giroConvEsp;
           huboAjuste = true;
         }
-        // Migrar conversaciones completadas con el flujo anterior de 6 pasos al flujo actual de 8 pasos
-        if (
-          (c.borradorId || (c.pasoIndice >= 6 && c.datos.oferta && c.datos.tono)) &&
-          c.pasoIndice < PASOS.length
-        ) {
-          c.pasoIndice = PASOS.length;
-          huboAjuste = true;
+        if (!Array.isArray(c.camposOmitidos)) {
+          c.camposOmitidos = [];
         }
         const waConv = limpiarDigitosWhatsappValidos(c.datos.whatsapp);
         if (waConv !== (c.datos.whatsapp || "")) {
@@ -955,7 +898,6 @@
         id: crearId("conv"),
         cuentaId: propietarioActual(),
         titulo: "Nueva conversación",
-        pasoIndice: 0,
         datos: {
           nombre: "",
           giro: "",
@@ -967,6 +909,7 @@
           tono: "",
           whatsapp: ""
         },
+        camposOmitidos: [],
         borradorId: null,
         creadaEn: ahora,
         actualizadaEn: ahora,
@@ -975,7 +918,7 @@
             id: crearId("msg"),
             rol: "asistente",
             tipo: "texto",
-            texto: PASOS[0].pregunta
+            texto: MENSAJE_BIENVENIDA_CHAT
           }
         ]
       };
@@ -1199,8 +1142,18 @@
       return gen.construirUrlPublicada(registro.publicadaSlug);
     }
 
-    async function guardarOActualizarBorradorDesdeConv(conv, variante, etiquetaVersion, detalleVersion) {
+    async function guardarOActualizarBorradorDesdeConv(
+      conv,
+      variante,
+      etiquetaVersion,
+      detalleVersion,
+      borradorServidorPrehecho,
+      soloLocalSiFalta
+    ) {
       const datos = clonar(conv.datos);
+      if (!datos.tono) {
+        datos.tono = "cercano";
+      }
       if (typeof gen.formatearNombrePropio === "function") {
         datos.nombre = gen.formatearNombrePropio(datos.nombre, "nombre");
         datos.ciudad = gen.formatearNombrePropio(datos.ciudad, "ciudad");
@@ -1210,16 +1163,36 @@
       }
       conv.datos = clonar(datos);
 
-      const resultado =
-        typeof gen.generarBorradorConDetalle === "function"
-          ? await gen.generarBorradorConDetalle(datos, variante)
-          : {
-              borrador:
-                (gen.generarBorradorConServicio
-                  ? await gen.generarBorradorConServicio(datos, variante)
-                  : null) || gen.generarBorrador(datos, variante),
-              origen: "local"
-            };
+      let resultado;
+      if (borradorServidorPrehecho && typeof borradorServidorPrehecho === "object") {
+        const baseLocal = gen.generarBorrador(datos, variante);
+        resultado = {
+          borrador: Object.assign({}, baseLocal, borradorServidorPrehecho, {
+            whatsapp: gen.limpiarDigitos(datos.whatsapp || ""),
+            mensajeWhatsapp: baseLocal.mensajeWhatsapp,
+            portada: baseLocal.portada,
+            estructura: baseLocal.estructura,
+            variante: Number.isFinite(Number(variante)) ? Math.abs(Number(variante)) : 0
+          }),
+          origen: "servidor"
+        };
+      } else if (soloLocalSiFalta) {
+        resultado = {
+          borrador: gen.generarBorrador(datos, variante),
+          origen: "local"
+        };
+      } else {
+        resultado =
+          typeof gen.generarBorradorConDetalle === "function"
+            ? await gen.generarBorradorConDetalle(datos, variante)
+            : {
+                borrador:
+                  (gen.generarBorradorConServicio
+                    ? await gen.generarBorradorConServicio(datos, variante)
+                    : null) || gen.generarBorrador(datos, variante),
+                origen: "local"
+              };
+      }
       const borrador = resultado.borrador;
 
       let registro = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
@@ -2004,6 +1977,305 @@
       }
     }
 
+    async function solicitarTurnoChatBackend(conv) {
+      if (typeof window.fetch !== "function") {
+        return { ok: false, status: 0, error: "no_fetch" };
+      }
+      const registroActual = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
+      const publicadaUrl =
+        registroActual && registroActual.publicadaSlug
+          ? gen.construirUrlPublicada(registroActual.publicadaSlug)
+          : "";
+      const payload = {
+        mensajes: (Array.isArray(conv.mensajes) ? conv.mensajes : [])
+          .filter((m) => m && typeof m.texto === "string" && m.texto.trim())
+          .slice(-14)
+          .map((m) => ({
+            rol: m.rol === "usuario" ? "usuario" : "asistente",
+            texto: m.texto
+          })),
+        datos: conv.datos || {},
+        camposOmitidos: Array.isArray(conv.camposOmitidos) ? conv.camposOmitidos : [],
+        tieneBorrador: Boolean(registroActual),
+        variante:
+          registroActual && registroActual.borrador ? registroActual.borrador.variante || 0 : 0,
+        estadoEditor: {
+          tieneLogo: Boolean(
+            registroActual && registroActual.diseno && registroActual.diseno.logoDataUrl
+          ),
+          portadaOrigen:
+            (registroActual && registroActual.diseno && registroActual.diseno.portadaOrigen) ||
+            "ninguna",
+          plantilla:
+            (registroActual && registroActual.diseno && registroActual.diseno.plantilla) ||
+            "clasica",
+          publicadaUrl
+        }
+      };
+
+      const controlador = typeof AbortController === "function" ? new AbortController() : null;
+      const temporizador = controlador
+        ? window.setTimeout(() => controlador.abort(), 48000)
+        : null;
+      try {
+        const resp = await window.fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controlador ? controlador.signal : undefined
+        });
+        let data = null;
+        try {
+          data = await resp.json();
+        } catch (err) {
+          data = null;
+        }
+        if (!resp.ok || !data || typeof data !== "object" || !data.accion) {
+          return {
+            ok: false,
+            status: resp.status,
+            error: (data && data.error) || "chat_unavailable"
+          };
+        }
+        return { ok: true, status: resp.status, data };
+      } catch (err) {
+        return { ok: false, status: 0, error: "network_error" };
+      } finally {
+        if (temporizador) {
+          window.clearTimeout(temporizador);
+        }
+      }
+    }
+
+    function aplicarAjusteDisenoDesdeBackend(conv, ajusteDiseno) {
+      if (!ajusteDiseno || typeof ajusteDiseno !== "object") {
+        return;
+      }
+      const registroActual = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
+      if (!registroActual) {
+        return;
+      }
+      let modifico = false;
+      registroActual.diseno = registroActual.diseno || {};
+
+      if (
+        ajusteDiseno.plantilla &&
+        ["clasica", "editorial", "directa"].includes(ajusteDiseno.plantilla)
+      ) {
+        registroActual.diseno.plantilla = ajusteDiseno.plantilla;
+        modifico = true;
+      }
+      if (ajusteDiseno.quitarLogo && registroActual.diseno.logoDataUrl) {
+        registroActual.diseno.logoDataUrl = "";
+        modifico = true;
+      }
+      if (ajusteDiseno.quitarPortada) {
+        registroActual.diseno.portadaOrigen = "ninguna";
+        registroActual.diseno.portadaDataUrl = "";
+        modifico = true;
+      } else if (
+        ajusteDiseno.cambiarPortada &&
+        typeof gen.obtenerSiguientePortada === "function"
+      ) {
+        const sig = gen.obtenerSiguientePortada(
+          registroActual.datos,
+          registroActual.diseno.portadaIndice,
+          registroActual.diseno.portadaDataUrl
+        );
+        if (
+          sig &&
+          sig.url &&
+          window.dmdEditor &&
+          typeof window.dmdEditor.aplicarPortadaEnRegistro === "function"
+        ) {
+          window.dmdEditor.aplicarPortadaEnRegistro(registroActual, sig);
+          modifico = true;
+        }
+      }
+
+      if (modifico) {
+        registroActual.actualizadoEn = new Date().toISOString();
+        sincronizarPublicada(registroActual);
+        if (window.dmdEditor && borradorActivoId === registroActual.id) {
+          window.dmdEditor.cargarBorrador(registroActual, false);
+        }
+      }
+    }
+
+    async function aplicarDecisionBackendChat(conv, decision) {
+      if (decision.datosActualizados && typeof decision.datosActualizados === "object") {
+        const nuevos = Object.assign({}, conv.datos, decision.datosActualizados);
+        if (nuevos.nombre && typeof gen.formatearNombrePropio === "function") {
+          nuevos.nombre = gen.formatearNombrePropio(nuevos.nombre, "nombre");
+        }
+        if (nuevos.ciudad && typeof gen.formatearNombrePropio === "function") {
+          nuevos.ciudad = gen.formatearNombrePropio(nuevos.ciudad, "ciudad");
+        }
+        if (nuevos.oferta && typeof gen.limpiarOfertaDeRelleno === "function") {
+          nuevos.oferta = gen.limpiarOfertaDeRelleno(nuevos.oferta) || nuevos.oferta;
+        }
+        if (nuevos.giro && typeof gen.normalizarGiro === "function") {
+          nuevos.giro = gen.normalizarGiro(nuevos.giro) || nuevos.giro;
+        }
+        conv.datos = nuevos;
+        if (conv.datos.nombre) {
+          conv.titulo = conv.datos.nombre;
+        }
+      }
+
+      if (Array.isArray(decision.camposOmitidos)) {
+        conv.camposOmitidos = decision.camposOmitidos.slice();
+      }
+
+      aplicarAjusteDisenoDesdeBackend(conv, decision.ajusteDiseno);
+
+      chipsSeguimiento = Array.isArray(decision.sugerencias)
+        ? decision.sugerencias.filter((s) => typeof s === "string" && s.trim()).slice(0, 3)
+        : [];
+      if (decision.accion === "completo" && chipsSeguimiento.length === 0) {
+        chipsSeguimiento = ["Abrir Editor visual"];
+      }
+
+      if (decision.accion === "generar" || decision.accion === "actualizar") {
+        const regPrevio = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
+        const varianteActual =
+          regPrevio && regPrevio.borrador ? regPrevio.borrador.variante || 0 : 0;
+        const esInicial = !regPrevio;
+        const { registro } = await guardarOActualizarBorradorDesdeConv(
+          conv,
+          varianteActual,
+          esInicial ? "Versión inicial" : "Actualización por chat",
+          esInicial
+            ? `Borrador inicial de ${conv.datos.nombre}`
+            : `Actualización conversacional (${decision.intencion || "datos"})`,
+          decision.borrador || null,
+          true
+        );
+        marcarBorradoresAnterioresComoTexto(conv);
+        conv.mensajes.push({
+          id: crearId("msg"),
+          rol: "asistente",
+          tipo: "borrador",
+          texto: decision.respuesta,
+          borradorId: registro.id
+        });
+        conv.actualizadaEn = new Date().toISOString();
+        guardarColecciones();
+        return;
+      }
+
+      conv.mensajes.push({
+        id: crearId("msg"),
+        rol: "asistente",
+        tipo: "texto",
+        texto: decision.respuesta
+      });
+      conv.actualizadaEn = new Date().toISOString();
+      guardarColecciones();
+    }
+
+    async function procesarTurnoRespaldoLocalSinBorrador(conv, texto) {
+      const clasif =
+        typeof gen.clasificarIntencionChat === "function"
+          ? gen.clasificarIntencionChat(texto, { registro: null, conv })
+          : null;
+
+      // Proteger contra pegar preguntas o saludos literales como datos del negocio
+      if (clasif && clasif.intencion === "saludo") {
+        responderEnHiloSinEditarBorrador(
+          conv,
+          "Hola. Cuéntame cómo se llama tu negocio, en qué ciudad está y qué ofreces para armar tu página."
+        );
+        return;
+      }
+      if (clasif && clasif.intencion === "pregunta") {
+        responderEnHiloSinEditarBorrador(
+          conv,
+          "Con el nombre de tu negocio, tu ciudad y lo que ofreces armo el borrador de tu página. También puedes agregar calle, horario o WhatsApp si gustas."
+        );
+        return;
+      }
+
+      const d = conv.datos;
+      // Extraer WhatsApp si viene en el mensaje
+      const matchWa = texto.match(/\+?[\d][\d\s-]{8,16}\d/);
+      if (matchWa) {
+        const dig = gen.limpiarDigitos(matchWa[0]);
+        if (dig.length >= 10 && dig.length <= 15) {
+          d.whatsapp = dig;
+        }
+      }
+      // Extraer giro si se deduce del texto
+      if (!d.giro && typeof gen.normalizarGiro === "function") {
+        const giroInf = gen.normalizarGiro(texto);
+        if (giroInf && giroInf !== "otro") {
+          d.giro = giroInf;
+          if (!d.giroTexto) {
+            d.giroTexto = giroInf;
+          }
+        }
+      }
+
+      const pideGenerarYa = /\b(armar|generar|crear)\s+(?:el\s+)?borrador|as[ií]\s+est[aá]\s+bien/i.test(
+        texto
+      );
+
+      if (!pideGenerarYa && !esTextoOmision(texto)) {
+        if (!d.nombre) {
+          const valNom = validarRespuestaPaso("nombre", texto);
+          if (valNom.ok) {
+            d.nombre = valNom.valor;
+            conv.titulo = valNom.valor;
+          }
+        } else if (!d.ciudad) {
+          const valCiu = validarRespuestaPaso("ciudad", texto);
+          if (valCiu.ok) {
+            d.ciudad = valCiu.valor;
+          }
+        } else if (!d.oferta) {
+          const valOf = validarRespuestaPaso("oferta", texto);
+          if (valOf.ok) {
+            d.oferta = valOf.valor;
+          }
+        }
+      }
+
+      if (d.nombre && d.ciudad && d.oferta) {
+        const { registro } = await guardarOActualizarBorradorDesdeConv(
+          conv,
+          0,
+          "Versión inicial",
+          `Borrador inicial de ${d.nombre}`,
+          null,
+          true
+        );
+        marcarBorradoresAnterioresComoTexto(conv);
+        conv.mensajes.push({
+          id: crearId("msg"),
+          rol: "asistente",
+          tipo: "borrador",
+          texto: `Listo, armé el borrador de ${registro.datos.nombre}. Dime si quieres agregar calle, horario o WhatsApp, o ajustar algo.`,
+          borradorId: registro.id
+        });
+        conv.actualizadaEn = new Date().toISOString();
+        guardarColecciones();
+        return;
+      }
+
+      if (!d.nombre) {
+        responderEnHiloSinEditarBorrador(conv, "¿Cómo se llama tu negocio?");
+        return;
+      }
+      if (!d.ciudad) {
+        responderEnHiloSinEditarBorrador(conv, `¿En qué ciudad está ${d.nombre}?`);
+        return;
+      }
+      responderEnHiloSinEditarBorrador(
+        conv,
+        `¿Qué productos o servicios ofreces en ${d.nombre}?`
+      );
+    }
+
     async function enviarMensajeUsuario(textoCrudo) {
       if (generandoAhora) {
         return;
@@ -2026,126 +2298,56 @@
       entradaChat.style.height = "auto";
       estadoChatEl.textContent = "";
 
-      // Si estamos en paso guiado
-      if (conv.pasoIndice < PASOS.length) {
-        const paso = PASOS[conv.pasoIndice];
-        const validacion = validarRespuestaPaso(paso.campo, texto);
-
-        // Si en un paso opcional (dirección, horario o WhatsApp) se omite, guardar vacío sin mostrar "Omitir" ni "Continuar sin..." en el chat
-        const esPasoOpcional =
-          paso.campo === "whatsapp" || paso.campo === "direccion" || paso.campo === "horario";
-        const omitioOpcional = esPasoOpcional && validacion.ok && validacion.omitido;
-        if (!omitioOpcional) {
-          let textoBurbuja = texto;
-          if (validacion.ok && (paso.campo === "nombre" || paso.campo === "ciudad")) {
-            textoBurbuja = validacion.valor;
-          } else if (validacion.ok && paso.campo === "oferta" && /^[a-záéíóúñü]/.test(texto)) {
-            textoBurbuja = texto.charAt(0).toUpperCase() + texto.slice(1);
-          }
-          conv.mensajes.push({
-            id: crearId("msg"),
-            rol: "usuario",
-            tipo: "texto",
-            campo: paso.campo,
-            texto: textoBurbuja
-          });
-        }
-
-        if (!validacion.ok) {
-          conv.mensajes.push({
-            id: crearId("msg"),
-            rol: "asistente",
-            tipo: "texto",
-            texto: validacion.aviso
-          });
-          conv.actualizadaEn = new Date().toISOString();
-          guardarColecciones();
-          renderizarHilo({ scrollSuave: true, forzarScroll: true });
-          return;
-        }
-
-        conv.datos[paso.campo] = validacion.valor;
-        if (paso.campo === "giro") {
-          conv.datos.giroTexto = validacion.giroTexto || texto;
-        }
-        if (paso.campo === "nombre") {
-          conv.titulo = validacion.valor;
-        }
-        conv.pasoIndice += 1;
-
-        if (conv.pasoIndice < PASOS.length) {
-          conv.mensajes.push({
-            id: crearId("msg"),
-            rol: "asistente",
-            tipo: "texto",
-            texto: PASOS[conv.pasoIndice].pregunta
-          });
-          conv.actualizadaEn = new Date().toISOString();
-          guardarColecciones();
-          renderizarTodo({ scrollSuave: true, forzarScroll: true });
-          return;
-        }
-
-        // Completó los pasos: generar borrador con indicador de escritura
-        fijarEstadoGeneracion(true, "Armando el borrador de tu página...");
-        try {
-          const { registro, origen } = await guardarOActualizarBorradorDesdeConv(
-            conv,
-            0,
-            "Versión inicial",
-            `Borrador inicial de ${conv.datos.nombre}`
-          );
-          marcarBorradoresAnterioresComoTexto(conv);
-          conv.mensajes.push({
-            id: crearId("msg"),
-            rol: "asistente",
-            tipo: "borrador",
-            texto: `Borrador listo para ${registro.datos.nombre}. Puedes revisarlo aquí, pedir ajustes o abrir el Editor visual.`,
-            borradorId: registro.id
-          });
-          guardarColecciones();
-          fijarEstadoGeneracion(
-            false,
-            origen === "local"
-              ? "Borrador listo y guardado en este navegador."
-              : "Borrador listo y guardado."
-          );
-          renderizarTodo({ scrollSuave: true, forzarScroll: true });
-        } catch (error) {
-          conv.pasoIndice = PASOS.length - 1;
-          fijarEstadoGeneracion(false, "");
-          mostrarErrorChat(
-            "Hubo un problema al armar tu borrador. Intenta de nuevo.",
-            () => enviarMensajeUsuario(texto)
-          );
-          renderizarTodo({ scrollSuave: true, forzarScroll: true });
-        }
-        return;
-      }
-
-      // Conversación ya completada: ignorar solo "Omitir" / "Continuar sin..." literales
-      if (esTextoOmision(texto)) {
-        estadoChatEl.textContent =
-          "Tu borrador ya está listo. Escribe una pregunta o un ajuste concreto (ej. cambia el tono o agrega un producto).";
-        return;
-      }
-
-      // Chip directo para ir al editor sin ensuciar el historial
+      // Chip directo para ir al editor sin ensuciar el historial ni gastar turno
       if (/^abrir\s+editor\s+visual$/i.test(texto)) {
         chipsSeguimiento = [];
-        await aplicarCambioSeguimiento(conv, texto);
+        const registroActual = conv.borradorId ? obtenerBorradorPorId(conv.borradorId) : null;
+        if (registroActual) {
+          fijarBorradorActivo(registroActual.id);
+        }
+        cambiarVistaApp("editor");
         return;
       }
 
+      chipsSeguimiento = [];
       conv.mensajes.push({
         id: crearId("msg"),
         rol: "usuario",
         tipo: "texto",
         texto
       });
+      conv.actualizadaEn = new Date().toISOString();
+      guardarColecciones();
+      fijarEstadoGeneracion(true, "");
       renderizarHilo({ scrollSuave: true, forzarScroll: true });
-      await aplicarCambioSeguimiento(conv, texto);
-      desplazarChatAlFinal({ suave: true, forzar: true });
+
+      try {
+        const resBackend = await solicitarTurnoChatBackend(conv);
+        if (resBackend.ok && resBackend.data) {
+          await aplicarDecisionBackendChat(conv, resBackend.data);
+          fijarEstadoGeneracion(false, "");
+          renderizarTodo({ scrollSuave: true, forzarScroll: true });
+          return;
+        }
+
+        // Respaldo local cuando el servidor no está configurado (503) o no responde
+        fijarEstadoGeneracion(false, "");
+        const tieneBorrador = Boolean(conv.borradorId && obtenerBorradorPorId(conv.borradorId));
+        if (tieneBorrador) {
+          await aplicarCambioSeguimiento(conv, texto);
+          desplazarChatAlFinal({ suave: true, forzar: true });
+        } else {
+          await procesarTurnoRespaldoLocalSinBorrador(conv, texto);
+          renderizarTodo({ scrollSuave: true, forzarScroll: true });
+        }
+      } catch (error) {
+        fijarEstadoGeneracion(false, "");
+        mostrarErrorChat(
+          "No se pudo procesar tu mensaje en este intento. Intenta de nuevo.",
+          () => enviarMensajeUsuario(texto)
+        );
+        renderizarTodo({ scrollSuave: true, forzarScroll: true });
+      }
     }
 
     async function guardarEdicionMensajeUsuario(conv, msg, nuevoTexto) {
@@ -2658,29 +2860,6 @@
       return card;
     }
 
-    function renderizarProgresoChat(conv) {
-      if (!progresoTexto || !progresoPaso || !progresoBarra) {
-        return;
-      }
-      if (!conv) {
-        return;
-      }
-      const total = PASOS.length;
-      if (conv.pasoIndice < total) {
-        const paso = PASOS[conv.pasoIndice];
-        const num = conv.pasoIndice + 1;
-        progresoTexto.textContent = `Paso ${num} de ${total} · ${paso.etiqueta}`;
-        progresoPaso.textContent = `${num}/${total}`;
-        progresoBarra.style.width = `${Math.round((num / total) * 100)}%`;
-      } else {
-        progresoTexto.textContent = conv.borradorId
-          ? "Borrador listo · Escribe un ajuste o ábrelo en el Editor visual"
-          : "Datos completos";
-        progresoPaso.textContent = "Listo";
-        progresoBarra.style.width = "100%";
-      }
-    }
-
     function desplazarChatAlFinal(opciones) {
       if (vistaActual !== "chat" || !hilo) {
         return;
@@ -2753,8 +2932,6 @@
       if (!conv) {
         return;
       }
-
-      renderizarProgresoChat(conv);
 
       // Encontrar el índice del ÚLTIMO mensaje de borrador para agrupar y nunca repetirlo 5 veces
       let ultimoIdxBorrador = -1;
@@ -2863,14 +3040,9 @@
         hilo.appendChild(filaCarga);
       }
 
-      // Chips de sugerencia según paso actual o seguimiento
+      // Chips de sugerencia devueltos por el asistente
       sugerenciasEl.textContent = "";
-      const chipsActivos =
-        !generandoAhora && conv.pasoIndice < PASOS.length
-          ? PASOS[conv.pasoIndice].chips
-          : !generandoAhora && chipsSeguimiento.length > 0
-            ? chipsSeguimiento
-            : [];
+      const chipsActivos = !generandoAhora && chipsSeguimiento.length > 0 ? chipsSeguimiento : [];
       if (chipsActivos.length > 0) {
         sugerenciasEl.hidden = false;
         chipsActivos.forEach((chipTexto) => {
@@ -2886,10 +3058,9 @@
       }
 
       if (entradaChat) {
-        entradaChat.placeholder =
-          conv.pasoIndice < PASOS.length
-            ? "Escribe tu respuesta aquí..."
-            : "Pregunta algo o pide un ajuste (ej. cambia el tono o agrega tacos)...";
+        entradaChat.placeholder = conv.borradorId
+          ? "Pregunta algo o pide un ajuste..."
+          : "Cuéntame de tu negocio...";
       }
 
       desplazarChatAlFinal({
