@@ -13,6 +13,74 @@
   const KEY_BORRADORES = "dmd_borradores_v1";
   const KEY_BORRADOR_ACTIVO = "dmd_borrador_activo_v1";
   const KEY_PUBLICADAS = "dmd_paginas_publicadas_v1";
+  const KEY_TEMA_MENSAJES = "dmd_tema_mensajes_v1";
+
+  const TEMAS_MENSAJES = [
+    {
+      id: "verde",
+      nombre: "Verde (predeterminado)",
+      bg: "#0f5c4d",
+      border: "#0b473b",
+      shadow: "rgba(15, 92, 77, 0.16)",
+      ink: "#ffffff"
+    },
+    {
+      id: "azul",
+      nombre: "Azul",
+      bg: "#1d4ed8",
+      border: "#1e40af",
+      shadow: "rgba(29, 78, 216, 0.18)",
+      ink: "#ffffff"
+    },
+    {
+      id: "indigo",
+      nombre: "Índigo",
+      bg: "#4338ca",
+      border: "#3730a3",
+      shadow: "rgba(67, 56, 202, 0.18)",
+      ink: "#ffffff"
+    },
+    {
+      id: "morado",
+      nombre: "Morado",
+      bg: "#6d28d9",
+      border: "#5b21b6",
+      shadow: "rgba(109, 40, 217, 0.18)",
+      ink: "#ffffff"
+    },
+    {
+      id: "vino",
+      nombre: "Vino",
+      bg: "#9f1239",
+      border: "#881337",
+      shadow: "rgba(159, 18, 57, 0.18)",
+      ink: "#ffffff"
+    },
+    {
+      id: "terracota",
+      nombre: "Terracota",
+      bg: "#b45309",
+      border: "#92400e",
+      shadow: "rgba(180, 83, 9, 0.18)",
+      ink: "#ffffff"
+    },
+    {
+      id: "petroleo",
+      nombre: "Petróleo",
+      bg: "#0e7490",
+      border: "#155e75",
+      shadow: "rgba(14, 116, 144, 0.18)",
+      ink: "#ffffff"
+    },
+    {
+      id: "grafito",
+      nombre: "Grafito",
+      bg: "#334155",
+      border: "#1e293b",
+      shadow: "rgba(51, 65, 85, 0.18)",
+      ink: "#ffffff"
+    }
+  ];
 
   const MENSAJE_BIENVENIDA_CHAT =
     "Hola. Cuéntame de tu negocio para armar tu página: cómo se llama, qué ofreces o en qué ciudad estás.";
@@ -211,6 +279,7 @@
     const vistaArchivos = document.getElementById("vista-archivos");
     const vistaProyectos = document.getElementById("vista-proyectos");
     const vistaSuscripcion = document.getElementById("vista-suscripcion");
+    const vistaAjustes = document.getElementById("vista-ajustes");
     const vistaCuenta = document.getElementById("vista-cuenta");
 
     const panelArchivosPaginas = document.getElementById("panel-archivos-paginas");
@@ -232,10 +301,17 @@
     const btnProyectosUndo = document.getElementById("btn-proyectos-undo");
     const btnProyectosUndoCerrar = document.getElementById("btn-proyectos-undo-cerrar");
 
+    const paletaTemaMensajes = document.getElementById("paleta-tema-mensajes");
+    const temaMensajesActualEl = document.getElementById("tema-mensajes-actual");
     const btnConfigDescargar = document.getElementById("btn-config-descargar");
     const btnConfigImportar = document.getElementById("btn-config-importar");
     const inputImportar = document.getElementById("input-importar-respaldo");
     const estadoRespaldo = document.getElementById("estado-respaldo-sidebar");
+    const btnAjustesPedirBorrar = document.getElementById("btn-ajustes-pedir-borrar");
+    const confirmarBorrarDatosLocal = document.getElementById("confirmar-borrar-datos-local");
+    const btnConfirmarBorrarDatos = document.getElementById("btn-confirmar-borrar-datos");
+    const btnCancelarBorrarDatos = document.getElementById("btn-cancelar-borrar-datos");
+    const estadoBorrarDatos = document.getElementById("estado-borrar-datos");
 
     const cuentaVistaHead = document.getElementById("cuenta-vista-head");
     const appCuentaCargando = document.getElementById("app-cuenta-cargando");
@@ -986,10 +1062,21 @@
     }
 
     function cambiarVistaApp(nuevaVista) {
-      const permitidas = ["chat", "editor", "archivos", "proyectos", "suscripcion", "cuenta"];
+      const permitidas = [
+        "chat",
+        "editor",
+        "archivos",
+        "proyectos",
+        "suscripcion",
+        "ajustes",
+        "cuenta"
+      ];
       const destino = permitidas.includes(nuevaVista) ? nuevaVista : "chat";
       if (destino !== "cuenta") {
         editandoPerfilActivo = false;
+      }
+      if (destino !== "ajustes" && confirmarBorrarDatosLocal) {
+        confirmarBorrarDatosLocal.hidden = true;
       }
       vistaActual = destino;
       modoActual = destino === "editor" ? "editor" : "chat";
@@ -1000,6 +1087,7 @@
         archivos: vistaArchivos,
         proyectos: vistaProyectos,
         suscripcion: vistaSuscripcion,
+        ajustes: vistaAjustes,
         cuenta: vistaCuenta
       };
 
@@ -1040,6 +1128,11 @@
         renderizarArchivos();
       } else if (destino === "proyectos") {
         renderizarMisProyectos();
+      } else if (destino === "ajustes") {
+        renderizarPaletaTemaMensajes();
+        window.scrollTo(0, 0);
+      } else if (destino === "suscripcion") {
+        window.scrollTo(0, 0);
       } else if (destino === "cuenta") {
         renderizarMiCuenta(false);
       } else if (destino === "chat") {
@@ -5125,88 +5218,159 @@
       );
     }
 
-    function encontrarContenedorScroll(elemento) {
-      let actual = elemento ? elemento.parentElement : null;
-      while (actual && actual !== document.body && actual !== document.documentElement) {
-        const estilo = window.getComputedStyle ? window.getComputedStyle(actual) : null;
-        const oy = estilo ? estilo.overflowY : "";
-        if (
-          (oy === "auto" || oy === "scroll" || oy === "overlay") &&
-          actual.scrollHeight > actual.clientHeight + 2
-        ) {
-          return actual;
-        }
-        actual = actual.parentElement;
-      }
-      return document.scrollingElement || document.documentElement || document.body;
+    let temaMensajesActualId = "verde";
+
+    function obtenerTemaMensajesPorId(id) {
+      const clave = String(id || "").trim().toLowerCase();
+      return TEMAS_MENSAJES.find((t) => t.id === clave) || TEMAS_MENSAJES[0];
     }
 
-    function desplazarInstantaneoAElemento(elemento) {
-      if (!elemento || typeof elemento.getBoundingClientRect !== "function") {
-        return false;
-      }
-      const rect = elemento.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) {
-        return false;
-      }
-      const contenedor = encontrarContenedorScroll(elemento);
-      const topbar = document.querySelector(".app-topbar");
-      const altoTopbar = topbar ? topbar.getBoundingClientRect().height : 0;
-      const margenSuperior = Math.round(altoTopbar) + 12;
-
-      const esDocumento =
-        !contenedor ||
-        contenedor === document.scrollingElement ||
-        contenedor === document.documentElement ||
-        contenedor === document.body;
-
-      if (esDocumento) {
-        const raizScroll = document.scrollingElement || document.documentElement || document.body;
-        const scrollActual =
-          window.pageYOffset !== undefined
-            ? window.pageYOffset
-            : (raizScroll && raizScroll.scrollTop) || 0;
-        const maxScroll = raizScroll
-          ? Math.max(0, raizScroll.scrollHeight - window.innerHeight)
-          : 0;
-        const destinoBruto = Math.max(0, Math.round(rect.top + scrollActual - margenSuperior));
-        const destino = maxScroll > 0 ? Math.min(destinoBruto, maxScroll) : destinoBruto;
-        const htmlEl = document.documentElement;
-        const scrollBehaviorPrevio = htmlEl ? htmlEl.style.scrollBehavior : "";
-        if (htmlEl) {
-          htmlEl.style.scrollBehavior = "auto";
+    function leerTemaMensajesGuardado() {
+      try {
+        if (!window.localStorage) {
+          return "verde";
         }
+        const guardado = window.localStorage.getItem(KEY_TEMA_MENSAJES);
+        return obtenerTemaMensajesPorId(guardado).id;
+      } catch (error) {
+        return "verde";
+      }
+    }
+
+    function aplicarTemaMensajes(temaId, persistir) {
+      const tema = obtenerTemaMensajesPorId(temaId);
+      temaMensajesActualId = tema.id;
+      const root = document.documentElement;
+      if (root && root.style) {
+        root.style.setProperty("--chat-user-bg", tema.bg);
+        root.style.setProperty("--chat-user-border", tema.border);
+        root.style.setProperty("--chat-user-shadow", tema.shadow);
+        root.style.setProperty("--chat-user-ink", tema.ink);
+      }
+      if (persistir) {
         try {
-          window.scrollTo({ top: destino, left: 0, behavior: "instant" });
+          if (window.localStorage) {
+            if (tema.id === "verde") {
+              window.localStorage.removeItem(KEY_TEMA_MENSAJES);
+            } else {
+              window.localStorage.setItem(KEY_TEMA_MENSAJES, tema.id);
+            }
+          }
         } catch (error) {
-          window.scrollTo(0, destino);
+          // Ignorar si el navegador restringe almacenamiento
         }
-        if (document.scrollingElement) {
-          document.scrollingElement.scrollTop = destino;
-        }
-        if (document.documentElement) {
-          document.documentElement.scrollTop = destino;
-        }
-        if (document.body) {
-          document.body.scrollTop = destino;
-        }
-        if (htmlEl) {
-          htmlEl.style.scrollBehavior = scrollBehaviorPrevio;
-        }
-        return true;
       }
-
-      const rectCont = contenedor.getBoundingClientRect();
-      const destinoCont = Math.max(
-        0,
-        Math.round(contenedor.scrollTop + (rect.top - rectCont.top) - 12)
-      );
-      const prevContBehavior = contenedor.style.scrollBehavior;
-      contenedor.style.scrollBehavior = "auto";
-      contenedor.scrollTop = destinoCont;
-      contenedor.style.scrollBehavior = prevContBehavior;
-      return true;
+      if (temaMensajesActualEl) {
+        temaMensajesActualEl.textContent = `Color actual: ${tema.nombre}`;
+      }
+      if (paletaTemaMensajes) {
+        paletaTemaMensajes.querySelectorAll(".msg-theme-swatch").forEach((btn) => {
+          const seleccionado = btn.dataset.temaId === tema.id;
+          btn.classList.toggle("is-selected", seleccionado);
+          btn.setAttribute("aria-checked", seleccionado ? "true" : "false");
+        });
+      }
     }
+
+    function renderizarPaletaTemaMensajes() {
+      if (!paletaTemaMensajes) {
+        return;
+      }
+      paletaTemaMensajes.textContent = "";
+      TEMAS_MENSAJES.forEach((tema) => {
+        const seleccionado = tema.id === temaMensajesActualId;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = seleccionado ? "msg-theme-swatch is-selected" : "msg-theme-swatch";
+        btn.dataset.temaId = tema.id;
+        btn.setAttribute("role", "radio");
+        btn.setAttribute("aria-checked", seleccionado ? "true" : "false");
+        btn.setAttribute("aria-label", tema.nombre);
+        btn.title = tema.nombre;
+
+        const dot = document.createElement("span");
+        dot.className = "msg-theme-dot";
+        dot.style.backgroundColor = tema.bg;
+        dot.setAttribute("aria-hidden", "true");
+
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("class", "msg-theme-check");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "3");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        const path = document.createElementNS(ns, "path");
+        path.setAttribute("d", "M20 6 9 17l-5-5");
+        svg.appendChild(path);
+        dot.appendChild(svg);
+
+        btn.appendChild(dot);
+        btn.addEventListener("click", () => {
+          aplicarTemaMensajes(tema.id, true);
+        });
+        paletaTemaMensajes.appendChild(btn);
+      });
+      if (temaMensajesActualEl) {
+        const actual = obtenerTemaMensajesPorId(temaMensajesActualId);
+        temaMensajesActualEl.textContent = `Color actual: ${actual.nombre}`;
+      }
+    }
+
+    function borrarDatosDeEsteNavegador() {
+      todasConversaciones = [];
+      todosBorradores = [];
+      todasPublicadas = [];
+      convActivaId = null;
+      borradorActivoId = null;
+      convBorradorMemoria = crearObjetoConversacionVacia();
+      chipsSeguimiento = [];
+      editandoMsgId = null;
+      confirmandoBorrarDraftId = null;
+      confirmandoBorrarConvId = null;
+      ocultarUndoToast();
+
+      guardarColecciones({ permitirVacio: true });
+
+      try {
+        if (window.localStorage) {
+          window.localStorage.removeItem(KEY_TEMA_MENSAJES);
+        }
+      } catch (error) {
+        // Ignorar si localStorage no está disponible
+      }
+      aplicarTemaMensajes("verde", false);
+
+      if (window.dmdEditor && typeof window.dmdEditor.cargarBorrador === "function") {
+        window.dmdEditor.cargarBorrador(null, false);
+      }
+      if (confirmarBorrarDatosLocal) {
+        confirmarBorrarDatosLocal.hidden = true;
+      }
+      if (estadoRespaldo) {
+        estadoRespaldo.textContent = "";
+      }
+      renderizarListaConversaciones();
+      renderizarHilo();
+      renderizarArchivos();
+      renderizarMisProyectos();
+
+      const tieneSesion = Boolean(
+        window.dmdCuenta &&
+          typeof window.dmdCuenta.obtenerSesionActual === "function" &&
+          window.dmdCuenta.obtenerSesionActual()
+      );
+      if (estadoBorrarDatos) {
+        estadoBorrarDatos.textContent = tieneSesion
+          ? "Se borraron los borradores, conversaciones y el tema de mensajes de este navegador. Tu sesión sigue activa."
+          : "Se borraron los borradores, conversaciones y el tema de mensajes de este navegador.";
+      }
+    }
+
+    aplicarTemaMensajes(leerTemaMensajesGuardado(), false);
+    renderizarPaletaTemaMensajes();
 
     if (btnSidebarAjustes) {
       btnSidebarAjustes.addEventListener("click", () => {
@@ -5216,25 +5380,34 @@
         if (!esEscritorioApp()) {
           abrirSidebar(false);
         }
-        cambiarVistaApp("suscripcion");
-        const bloqueConfig = document.getElementById("configuracion-datos");
-        if (!bloqueConfig) {
-          return;
+        if (estadoBorrarDatos) {
+          estadoBorrarDatos.textContent = "";
         }
-        const irAConfig = () => {
-          if (vistaActual !== "suscripcion") {
-            return;
-          }
-          desplazarInstantaneoAElemento(bloqueConfig);
-        };
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => {
-            irAConfig();
-          });
-        });
-        window.setTimeout(irAConfig, 120);
-        window.setTimeout(irAConfig, 240);
+        cambiarVistaApp("ajustes");
       });
+    }
+
+    if (btnAjustesPedirBorrar && confirmarBorrarDatosLocal) {
+      btnAjustesPedirBorrar.addEventListener("click", () => {
+        confirmarBorrarDatosLocal.hidden = false;
+        if (estadoBorrarDatos) {
+          estadoBorrarDatos.textContent = "";
+        }
+        if (btnConfirmarBorrarDatos && typeof btnConfirmarBorrarDatos.focus === "function") {
+          btnConfirmarBorrarDatos.focus();
+        }
+      });
+    }
+    if (btnCancelarBorrarDatos && confirmarBorrarDatosLocal) {
+      btnCancelarBorrarDatos.addEventListener("click", () => {
+        confirmarBorrarDatosLocal.hidden = true;
+        if (btnAjustesPedirBorrar && typeof btnAjustesPedirBorrar.focus === "function") {
+          btnAjustesPedirBorrar.focus();
+        }
+      });
+    }
+    if (btnConfirmarBorrarDatos) {
+      btnConfirmarBorrarDatos.addEventListener("click", borrarDatosDeEsteNavegador);
     }
 
     botonesVistaApp.forEach((btn) => {

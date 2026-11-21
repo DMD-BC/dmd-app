@@ -6049,10 +6049,10 @@ p {
 .chat-msg-usuario .chat-bubble {
   max-width: 82%;
   border-radius: 18px 18px 4px 18px;
-  background-color: #0f5c4d;
-  color: #ffffff;
-  border: 1px solid #0b473b;
-  box-shadow: 0 3px 10px rgba(15, 92, 77, 0.16);
+  background-color: var(--chat-user-bg, #0f5c4d);
+  color: var(--chat-user-ink, #ffffff);
+  border: 1px solid var(--chat-user-border, #0b473b);
+  box-shadow: 0 3px 10px var(--chat-user-shadow, rgba(15, 92, 77, 0.16));
 }
 
 .chat-typing-bubble {
@@ -8273,6 +8273,159 @@ p {
     border-bottom-color: #5bc7ae;
   }
 }
+
+/* Vista independiente de Ajustes: Tema de mensajes, respaldo y borrado local */
+.settings-view-stack {
+  max-width: 42rem;
+}
+
+.settings-card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.settings-card-head {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-card-head h3 {
+  margin: 0;
+}
+
+.msg-theme-preview {
+  display: grid;
+  gap: 10px;
+  padding: 14px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  min-width: 0;
+}
+
+.msg-theme-row {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.msg-theme-row-asistente {
+  align-items: flex-start;
+}
+
+.msg-theme-row-usuario {
+  align-items: flex-end;
+}
+
+.msg-theme-bubble {
+  max-width: 86%;
+  padding: 10px 13px;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.msg-theme-bubble-asistente {
+  border-radius: 18px 18px 18px 4px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  box-shadow: var(--shadow-xs);
+}
+
+.msg-theme-bubble-usuario {
+  border-radius: 18px 18px 4px 18px;
+  background-color: var(--chat-user-bg, #0f5c4d);
+  color: var(--chat-user-ink, #ffffff);
+  border: 1px solid var(--chat-user-border, #0b473b);
+  box-shadow: 0 3px 10px var(--chat-user-shadow, rgba(15, 92, 77, 0.16));
+}
+
+.msg-theme-text {
+  margin: 0;
+}
+
+.msg-theme-palette {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 520px) {
+  .msg-theme-palette {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+.msg-theme-swatch {
+  width: 46px;
+  height: 46px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease, border-color 140ms ease;
+}
+
+.msg-theme-swatch:hover {
+  transform: scale(1.06);
+}
+
+.msg-theme-swatch:focus-visible {
+  outline: 2px solid #0f5c4d;
+  outline-offset: 2px;
+}
+
+.msg-theme-swatch.is-selected {
+  border-color: var(--ink);
+}
+
+.msg-theme-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.msg-theme-check {
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.msg-theme-swatch.is-selected .msg-theme-check {
+  opacity: 1;
+}
+
+.settings-danger-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .msg-theme-swatch:focus-visible {
+    outline-color: #5bc7ae;
+  }
+
+  .msg-theme-dot {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
 
 
 
