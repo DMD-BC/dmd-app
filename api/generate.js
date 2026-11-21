@@ -666,7 +666,7 @@ async function handler(req, res) {
   let respuestaGemini;
   try {
     const controlador = new AbortController();
-    const temporizador = setTimeout(() => controlador.abort(), 24000);
+    const temporizador = setTimeout(() => controlador.abort(), 45000);
     try {
       respuestaGemini = await fetch(URL_GEMINI, {
         method: "POST",
@@ -692,7 +692,7 @@ async function handler(req, res) {
     }
   } catch (e) {
     const detalleRed =
-      (e && e.name === "AbortError" ? "Timeout after 24000ms" : "") ||
+      (e && e.name === "AbortError" ? "Timeout after 45000ms" : "") ||
       (e && e.cause && e.cause.message) ||
       (e && e.message) ||
       "network_error";
