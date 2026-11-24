@@ -1,1 +1,21 @@
-ewogICIkc2NoZW1hIjogImh0dHBzOi8vb3BlbmFwaS52ZXJjZWwuc2gvdmVyY2VsLmpzb24iLAogICJyZXdyaXRlcyI6IFsKICAgIHsKICAgICAgInNvdXJjZSI6ICIvYmVzbyIsCiAgICAgICJkZXN0aW5hdGlvbiI6ICJodHRwczovL2Jlc28taWEudmVyY2VsLmFwcC8iCiAgICB9LAogICAgewogICAgICAic291cmNlIjogIi9iZXNvLzpwYXRoKiIsCiAgICAgICJkZXN0aW5hdGlvbiI6ICJodHRwczovL2Jlc28taWEudmVyY2VsLmFwcC86cGF0aCoiCiAgICB9LAogICAgewogICAgICAic291cmNlIjogIi9fbmV4dC86cGF0aCoiLAogICAgICAiZGVzdGluYXRpb24iOiAiaHR0cHM6Ly9iZXNvLWlhLnZlcmNlbC5hcHAvX25leHQvOnBhdGgqIgogICAgfSwKICAgIHsKICAgICAgInNvdXJjZSI6ICIvc2FtcGxlcy86cGF0aCoiLAogICAgICAiZGVzdGluYXRpb24iOiAiaHR0cHM6Ly9iZXNvLWlhLnZlcmNlbC5hcHAvc2FtcGxlcy86cGF0aCoiCiAgICB9CiAgXQp9Cg==
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/beso",
+      "destination": "https://beso-ia.vercel.app/"
+    },
+    {
+      "source": "/beso/:path*",
+      "destination": "https://beso-ia.vercel.app/:path*"
+    },
+    {
+      "source": "/_next/:path*",
+      "destination": "https://beso-ia.vercel.app/_next/:path*"
+    },
+    {
+      "source": "/samples/:path*",
+      "destination": "https://beso-ia.vercel.app/samples/:path*"
+    }
+  ]
+}
