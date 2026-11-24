@@ -2,7 +2,7 @@
 
 /* ==========================================================================
    dmd - api/chat.js (función serverless de Vercel)
-   Razonamiento conversacional en dos fases con Llama 3.3 70B en Groq:
+   Razonamiento conversacional en dos fases con Qwen 3.8 27B en Groq:
    1) Decisión corta (pocos tokens, timeout acotado): clasifica intención,
       extrae datos reales y decide preguntar, responder, generar, actualizar
       o dar por completo.
@@ -13,7 +13,9 @@
 
 const generateHandler = require("./generate");
 const {
+  MODELO,
   MAX_OUTPUT_TOKENS,
+  construirCuerpoGroq,
   PERFILES_DISENO_GIRO,
   detectarPerfilGiro,
   construirPrompt,
@@ -22,7 +24,6 @@ const {
   normalizarBorrador
 } = generateHandler._test;
 
-const MODELO = "openai/gpt-oss-120b";
 const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const TIMEOUT_TOTAL_MS = 45000;
 const TIMEOUT_DECISION_MS = 15000;
@@ -367,13 +368,13 @@ async function invocarGeminiJson({ clave, prompt, maxOutputTokens, temperature, 
           "Content-Type": "application/json",
           Authorization: "Bearer " + clave
         },
-        body: JSON.stringify({
-          model: MODELO,
-          messages: [{ role: "user", content: prompt }],
-          temperature,
-          max_tokens: maxOutputTokens,
-          response_format: { type: "json_object" }
-        }),
+        body: JSON.stringify(
+          construirCuerpoGroq({
+            prompt,
+            temperature,
+            maxTokens: maxOutputTokens
+          })
+        ),
         signal: controlador.signal
       });
     } finally {
