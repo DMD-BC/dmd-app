@@ -3,19 +3,19 @@
   "rewrites": [
     {
       "source": "/beso",
-      "destination": "https://beso-ia.vercel.app/"
+      "destination": "https://www.dmdmx.dev/"
     },
     {
       "source": "/beso/:path*",
-      "destination": "https://beso-ia.vercel.app/:path*"
+      "destination": "https://www.dmdmx.dev/:path*"
     },
     {
       "source": "/_next/:path*",
-      "destination": "https://beso-ia.vercel.app/_next/:path*"
+      "destination": "https://www.dmdmx.dev/_next/:path*"
     },
     {
       "source": "/samples/:path*",
-      "destination": "https://beso-ia.vercel.app/samples/:path*"
+      "destination": "https://www.dmdmx.dev/samples/:path*"
     }
   ]
 }
