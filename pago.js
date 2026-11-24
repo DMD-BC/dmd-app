@@ -327,6 +327,44 @@ const PLANES_DMD = [
     }
   }
 
+  // Regreso de Mercado Pago: la preapproval devuelve al usuario a
+  // pago.html?sub=ok (ver api/mp.js en dmd-paginas-web-ia). Se lee el
+  // parámetro una sola vez, se limpia de la URL para que no reaparezca al
+  // recargar y se muestra la confirmación, recargando la suscripción para
+  // reflejar el plan activo. La preapproval de MP solo tiene una back_url,
+  // así que "cancel" y "pending" se contemplan por si el regreso cambia en
+  // el futuro; hoy el backend solo devuelve ?sub=ok.
+  function limpiarParametroSub() {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("sub");
+      window.history.replaceState(null, "", url.toString());
+    } catch (error) {
+      // Ignorar
+    }
+  }
+
+  async function procesarRegresoMercadoPago(estado) {
+    limpiarParametroSub();
+    if (estado === "cancel") {
+      mostrarEstadoPago("El pago se canceló. No se hizo ningún cargo; puedes intentarlo de nuevo cuando quieras.");
+      return;
+    }
+    if (estado === "pending") {
+      await cargarSuscripcionReal();
+      mostrarEstadoPago("Tu pago está pendiente de confirmación. En cuanto Mercado Pago lo confirme, tu suscripción quedará activa.");
+      return;
+    }
+    // estado === "ok": recargar la suscripción y confirmar según su estado
+    // real (el webhook puede tardar unos segundos en marcarla autorizada).
+    await cargarSuscripcionReal();
+    if (suscripcionActual && suscripcionActual.status === "authorized") {
+      mostrarEstadoPago("Pago completado, tu suscripción está activa.");
+    } else {
+      mostrarEstadoPago("Pago recibido. Estamos confirmando tu suscripción con Mercado Pago; si en unos minutos no se refleja, recarga la página.");
+    }
+  }
+
   function obtenerSesion() {
     if (window.dmdCuenta && typeof window.dmdCuenta.obtenerSesionActual === "function") {
       return window.dmdCuenta.obtenerSesionActual();
@@ -854,11 +892,16 @@ const PLANES_DMD = [
   };
 
   function montar() {
+    let regresoMp = "";
     try {
       const params = new URLSearchParams(window.location.search);
       const planUrl = params.get("plan");
       if (planUrl && obtenerPlanPorId(planUrl)) {
         planSeleccionadoId = planUrl.trim().toLowerCase();
+      }
+      const subUrl = params.get("sub");
+      if (subUrl) {
+        regresoMp = subUrl.trim().toLowerCase();
       }
     } catch (error) {
       // Ignorar
@@ -963,7 +1006,17 @@ const PLANES_DMD = [
       });
     }
 
-    sincronizarVistaPago();
+    // Primero se sincroniza la vista (incluye la primera carga de la
+    // suscripción) y después se procesa el regreso de Mercado Pago, que
+    // vuelve a recargar la suscripción para reflejar el pago recién hecho.
+    Promise.resolve()
+      .then(() => sincronizarVistaPago())
+      .catch(() => {})
+      .then(() => {
+        if (regresoMp === "ok" || regresoMp === "cancel" || regresoMp === "pending") {
+          procesarRegresoMercadoPago(regresoMp);
+        }
+      });
   }
 
   if (document.readyState === "loading") {
