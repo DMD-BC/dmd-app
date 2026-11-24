@@ -2,16 +2,36 @@
 
 /* ==========================================================================
    dmd - api/generate.js (función serverless de Vercel)
-   Genera el borrador de la página de un negocio con Llama 3.3 70B en Groq.
+   Genera el borrador de la página de un negocio con Qwen 3.8 27B en Groq.
    La clave vive SOLO en la variable de entorno GROQ_API_KEY del servidor.
    Nunca se envía al navegador, nunca se guarda en ningún archivo ni en
    ningún registro. Sin clave configurada, responde 503 y el cliente usa
    el generador local como respaldo.
    ========================================================================== */
 
-const MODELO = "openai/gpt-oss-120b";
+const MODELO = "qwen/qwen3.8-27b";
 const URL_GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const MAX_OUTPUT_TOKENS = 2500;
+
+function obtenerModeloGroq() {
+  const configurado = process.env.GROQ_MODEL;
+  return typeof configurado === "string" && configurado.trim() ? configurado.trim() : MODELO;
+}
+
+function construirCuerpoGroq({ prompt, temperature, maxTokens }) {
+  const modelo = obtenerModeloGroq();
+  const cuerpo = {
+    model: modelo,
+    messages: [{ role: "user", content: prompt }],
+    temperature,
+    max_completion_tokens: maxTokens,
+    response_format: { type: "json_object" }
+  };
+  if (/^qwen\//i.test(modelo)) {
+    cuerpo.reasoning_effort = "none";
+  }
+  return cuerpo;
+}
 
 const PERFILES_DISENO_GIRO = {
   panaderia: {
@@ -372,7 +392,10 @@ function extraerJsonSeguro(textoCrudo) {
   if (typeof textoCrudo !== "string" || !textoCrudo.trim()) {
     return null;
   }
-  let limpio = textoCrudo.replace(/^\uFEFF/, "").trim();
+  let limpio = textoCrudo
+    .replace(/^\uFEFF/, "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .trim();
 
   // Quitar bloques de código markdown ```json ... ``` o ``` ... ```
   const matchFence = limpio.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -674,13 +697,13 @@ async function handler(req, res) {
           "Content-Type": "application/json",
           Authorization: "Bearer " + clave
         },
-        body: JSON.stringify({
-          model: MODELO,
-          messages: [{ role: "user", content: construirPrompt(datos) }],
-          temperature: 0.7,
-          max_tokens: MAX_OUTPUT_TOKENS,
-          response_format: { type: "json_object" }
-        }),
+        body: JSON.stringify(
+          construirCuerpoGroq({
+            prompt: construirPrompt(datos),
+            temperature: 0.7,
+            maxTokens: MAX_OUTPUT_TOKENS
+          })
+        ),
         signal: controlador.signal
       });
     } finally {
@@ -778,6 +801,8 @@ handler._test = {
   MODELO,
   URL_GROQ,
   MAX_OUTPUT_TOKENS,
+  obtenerModeloGroq,
+  construirCuerpoGroq,
   PERFILES_DISENO_GIRO,
   detectarPerfilGiro,
   construirPrompt,
