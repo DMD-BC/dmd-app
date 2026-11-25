@@ -1,1 +1,21 @@
-{"$schema":"https://openapi.vercel.sh/vercel.json","redirects":[{"destination":"https://beso.dmdmx.dev/","permanent":true,"source":"/beso"},{"destination":"https://beso.dmdmx.dev/:path*","permanent":true,"source":"/beso/:path*"}]}
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "destination": "https://beso.dmdmx.dev/",
+      "permanent": true,
+      "source": "/beso"
+    },
+    {
+      "destination": "https://beso.dmdmx.dev/:path*",
+      "permanent": true,
+      "source": "/beso/:path*"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/app.html"
+    }
+  ]
+}
