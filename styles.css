@@ -8606,3 +8606,65 @@ html[data-avatar="grande"] {
   font: inherit;
   font-weight: 600;
 }
+
+/* Listas dentro de las secciones de Ajustes */
+.settings-list {
+  display: grid;
+  gap: 0;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.settings-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  background-color: var(--surface);
+}
+
+.settings-list-row + .settings-list-row {
+  border-top: 1px solid var(--border);
+}
+
+.settings-list-row > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-list-row .field-hint {
+  margin-top: 2px;
+}
+
+.settings-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.settings-badge-ok {
+  background-color: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.settings-badge-warn {
+  background-color: rgba(180, 83, 9, 0.16);
+  color: #b45309;
+}
+
+.settings-badge-off {
+  background-color: var(--surface-subtle);
+  color: var(--ink-muted);
+}
+
+#lista-alarmas:empty {
+  display: none;
+}
+
+.alarma-item {
+  align-items: flex-start;
+}

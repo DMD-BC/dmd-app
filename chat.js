@@ -983,7 +983,7 @@
           horario: "",
           oferta: "",
           tono: "",
-          whatsapp: ""
+          whatsapp: leerCanalesGuardados().whatsapp
         },
         camposOmitidos: [],
         borradorId: null,
@@ -1217,6 +1217,9 @@
       if (!detalle) {
         return;
       }
+      if (id === "ajustes-almacenamiento" && typeof renderUsoAlmacenamiento === "function") {
+        renderUsoAlmacenamiento();
+      }
       if (menuAjustes) {
         menuAjustes.hidden = true;
       }
@@ -1234,6 +1237,316 @@
     document.querySelectorAll("[data-ajustes-volver]").forEach((btn) => {
       btn.addEventListener("click", mostrarMenuAjustes);
     });
+
+    // ── Ajustes: todas las secciones de Configuración ──────────────────────
+    const KEY_CANALES = "dmd_canales_v1";
+    const KEY_NOTIF = "dmd_notif_v1";
+    const KEY_ALARMAS = "dmd_alarmas_v1";
+    const KEY_CODIGO = "dmd_codigo_v1";
+    const timersAlarmas = new Map();
+
+    function leerCanalesGuardados() {
+      try {
+        const raw = window.localStorage ? window.localStorage.getItem(KEY_CANALES) : null;
+        const parsed = raw ? JSON.parse(raw) : null;
+        return {
+          whatsapp: parsed && typeof parsed.whatsapp === "string" ? parsed.whatsapp : "",
+          correo: parsed && typeof parsed.correo === "string" ? parsed.correo : ""
+        };
+      } catch (error) {
+        return { whatsapp: "", correo: "" };
+      }
+    }
+
+    function guardarCanales(whatsapp, correo) {
+      try {
+        if (window.localStorage) {
+          window.localStorage.setItem(KEY_CANALES, JSON.stringify({ whatsapp, correo }));
+        }
+      } catch (error) {}
+    }
+
+    // Canales de mensajes
+    const inputCanalWhatsapp = document.getElementById("input-canal-whatsapp");
+    const inputCanalCorreo = document.getElementById("input-canal-correo");
+    const btnCanalesGuardar = document.getElementById("btn-canales-guardar");
+    const estadoCanales = document.getElementById("estado-canales");
+    if (inputCanalWhatsapp || inputCanalCorreo) {
+      const canales = leerCanalesGuardados();
+      if (inputCanalWhatsapp) inputCanalWhatsapp.value = canales.whatsapp;
+      if (inputCanalCorreo) inputCanalCorreo.value = canales.correo;
+    }
+    if (btnCanalesGuardar) {
+      btnCanalesGuardar.addEventListener("click", () => {
+        const whatsapp = inputCanalWhatsapp ? String(inputCanalWhatsapp.value || "").trim() : "";
+        const correo = inputCanalCorreo ? String(inputCanalCorreo.value || "").trim() : "";
+        if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+          if (estadoCanales) estadoCanales.textContent = "Revisa el correo: no tiene formato válido.";
+          return;
+        }
+        guardarCanales(whatsapp, correo);
+        if (estadoCanales) estadoCanales.textContent = "Canales guardados. Se llenarán solos en tus próximas páginas.";
+      });
+    }
+
+    // Dispositivos
+    const dispositivoNombreEl = document.getElementById("dispositivo-actual-nombre");
+    const dispositivoDetalleEl = document.getElementById("dispositivo-actual-detalle");
+    if (dispositivoNombreEl || dispositivoDetalleEl) {
+      const ua = String(window.navigator ? window.navigator.userAgent || "" : "");
+      const esIPhone = /iPhone/i.test(ua);
+      const esIPad = /iPad/i.test(ua);
+      const esAndroid = /Android/i.test(ua);
+      const esWindows = /Windows/i.test(ua);
+      const esMac = /Macintosh/i.test(ua);
+      const sistema = esIPhone ? "iPhone" : esIPad ? "iPad" : esAndroid ? "Android" : esWindows ? "Windows" : esMac ? "Mac" : "Este navegador";
+      const navegador = /Edg/i.test(ua) ? "Edge" : /Firefox/i.test(ua) ? "Firefox" : /Chrome/i.test(ua) ? "Chrome" : /Safari/i.test(ua) ? "Safari" : "Navegador";
+      if (dispositivoNombreEl) dispositivoNombreEl.textContent = `Este dispositivo (${sistema} · ${navegador})`;
+      if (dispositivoDetalleEl) dispositivoDetalleEl.textContent = "Sesión activa en este navegador.";
+    }
+    const btnDispositivoSalir = document.getElementById("btn-dispositivo-cerrar-sesion");
+    const estadoSalirDispositivo = document.getElementById("estado-cerrar-sesion-dispositivo");
+    if (btnDispositivoSalir) {
+      btnDispositivoSalir.addEventListener("click", () => {
+        if (btnAppCuentaSalir) {
+          btnAppCuentaSalir.click();
+          if (estadoSalirDispositivo) estadoSalirDispositivo.textContent = "Cerrando sesión…";
+        } else if (estadoSalirDispositivo) {
+          estadoSalirDispositivo.textContent = "No se pudo cerrar la sesión desde aquí. Usa Mi cuenta para salir.";
+        }
+      });
+    }
+
+    // Billetera
+    const btnBilleteraPlanes = document.getElementById("btn-billetera-ver-planes");
+    if (btnBilleteraPlanes) {
+      btnBilleteraPlanes.addEventListener("click", () => cambiarVistaApp("suscripcion"));
+    }
+
+    // Almacenamiento seguro
+    const usoAlmacenamientoEl = document.getElementById("almacenamiento-uso");
+    function renderUsoAlmacenamiento() {
+      if (!usoAlmacenamientoEl) return;
+      try {
+        let bytes = 0;
+        if (window.localStorage) {
+          for (let i = 0; i < window.localStorage.length; i += 1) {
+            const k = window.localStorage.key(i) || "";
+            const v = window.localStorage.getItem(k) || "";
+            bytes += (k.length + v.length) * 2;
+          }
+        }
+        const kb = Math.max(1, Math.round(bytes / 1024));
+        usoAlmacenamientoEl.textContent = `Usas ${kb} KB guardados en este navegador. Nada sale de tu dispositivo salvo que descargues un respaldo.`;
+      } catch (error) {
+        usoAlmacenamientoEl.textContent = "No se pudo calcular el espacio usado en este navegador.";
+      }
+    }
+    renderUsoAlmacenamiento();
+    const btnAlmDescargar = document.getElementById("btn-almacenamiento-descargar");
+    const btnAlmImportar = document.getElementById("btn-almacenamiento-importar");
+    const inputImportarRespaldo = document.getElementById("input-importar-respaldo");
+    if (btnAlmDescargar) btnAlmDescargar.addEventListener("click", () => { if (typeof descargarRespaldoJson === "function") descargarRespaldoJson(); });
+    if (btnAlmImportar) btnAlmImportar.addEventListener("click", () => { if (inputImportarRespaldo) inputImportarRespaldo.click(); });
+
+    // Controles de datos: descargar mis datos
+    const btnAjustesDescargarDatos = document.getElementById("btn-ajustes-descargar-datos");
+    if (btnAjustesDescargarDatos) btnAjustesDescargarDatos.addEventListener("click", () => { if (typeof descargarRespaldoJson === "function") descargarRespaldoJson(); });
+
+    // Permisos
+    const permisoNotifEstado = document.getElementById("permiso-notif-estado");
+    const btnPermisoNotif = document.getElementById("btn-permiso-notif");
+    function renderPermisoNotif() {
+      if (!permisoNotifEstado) return;
+      if (!("Notification" in window)) {
+        permisoNotifEstado.textContent = "Este navegador no admite notificaciones.";
+        return;
+      }
+      const estado = window.Notification.permission;
+      permisoNotifEstado.textContent = estado === "granted" ? "Permitidas." : estado === "denied" ? "Bloqueadas en el navegador." : "Aún no pedidas.";
+    }
+    renderPermisoNotif();
+    if (btnPermisoNotif) {
+      btnPermisoNotif.addEventListener("click", async () => {
+        if (!("Notification" in window)) return;
+        try {
+          await window.Notification.requestPermission();
+        } catch (error) {}
+        renderPermisoNotif();
+        renderNotif();
+      });
+    }
+
+    // Notificaciones
+    const notifEstadoEl = document.getElementById("notif-estado");
+    const btnNotifCambiar = document.getElementById("btn-notif-cambiar");
+    function leerNotif() {
+      try {
+        return window.localStorage ? window.localStorage.getItem(KEY_NOTIF) === "si" : false;
+      } catch (error) {
+        return false;
+      }
+    }
+    function renderNotif() {
+      if (!notifEstadoEl) return;
+      const activas = leerNotif();
+      const permiso = ("Notification" in window) ? window.Notification.permission : "denied";
+      notifEstadoEl.textContent = activas && permiso === "granted" ? "Encendidos." : activas ? "Encendidos, pero el navegador bloquea los avisos." : "Apagados.";
+      if (btnNotifCambiar) btnNotifCambiar.textContent = activas ? "Apagar" : "Activar";
+    }
+    renderNotif();
+    if (btnNotifCambiar) {
+      btnNotifCambiar.addEventListener("click", async () => {
+        const activas = !leerNotif();
+        if (activas && "Notification" in window && window.Notification.permission === "default") {
+          try {
+            await window.Notification.requestPermission();
+          } catch (error) {}
+        }
+        try {
+          if (window.localStorage) {
+            if (activas) window.localStorage.setItem(KEY_NOTIF, "si");
+            else window.localStorage.removeItem(KEY_NOTIF);
+          }
+        } catch (error) {}
+        renderNotif();
+        renderPermisoNotif();
+      });
+    }
+
+    // Alarmas (recordatorios locales)
+    const inputAlarmaTexto = document.getElementById("input-alarma-texto");
+    const selectAlarmaCuando = document.getElementById("select-alarma-cuando");
+    const btnAlarmaCrear = document.getElementById("btn-alarma-crear");
+    const listaAlarmas = document.getElementById("lista-alarmas");
+    const estadoAlarmas = document.getElementById("estado-alarmas");
+    function leerAlarmas() {
+      try {
+        const raw = window.localStorage ? window.localStorage.getItem(KEY_ALARMAS) : null;
+        const parsed = raw ? JSON.parse(raw) : null;
+        return Array.isArray(parsed) ? parsed.filter((a) => a && a.id && a.cuando) : [];
+      } catch (error) {
+        return [];
+      }
+    }
+    function guardarAlarmas(lista) {
+      try {
+        if (window.localStorage) window.localStorage.setItem(KEY_ALARMAS, JSON.stringify(lista));
+      } catch (error) {}
+    }
+    function formatearCuando(ms) {
+      try {
+        return new Date(ms).toLocaleString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+      } catch (error) {
+        return "";
+      }
+    }
+    function avisarAlarma(alarma) {
+      if ("Notification" in window && window.Notification.permission === "granted") {
+        try {
+          new window.Notification("DMD", { body: alarma.texto || "Recordatorio" });
+          return;
+        } catch (error) {}
+      }
+      window.alert(alarma.texto || "Recordatorio de DMD");
+    }
+    function armarAlarma(alarma) {
+      const espera = alarma.cuando - Date.now();
+      if (timersAlarmas.has(alarma.id)) {
+        clearTimeout(timersAlarmas.get(alarma.id));
+        timersAlarmas.delete(alarma.id);
+      }
+      if (espera <= 0) return;
+      const timer = setTimeout(() => {
+        avisarAlarma(alarma);
+        guardarAlarmas(leerAlarmas().filter((a) => a.id !== alarma.id));
+        renderAlarmas();
+      }, espera);
+      timersAlarmas.set(alarma.id, timer);
+    }
+    function renderAlarmas() {
+      if (!listaAlarmas) return;
+      listaAlarmas.textContent = "";
+      const lista = leerAlarmas().sort((a, b) => a.cuando - b.cuando);
+      lista.forEach((alarma) => {
+        const fila = document.createElement("div");
+        fila.className = "settings-list-row alarma-item";
+        const info = document.createElement("div");
+        const titulo = document.createElement("strong");
+        titulo.textContent = alarma.texto || "Recordatorio";
+        const detalle = document.createElement("p");
+        detalle.className = "field-hint";
+        detalle.textContent = formatearCuando(alarma.cuando);
+        info.appendChild(titulo);
+        info.appendChild(detalle);
+        const btnBorrar = document.createElement("button");
+        btnBorrar.type = "button";
+        btnBorrar.className = "btn btn-secondary btn-sm";
+        btnBorrar.textContent = "Borrar";
+        btnBorrar.addEventListener("click", () => {
+          if (timersAlarmas.has(alarma.id)) {
+            clearTimeout(timersAlarmas.get(alarma.id));
+            timersAlarmas.delete(alarma.id);
+          }
+          guardarAlarmas(leerAlarmas().filter((a) => a.id !== alarma.id));
+          renderAlarmas();
+        });
+        fila.appendChild(info);
+        fila.appendChild(btnBorrar);
+        listaAlarmas.appendChild(fila);
+      });
+      if (estadoAlarmas) {
+        estadoAlarmas.textContent = lista.length === 0 ? "No tienes recordatorios." : `${lista.length} recordatorio(s) activo(s).`;
+      }
+    }
+    leerAlarmas().forEach(armarAlarma);
+    renderAlarmas();
+    if (btnAlarmaCrear) {
+      btnAlarmaCrear.addEventListener("click", () => {
+        const texto = inputAlarmaTexto ? String(inputAlarmaTexto.value || "").trim() : "";
+        const cuandoSel = selectAlarmaCuando ? selectAlarmaCuando.value : "hora";
+        const ahora = new Date();
+        let cuando;
+        if (cuandoSel === "manana") {
+          cuando = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1, 9, 0, 0).getTime();
+        } else if (cuandoSel === "semana") {
+          cuando = ahora.getTime() + 7 * 24 * 60 * 60 * 1000;
+        } else {
+          cuando = ahora.getTime() + 60 * 60 * 1000;
+        }
+        const alarma = { id: crearId("alarma"), texto: texto || "Revisar mi página", cuando };
+        const lista = leerAlarmas();
+        lista.push(alarma);
+        guardarAlarmas(lista);
+        armarAlarma(alarma);
+        renderAlarmas();
+        if (estadoAlarmas) estadoAlarmas.textContent = `Recordatorio creado para ${formatearCuando(cuando)}.`;
+      });
+    }
+
+    // Canjear código de invitación
+    const inputCodigo = document.getElementById("input-codigo-invitacion");
+    const btnCodigoCanjear = document.getElementById("btn-codigo-canjear");
+    const estadoCodigo = document.getElementById("estado-codigo");
+    try {
+      const guardado = window.localStorage ? window.localStorage.getItem(KEY_CODIGO) : null;
+      if (guardado && inputCodigo) inputCodigo.value = guardado;
+      if (guardado && estadoCodigo) estadoCodigo.textContent = `Código guardado: ${guardado}. Te avisaremos cuando se active.`;
+    } catch (error) {}
+    if (btnCodigoCanjear) {
+      btnCodigoCanjear.addEventListener("click", () => {
+        const codigo = inputCodigo ? String(inputCodigo.value || "").trim() : "";
+        if (!codigo) {
+          if (estadoCodigo) estadoCodigo.textContent = "Escribe un código para canjearlo.";
+          return;
+        }
+        try {
+          if (window.localStorage) window.localStorage.setItem(KEY_CODIGO, codigo);
+        } catch (error) {}
+        if (estadoCodigo) estadoCodigo.textContent = `Código ${codigo} guardado. DMD aún no tiene códigos activos; te avisaremos cuando se active.`;
+      });
+    }
+
 
     aplicarModo(document.documentElement.dataset.modo || "sistema", false);
     aplicarTamanoAvatar(document.documentElement.dataset.avatar || "mediano", false);
