@@ -17,19 +17,19 @@
 
   const TEMAS_MENSAJES = [
     {
-      id: "verde",
-      nombre: "Verde (predeterminado)",
-      bg: "#0f5c4d",
-      border: "#0b473b",
-      shadow: "rgba(15, 92, 77, 0.16)",
+      id: "azul",
+      nombre: "Azul (predeterminado)",
+      bg: "#2e75b6",
+      border: "#1f4e79",
+      shadow: "rgba(46, 117, 182, 0.18)",
       ink: "#ffffff"
     },
     {
-      id: "azul",
-      nombre: "Azul",
-      bg: "#1d4ed8",
-      border: "#1e40af",
-      shadow: "rgba(29, 78, 216, 0.18)",
+      id: "verde",
+      nombre: "Verde",
+      bg: "#0f5c4d",
+      border: "#0b473b",
+      shadow: "rgba(15, 92, 77, 0.16)",
       ink: "#ffffff"
     },
     {
@@ -1129,7 +1129,72 @@
       } else if (destino === "proyectos") {
         renderizarMisProyectos();
       } else if (destino === "ajustes") {
-        renderizarPaletaTemaMensajes();
+    
+    // Apariencia (Ajustes): Modo Sistema/Claro/Oscuro y tamaño del avatar de DMD.
+    const KEY_MODO = "dmd_modo_v1";
+    const KEY_AVATAR = "dmd_avatar_v1";
+    const selectModo = document.getElementById("select-modo");
+    const selectAvatar = document.getElementById("select-avatar");
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
+    function aplicarModo(modo, persistir) {
+      const valor = modo === "claro" || modo === "oscuro" || modo === "sistema" ? modo : "sistema";
+      document.documentElement.dataset.modo = valor;
+      if (metaThemeColor) {
+        const oscuro = valor === "oscuro" || (valor === "sistema" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        metaThemeColor.setAttribute("content", oscuro ? "#0f2a44" : "#ffffff");
+      }
+      if (persistir) {
+        try {
+          if (window.localStorage) {
+            if (valor === "sistema") {
+              window.localStorage.removeItem(KEY_MODO);
+            } else {
+              window.localStorage.setItem(KEY_MODO, valor);
+            }
+          }
+        } catch (error) {}
+      }
+      if (selectModo) {
+        selectModo.value = valor;
+      }
+    }
+
+    function aplicarTamanoAvatar(tamano, persistir) {
+      const valor = tamano === "pequeno" || tamano === "mediano" || tamano === "grande" ? tamano : "mediano";
+      document.documentElement.dataset.avatar = valor;
+      if (persistir) {
+        try {
+          if (window.localStorage) {
+            if (valor === "mediano") {
+              window.localStorage.removeItem(KEY_AVATAR);
+            } else {
+              window.localStorage.setItem(KEY_AVATAR, valor);
+            }
+          }
+        } catch (error) {}
+      }
+      if (selectAvatar) {
+        selectAvatar.value = valor;
+      }
+    }
+
+    if (selectModo) {
+      selectModo.addEventListener("change", () => aplicarModo(selectModo.value, true));
+    }
+    if (selectAvatar) {
+      selectAvatar.addEventListener("change", () => aplicarTamanoAvatar(selectAvatar.value, true));
+    }
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if ((document.documentElement.dataset.modo || "sistema") === "sistema") {
+          aplicarModo("sistema", false);
+        }
+      });
+    }
+    renderizarPaletaTemaMensajes();
+    aplicarModo(document.documentElement.dataset.modo || "sistema", false);
+    aplicarTamanoAvatar(document.documentElement.dataset.avatar || "mediano", false);
         window.scrollTo(0, 0);
       } else if (destino === "suscripcion") {
         window.scrollTo(0, 0);
@@ -3084,7 +3149,20 @@
           burbuja.appendChild(p);
         }
 
-        fila.appendChild(burbuja);
+        if (msg.rol === "asistente") {
+          const cuerpo = document.createElement("div");
+          cuerpo.className = "chat-msg-body";
+          const avatar = document.createElement("img");
+          avatar.className = "chat-avatar";
+          avatar.src = "/logo.png";
+          avatar.alt = "DMD";
+          avatar.setAttribute("aria-hidden", "true");
+          cuerpo.appendChild(avatar);
+          cuerpo.appendChild(burbuja);
+          fila.appendChild(cuerpo);
+        } else {
+          fila.appendChild(burbuja);
+        }
 
         if (msg.rol === "usuario" && editandoMsgId !== msg.id) {
           const bEdit = document.createElement("button");
@@ -3130,7 +3208,16 @@
         srTxt.textContent = "Escribiendo respuesta...";
         burbujaCarga.appendChild(puntos);
         burbujaCarga.appendChild(srTxt);
-        filaCarga.appendChild(burbujaCarga);
+        const cuerpoCarga = document.createElement("div");
+        cuerpoCarga.className = "chat-msg-body";
+        const avatarCarga = document.createElement("img");
+        avatarCarga.className = "chat-avatar";
+        avatarCarga.src = "/logo.png";
+        avatarCarga.alt = "DMD";
+        avatarCarga.setAttribute("aria-hidden", "true");
+        cuerpoCarga.appendChild(avatarCarga);
+        cuerpoCarga.appendChild(burbujaCarga);
+        filaCarga.appendChild(cuerpoCarga);
         hilo.appendChild(filaCarga);
       }
 
@@ -5218,7 +5305,7 @@
       );
     }
 
-    let temaMensajesActualId = "verde";
+    let temaMensajesActualId = "azul";
 
     function obtenerTemaMensajesPorId(id) {
       const clave = String(id || "").trim().toLowerCase();
@@ -5228,12 +5315,12 @@
     function leerTemaMensajesGuardado() {
       try {
         if (!window.localStorage) {
-          return "verde";
+          return "azul";
         }
         const guardado = window.localStorage.getItem(KEY_TEMA_MENSAJES);
         return obtenerTemaMensajesPorId(guardado).id;
       } catch (error) {
-        return "verde";
+        return "azul";
       }
     }
 
@@ -5250,7 +5337,7 @@
       if (persistir) {
         try {
           if (window.localStorage) {
-            if (tema.id === "verde") {
+            if (tema.id === "azul") {
               window.localStorage.removeItem(KEY_TEMA_MENSAJES);
             } else {
               window.localStorage.setItem(KEY_TEMA_MENSAJES, tema.id);
@@ -5341,7 +5428,7 @@
       } catch (error) {
         // Ignorar si localStorage no está disponible
       }
-      aplicarTemaMensajes("verde", false);
+      aplicarTemaMensajes("azul", false);
 
       if (window.dmdEditor && typeof window.dmdEditor.cargarBorrador === "function") {
         window.dmdEditor.cargarBorrador(null, false);
