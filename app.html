@@ -21,6 +21,18 @@
       document.documentElement.dataset.platform = p;
     })();
   </script>
+  <script>
+    (function () {
+      try {
+        var modo = window.localStorage ? window.localStorage.getItem("dmd_modo_v1") : null;
+        if (modo !== "claro" && modo !== "oscuro" && modo !== "sistema") modo = "sistema";
+        document.documentElement.dataset.modo = modo;
+        var avatar = window.localStorage ? window.localStorage.getItem("dmd_avatar_v1") : null;
+        if (avatar !== "pequeno" && avatar !== "mediano" && avatar !== "grande") avatar = "mediano";
+        document.documentElement.dataset.avatar = avatar;
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -36,12 +48,7 @@
     <aside id="app-sidebar" class="app-sidebar" aria-label="Conversaciones de DMD">
       <div class="sidebar-head">
         <a class="brand brand-compact" href="/" aria-label="DMD, ir al inicio">
-          <span class="brand-squares" aria-hidden="true">
-            <span class="brand-sq brand-sq-1"></span>
-            <span class="brand-sq brand-sq-2"></span>
-            <span class="brand-sq brand-sq-3"></span>
-            <span class="brand-sq brand-sq-4"></span>
-          </span>
+          <img src="/logo.png" class="brand-logo" alt="" aria-hidden="true">
           <span>DMD</span>
         </a>
         <button id="btn-cerrar-sidebar" class="icon-btn sidebar-close-btn" type="button" aria-label="Cerrar menú lateral">
@@ -120,12 +127,7 @@
 
         <div class="app-topbar-brand">
           <a class="brand brand-topbar-always" href="/" aria-label="DMD, ir al inicio">
-            <span class="brand-squares brand-squares-sm" aria-hidden="true">
-              <span class="brand-sq brand-sq-1"></span>
-              <span class="brand-sq brand-sq-2"></span>
-              <span class="brand-sq brand-sq-3"></span>
-              <span class="brand-sq brand-sq-4"></span>
-            </span>
+            <img src="/logo.png" class="brand-logo brand-logo-sm" alt="" aria-hidden="true">
             <span class="brand-word-dmd">DMD</span>
           </a>
         </div>
@@ -710,7 +712,7 @@
           <article id="ajustes-tema-mensajes" class="card settings-card" aria-labelledby="titulo-tema-mensajes">
             <div class="settings-card-head">
               <h3 id="titulo-tema-mensajes">Tema de mensajes</h3>
-              <p class="field-hint">Elige el color de las burbujas de tus mensajes en el chat. El resto de la app mantiene el verde principal.</p>
+              <p class="field-hint">Elige el color de las burbujas de tus mensajes en el chat.</p>
             </div>
 
             <div class="msg-theme-preview" aria-label="Vista previa del tema de mensajes">
@@ -727,7 +729,35 @@
             </div>
 
             <div id="paleta-tema-mensajes" class="msg-theme-palette" role="radiogroup" aria-labelledby="titulo-tema-mensajes"></div>
-            <p id="tema-mensajes-actual" class="field-hint" role="status" aria-live="polite">Color actual: Verde (predeterminado)</p>
+            <p id="tema-mensajes-actual" class="field-hint" role="status" aria-live="polite">Color actual: Azul (predeterminado)</p>
+          </article>
+
+
+          <article id="ajustes-apariencia" class="card settings-card" aria-labelledby="titulo-apariencia">
+            <div class="settings-card-head">
+              <h3 id="titulo-apariencia">Apariencia</h3>
+              <p class="field-hint">Cambia el modo de la app y el tamaño del avatar de DMD en el chat. Se guarda en este navegador.</p>
+            </div>
+
+            <div class="settings-field">
+              <label class="field-label" for="select-modo">Modo</label>
+              <select id="select-modo" class="select" autocomplete="off">
+                <option value="sistema">Sistema</option>
+                <option value="claro">Claro</option>
+                <option value="oscuro">Oscuro</option>
+              </select>
+              <p class="field-hint">Sistema sigue el modo de tu teléfono o computadora.</p>
+            </div>
+
+            <div class="settings-field">
+              <label class="field-label" for="select-avatar">Tamaño del avatar</label>
+              <select id="select-avatar" class="select" autocomplete="off">
+                <option value="pequeno">Pequeño</option>
+                <option value="mediano">Mediano</option>
+                <option value="grande">Grande</option>
+              </select>
+              <p class="field-hint">El avatar es el logo de DMD junto a sus mensajes en el chat.</p>
+            </div>
           </article>
 
           <article id="configuracion-datos" class="card subview-config-card settings-card" aria-labelledby="titulo-respaldo-ajustes">
