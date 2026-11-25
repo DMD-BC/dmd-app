@@ -709,7 +709,45 @@
             </div>
           </div>
 
-          <article id="ajustes-tema-mensajes" class="card settings-card" aria-labelledby="titulo-tema-mensajes">
+
+          <div id="ajustes-menu">
+            <div class="settings-menu-group" role="group" aria-label="Chat y apariencia">
+              <button class="settings-menu-row" type="button" data-ajustes-detalle="ajustes-apariencia">
+                <span class="settings-menu-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </span>
+                <span class="settings-menu-label">Apariencia</span>
+                <span class="settings-menu-chevron" aria-hidden="true">›</span>
+              </button>
+              <button class="settings-menu-row" type="button" data-ajustes-detalle="ajustes-tema-mensajes">
+                <span class="settings-menu-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </span>
+                <span class="settings-menu-label">Tema de mensajes</span>
+                <span class="settings-menu-chevron" aria-hidden="true">›</span>
+              </button>
+            </div>
+
+            <div class="settings-menu-group" role="group" aria-label="Datos">
+              <button class="settings-menu-row" type="button" data-ajustes-detalle="configuracion-datos">
+                <span class="settings-menu-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </span>
+                <span class="settings-menu-label">Respaldo y aviso legal</span>
+                <span class="settings-menu-chevron" aria-hidden="true">›</span>
+              </button>
+              <button class="settings-menu-row" type="button" data-ajustes-detalle="ajustes-borrar-datos">
+                <span class="settings-menu-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </span>
+                <span class="settings-menu-label">Datos en este navegador</span>
+                <span class="settings-menu-chevron" aria-hidden="true">›</span>
+              </button>
+            </div>
+          </div>
+
+          <article id="ajustes-tema-mensajes" class="card settings-card ajustes-detalle" aria-labelledby="titulo-tema-mensajes" hidden>
+            <button class="ajustes-back" type="button" data-ajustes-volver>‹ Ajustes</button>
             <div class="settings-card-head">
               <h3 id="titulo-tema-mensajes">Tema de mensajes</h3>
               <p class="field-hint">Elige el color de las burbujas de tus mensajes en el chat.</p>
@@ -733,7 +771,8 @@
           </article>
 
 
-          <article id="ajustes-apariencia" class="card settings-card" aria-labelledby="titulo-apariencia">
+          <article id="ajustes-apariencia" class="card settings-card ajustes-detalle" aria-labelledby="titulo-apariencia" hidden>
+            <button class="ajustes-back" type="button" data-ajustes-volver>‹ Ajustes</button>
             <div class="settings-card-head">
               <h3 id="titulo-apariencia">Apariencia</h3>
               <p class="field-hint">Cambia el modo de la app y el tamaño del avatar de DMD en el chat. Se guarda en este navegador.</p>
@@ -760,7 +799,8 @@
             </div>
           </article>
 
-          <article id="configuracion-datos" class="card subview-config-card settings-card" aria-labelledby="titulo-respaldo-ajustes">
+          <article id="configuracion-datos" class="card subview-config-card settings-card ajustes-detalle" aria-labelledby="titulo-respaldo-ajustes" hidden>
+            <button class="ajustes-back" type="button" data-ajustes-volver>‹ Ajustes</button>
             <div class="settings-card-head">
               <h3 id="titulo-respaldo-ajustes">Respaldo y aviso legal</h3>
               <p class="field-hint">Tus cambios se conservan en este navegador. Descarga un respaldo para llevarlos a otro dispositivo.</p>
@@ -774,7 +814,8 @@
             <p id="estado-respaldo-sidebar" class="sidebar-status" role="status" aria-live="polite"></p>
           </article>
 
-          <article id="ajustes-borrar-datos" class="card settings-card settings-danger-card" aria-labelledby="titulo-borrar-datos">
+          <article id="ajustes-borrar-datos" class="card settings-card settings-danger-card ajustes-detalle" aria-labelledby="titulo-borrar-datos" hidden>
+            <button class="ajustes-back" type="button" data-ajustes-volver>‹ Ajustes</button>
             <div class="settings-card-head">
               <h3 id="titulo-borrar-datos">Datos en este navegador</h3>
               <p class="field-hint">Elimina los borradores, páginas locales, conversaciones y el tema de mensajes guardados en este navegador. No borra tu cuenta ni cierra tu sesión.</p>

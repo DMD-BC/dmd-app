@@ -1078,6 +1078,9 @@
       if (destino !== "ajustes" && confirmarBorrarDatosLocal) {
         confirmarBorrarDatosLocal.hidden = true;
       }
+      if (destino === "ajustes" && typeof mostrarMenuAjustes === "function") {
+        mostrarMenuAjustes();
+      }
       vistaActual = destino;
       modoActual = destino === "editor" ? "editor" : "chat";
 
@@ -1193,6 +1196,45 @@
       });
     }
     renderizarPaletaTemaMensajes();
+    // Ajustes dividido en grupos (menú + detalle), como Configuración de Muse.
+    const menuAjustes = document.getElementById("ajustes-menu");
+    const detallesAjustes = Array.from(document.querySelectorAll(".ajustes-detalle"));
+
+    function mostrarMenuAjustes() {
+      if (menuAjustes) {
+        menuAjustes.hidden = false;
+      }
+      detallesAjustes.forEach((el) => {
+        el.hidden = true;
+      });
+      if (vistaAjustes && typeof vistaAjustes.scrollTo === "function") {
+        vistaAjustes.scrollTo({ top: 0 });
+      }
+    }
+
+    function abrirDetalleAjustes(id) {
+      const detalle = document.getElementById(id);
+      if (!detalle) {
+        return;
+      }
+      if (menuAjustes) {
+        menuAjustes.hidden = true;
+      }
+      detallesAjustes.forEach((el) => {
+        el.hidden = el !== detalle;
+      });
+      if (vistaAjustes && typeof vistaAjustes.scrollTo === "function") {
+        vistaAjustes.scrollTo({ top: 0 });
+      }
+    }
+
+    document.querySelectorAll("[data-ajustes-detalle]").forEach((btn) => {
+      btn.addEventListener("click", () => abrirDetalleAjustes(btn.dataset.ajustesDetalle));
+    });
+    document.querySelectorAll("[data-ajustes-volver]").forEach((btn) => {
+      btn.addEventListener("click", mostrarMenuAjustes);
+    });
+
     aplicarModo(document.documentElement.dataset.modo || "sistema", false);
     aplicarTamanoAvatar(document.documentElement.dataset.avatar || "mediano", false);
         window.scrollTo(0, 0);
