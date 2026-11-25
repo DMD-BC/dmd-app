@@ -10,12 +10,11 @@
       "destination": "https://beso.dmdmx.dev/:path*",
       "permanent": true,
       "source": "/beso/:path*"
-    }
-  ],
-  "rewrites": [
+    },
     {
       "source": "/",
-      "destination": "/app.html"
+      "destination": "/app.html",
+      "permanent": false
     }
   ]
 }
