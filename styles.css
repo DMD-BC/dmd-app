@@ -1,36 +1,36 @@
 /* ==========================================================================
    dmd - Hoja de estilos mobile-first (360-390 px primero)
-   Paleta BESO: fondo oscuro #0c0b0a, superficies cálidas, texto claro #f5f1eb y acento bronce #967150.
+   Paleta DMD: fondo oscuro #ffffff, superficies cálidas, texto claro #0f2a44 y acento azul #2e75b6.
    Los 4 colores de la marca solo se usan dentro de los 4 cuadrados del logo.
    ========================================================================== */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Superficies oscuras BESO */
-  --bg: #0c0b0a;
-  --surface: #141311;
-  --surface-subtle: #1b1917;
-  --ink: #f5f1eb;
-  --ink-secondary: #a59e95;
-  --ink-muted: #706a62;
-  --border: rgba(255, 248, 240, 0.08);
-  --border-strong: rgba(255, 248, 240, 0.16);
+  /* Superficies oscuras DMD */
+  --bg: #ffffff;
+  --surface: #f2f7fc;
+  --surface-subtle: #e6eef7;
+  --ink: #0f2a44;
+  --ink-secondary: #33567a;
+  --ink-muted: #5b7a99;
+  --border: rgba(15, 42, 68, 0.08);
+  --border-strong: rgba(15, 42, 68, 0.16);
 
-  /* Color principal único: bronce BESO #967150; texto de acento #d7b998 */
-  --accent: #967150;
-  --accent-ink: #d7b998;
-  --accent-ink-hover: #e8cdb2;
-  --accent-hover: #aa815d;
-  --accent-active: #6e5238;
-  --accent-soft: rgba(150, 113, 80, 0.16);
-  --accent-border: rgba(150, 113, 80, 0.45);
+  /* Color principal único: azul DMD #2e75b6; texto de acento #1f4e79 */
+  --accent: #2e75b6;
+  --accent-ink: #1f4e79;
+  --accent-ink-hover: #9cc3ee;
+  --accent-hover: #6aa9e9;
+  --accent-active: #1f4e79;
+  --accent-soft: rgba(46, 117, 182, 0.16);
+  --accent-border: rgba(46, 117, 182, 0.45);
   --on-accent: #ffffff;
 
   /* Error de formulario discreto y legible */
-  --error-ink: #f0a8a8;
-  --error-bg: #2a1512;
-  --error-border: #5c2b24;
+  --error-ink: #b3261e;
+  --error-bg: #fdecea;
+  --error-border: #f2b8b5;
 
   /* Pila de fuentes por plataforma: cuerpo del sistema (San Francisco en iOS, Roboto en Android) */
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", system-ui,
@@ -77,40 +77,40 @@ html[data-platform="android"] {
   --font-sans: "Plus Jakarta Sans", "Roboto", system-ui, "Noto Sans", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --bg: #0c0b0a;
-    --surface: #141311;
-    --surface-subtle: #1b1917;
-    --ink: #f5f1eb;
-    --ink-secondary: #a59e95;
-    --ink-muted: #706a62;
-    --border: rgba(255, 248, 240, 0.08);
-    --border-strong: rgba(255, 248, 240, 0.16);
+    --bg: #ffffff;
+    --surface: #f2f7fc;
+    --surface-subtle: #e6eef7;
+    --ink: #0f2a44;
+    --ink-secondary: #33567a;
+    --ink-muted: #5b7a99;
+    --border: rgba(15, 42, 68, 0.08);
+    --border-strong: rgba(15, 42, 68, 0.16);
 
-    --accent: #967150;
-    --accent-ink: #d7b998;
-    --accent-ink-hover: #e8cdb2;
-    --accent-hover: #aa815d;
-    --accent-active: #6e5238;
-    --accent-soft: rgba(150, 113, 80, 0.16);
-    --accent-border: rgba(150, 113, 80, 0.45);
+    --accent: #2e75b6;
+    --accent-ink: #1f4e79;
+    --accent-ink-hover: #9cc3ee;
+    --accent-hover: #6aa9e9;
+    --accent-active: #1f4e79;
+    --accent-soft: rgba(46, 117, 182, 0.16);
+    --accent-border: rgba(46, 117, 182, 0.45);
     --on-accent: #ffffff;
 
-    --error-ink: #f0a8a8;
-    --error-bg: #2a1512;
-    --error-border: #5c2b24;
+    --error-ink: #b3261e;
+    --error-bg: #fdecea;
+    --error-border: #f2b8b5;
   }
 
   .select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23f5f1eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%230f2a44' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 
   .input:focus,
   .select:focus,
   .textarea:focus {
     border-color: var(--accent-ink);
-    box-shadow: 0 0 0 3px rgba(215, 185, 152, 0.22);
+    box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.22);
   }
 }
 
@@ -182,7 +182,7 @@ a:hover {
   color: var(--accent-ink-hover);
 }
 
-/* Foco visible en bronce BESO */
+/* Foco visible en azul DMD */
 :focus-visible {
   outline: 3px solid var(--accent-ink);
   outline-offset: 2px;
@@ -231,7 +231,7 @@ a:hover {
 }
 
 /* ==========================================================================
-   Marca de 4 cuadrados en tonos bronce de BESO (#967150)
+   Marca de 4 cuadrados en tonos azul de DMD (#2e75b6)
    ========================================================================== */
 .brand-squares {
   display: inline-flex;
@@ -248,19 +248,19 @@ a:hover {
 }
 
 .brand-sq-1 {
-  background-color: #6e5238;
+    background-color: #6aa9e9;
 }
 
 .brand-sq-2 {
-  background-color: #967150;
+    background-color: #2e75b6;
 }
 
 .brand-sq-3 {
-  background-color: #aa815d;
+    background-color: #1f4e79;
 }
 
 .brand-sq-4 {
-  background-color: #d7b998;
+    background-color: #0f2a44;
 }
 
 .brand-squares-sm .brand-sq {
@@ -737,7 +737,7 @@ p {
 .select:focus,
 .textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(150, 113, 80, 0.14);
+  box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.14);
   outline: none;
 }
 
@@ -1488,7 +1488,7 @@ p {
 }
 
 /* ==========================================================================
-   Contraste en modo oscuro para textos, bordes e íconos con acento bronce
+   Contraste en modo oscuro para textos, bordes e íconos con acento azul
    ========================================================================== */
 .nav-link[aria-current="page"],
 .includes-icon,
@@ -2586,7 +2586,7 @@ p {
    Página del negocio (en editor visual y en ver.html)
    ========================================================================== */
 .biz-page {
-  --biz-accent: #967150;
+  --biz-accent: #2e75b6;
   --biz-font: var(--font-sans);
   font-family: var(--biz-font);
   background-color: var(--surface);
@@ -2934,16 +2934,16 @@ p {
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23f5f1eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%230f2a44' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 
   .input:focus,
   .select:focus,
   .textarea:focus {
     border-color: var(--accent-ink);
-    box-shadow: 0 0 0 3px rgba(215, 185, 152, 0.22);
+    box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.22);
   }
 
   .editable-inline:focus {
@@ -2963,7 +2963,7 @@ p {
 
 /* ==========================================================================
    dmd - Pulido profesional (Home, Login, Pago, Chat, Editor dividido y Vista real)
-   Un solo color principal: bronce BESO #967150 con tonos cálidos oscuros.
+   Un solo color principal: azul DMD #2e75b6 con tonos cálidos oscuros.
    ========================================================================== */
 
 :root {
@@ -2972,7 +2972,7 @@ p {
   --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.09);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.28);
     --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.32);
@@ -4289,7 +4289,7 @@ p {
   color: var(--ink-muted);
 }
 
-/* Paleta única bronce BESO */
+/* Paleta única azul DMD */
 .brand-palette-readonly {
   display: flex;
   align-items: center;
@@ -4304,7 +4304,7 @@ p {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #967150;
+  background-color: #2e75b6;
   border: 2px solid var(--accent-border);
   flex-shrink: 0;
 }
@@ -4338,7 +4338,7 @@ p {
 
 .subdomain-input-group:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(150, 113, 80, 0.14);
+  box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.14);
 }
 
 .subdomain-input {
@@ -4623,21 +4623,21 @@ p {
   gap: 6px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .brand-sq-1 {
-    background-color: #967150;
+    background-color: #6aa9e9;
   }
 
   .brand-sq-2 {
-    background-color: #967150;
+    background-color: #2e75b6;
   }
 
   .brand-sq-3 {
-    background-color: #aa815d;
+    background-color: #1f4e79;
   }
 
   .brand-sq-4 {
-    background-color: #d7b998;
+    background-color: #0f2a44;
   }
 
   .storage-dot,
@@ -4664,7 +4664,7 @@ p {
 .cover-fallback {
   aspect-ratio: 16 / 9;
   max-height: 180px;
-  background: linear-gradient(135deg, #967150 0%, #7a5c40 55%, #241c14 100%);
+  background: linear-gradient(135deg, #2e75b6 0%, #2e75b6 55%, #0f2a44 100%);
   border-color: var(--accent-border);
   position: relative;
 }
@@ -4913,7 +4913,7 @@ p {
 
 /* ==========================================================================
    Diseño editorial, Bento asimétrico, stickers troquelados y personalidad
-   visual por giro (un solo color principal #967150 + papel y tinta neutra)
+   visual por giro (un solo color principal #2e75b6 + papel y tinta neutra)
    ========================================================================== */
 
 .editorial-emphasis {
@@ -4944,7 +4944,7 @@ p {
 
 .btn-sheen:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(150, 113, 80, 0.22);
+  box-shadow: 0 8px 20px rgba(46, 117, 182, 0.22);
 }
 
 .btn-sheen:hover::after {
@@ -4959,7 +4959,7 @@ p {
   transform: translateX(3px);
 }
 
-/* Stickers troquelados estilo papel adhesivo (monocromo bronce + borde blanco) */
+/* Stickers troquelados estilo papel adhesivo (monocromo azul + borde blanco) */
 .dmd-sticker {
   display: inline-flex;
   align-items: center;
@@ -4993,9 +4993,9 @@ p {
 
 .dmd-sticker-light {
   background-color: #ffffff;
-  color: #967150;
+  color: #2e75b6;
   border-color: rgba(255, 255, 255, 0.9);
-  outline-color: rgba(150, 113, 80, 0.18);
+  outline-color: rgba(46, 117, 182, 0.18);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
@@ -5018,9 +5018,9 @@ p {
   padding: 5px 10px;
   border-radius: 999px;
   background-color: #ffffff;
-  color: #967150;
+  color: #2e75b6;
   border: 2px solid #ffffff;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(150, 113, 80, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(46, 117, 182, 0.18);
   font-family: var(--font-sans);
   font-size: 0.72rem;
   font-weight: 700;
@@ -5033,7 +5033,7 @@ p {
 .biz-sticker-ferreteria,
 .biz-sticker-taller {
   border-radius: 5px;
-  background-color: #967150;
+  background-color: #2e75b6;
   color: #ffffff;
   border-color: #ffffff;
   transform: rotate(2deg);
@@ -5041,7 +5041,7 @@ p {
 
 .biz-sticker-taqueria,
 .biz-sticker-comida {
-  background-color: #967150;
+  background-color: #2e75b6;
   color: #ffffff;
   border-color: #ffffff;
   transform: rotate(-3.2deg);
@@ -5059,7 +5059,7 @@ p {
   padding: 3px 7px;
   border-radius: 999px;
   background-color: #ffffff;
-  color: #967150;
+  color: #2e75b6;
   border: 1.5px solid #ffffff;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
   font-size: 0.6rem;
@@ -5070,7 +5070,7 @@ p {
 
 .tpl-mini-sticker-alt {
   border-radius: 4px;
-  background-color: #967150;
+  background-color: #2e75b6;
   color: #ffffff;
   transform: rotate(2deg);
 }
@@ -5091,7 +5091,7 @@ p {
   inset: 0;
   background: radial-gradient(
     360px circle at var(--spot-x, 65%) var(--spot-y, 25%),
-    rgba(150, 113, 80, 0.09),
+    rgba(46, 117, 182, 0.09),
     transparent 65%
   );
   pointer-events: none;
@@ -5322,8 +5322,8 @@ p {
 }
 
 .bento-card-accent {
-  background-color: #967150;
-  border-color: #967150;
+  background-color: #2e75b6;
+  border-color: #2e75b6;
   color: #ffffff;
 }
 
@@ -5407,13 +5407,13 @@ p {
   gap: 6px;
 }
 
-/* CTA final de alto contraste en bronce BESO #967150 */
+/* CTA final de alto contraste en azul DMD #2e75b6 */
 .final-cta-accent {
-  background-color: #967150;
-  border-color: #aa815d;
+  background-color: #2e75b6;
+  border-color: #6aa9e9;
   color: #ffffff;
   padding: 28px 22px;
-  box-shadow: 0 14px 32px rgba(150, 113, 80, 0.22);
+  box-shadow: 0 14px 32px rgba(46, 117, 182, 0.22);
 }
 
 .final-cta-copy {
@@ -5432,15 +5432,15 @@ p {
 
 .btn-on-accent {
   background-color: #ffffff;
-  color: #967150;
+  color: #2e75b6;
   border: 1px solid #ffffff;
   font-weight: 700;
 }
 
 .btn-on-accent:hover {
-  background-color: #f5f1eb;
-  border-color: #f5f1eb;
-  color: #6e5238;
+  background-color: #e6eef7;
+  border-color: #e6eef7;
+  color: #1f4e79;
 }
 
 .btn-outline-on-accent {
@@ -5632,25 +5632,25 @@ p {
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .dmd-sticker {
-    background-color: rgba(150, 113, 80, 0.28);
-    color: #d7b998;
+    background-color: rgba(46, 117, 182, 0.28);
+    color: #1f4e79;
     border-color: var(--surface);
-    outline-color: rgba(215, 185, 152, 0.35);
+    outline-color: rgba(46, 117, 182, 0.35);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   }
 
   .dmd-sticker-light {
     background-color: #ffffff;
-    color: #967150;
+    color: #2e75b6;
     border-color: #ffffff;
   }
 
   .biz-sticker {
-    background-color: #1b1917;
-    color: #d7b998;
-    border-color: #2a2620;
+    background-color: #e6eef7;
+    color: #1f4e79;
+    border-color: #d5e3f0;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
   }
 
@@ -5658,21 +5658,21 @@ p {
   .biz-sticker-taller,
   .biz-sticker-taqueria,
   .biz-sticker-comida {
-    background-color: #967150;
+    background-color: #2e75b6;
     color: #ffffff;
-    border-color: #1b1917;
+    border-color: #e6eef7;
   }
 
   .tpl-mini-sticker {
-    background-color: #1b1917;
-    color: #d7b998;
-    border-color: #2a2620;
+    background-color: #e6eef7;
+    color: #1f4e79;
+    border-color: #d5e3f0;
   }
 
   .tpl-mini-sticker-alt {
-    background-color: #967150;
+    background-color: #2e75b6;
     color: #ffffff;
-    border-color: #1b1917;
+    border-color: #e6eef7;
   }
 }
 
@@ -5701,28 +5701,28 @@ p {
   padding: 9px 15px;
   border-radius: 12px;
   border: 3px solid #ffffff;
-  outline: 2px dashed rgba(150, 113, 80, 0.42);
+  outline: 2px dashed rgba(46, 117, 182, 0.42);
   outline-offset: -5px;
-  background-color: #967150;
+  background-color: #2e75b6;
   color: #ffffff;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.02em;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22), 0 2px 0 rgba(150, 113, 80, 0.35);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22), 0 2px 0 rgba(46, 117, 182, 0.35);
 }
 
 .dmd-sticker-stamp.dmd-sticker-light {
   background-color: #ffffff;
-  color: #967150;
+  color: #2e75b6;
   border-color: #ffffff;
-  outline-color: rgba(150, 113, 80, 0.38);
+  outline-color: rgba(46, 117, 182, 0.38);
 }
 
 .biz-sticker {
   padding: 7px 13px;
   border-radius: 10px;
   border: 3px solid #ffffff;
-  outline: 1.5px dashed rgba(150, 113, 80, 0.34);
+  outline: 1.5px dashed rgba(46, 117, 182, 0.34);
   outline-offset: -4px;
   font-size: 0.76rem;
   font-weight: 800;
@@ -5968,7 +5968,7 @@ p {
 .sidebar-search-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(150, 113, 80, 0.14);
+  box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.14);
 }
 
 .sidebar-views-nav {
@@ -6031,7 +6031,7 @@ p {
   }
 }
 
-/* Chat en burbujas: usuario derecha bronce #967150, asistente izquierda neutro */
+/* Chat en burbujas: usuario derecha azul #2e75b6, asistente izquierda neutro */
 .chat-thread {
   padding: 16px calc(12px + var(--safe-right)) 24px calc(12px + var(--safe-left));
   gap: 14px;
@@ -6049,10 +6049,10 @@ p {
 .chat-msg-usuario .chat-bubble {
   max-width: 82%;
   border-radius: 18px 18px 4px 18px;
-  background-color: var(--chat-user-bg, #967150);
+  background-color: var(--chat-user-bg, #2e75b6);
   color: var(--chat-user-ink, #ffffff);
-  border: 1px solid var(--chat-user-border, #aa815d);
-  box-shadow: 0 3px 10px var(--chat-user-shadow, rgba(150, 113, 80, 0.16));
+  border: 1px solid var(--chat-user-border, #6aa9e9);
+  box-shadow: 0 3px 10px var(--chat-user-shadow, rgba(46, 117, 182, 0.16));
 }
 
 .chat-typing-bubble {
@@ -6072,7 +6072,7 @@ p {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #967150;
+  background-color: #2e75b6;
   opacity: 0.45;
   animation: dmdTypingBounce 1.1s infinite ease-in-out;
 }
@@ -6182,12 +6182,12 @@ p {
 }
 
 .bottom-nav-btn.is-active {
-  color: #967150;
+  color: #2e75b6;
   font-weight: 700;
 }
 
 .bottom-nav-btn.is-active svg {
-  stroke: #967150;
+  stroke: #2e75b6;
 }
 
 .undo-toast {
@@ -6623,24 +6623,24 @@ p {
   gap: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .dmd-sticker-stamp {
-    background-color: #967150;
+    background-color: #2e75b6;
     color: #ffffff;
-    border-color: #1b1917;
-    outline-color: rgba(215, 185, 152, 0.55);
+    border-color: #e6eef7;
+    outline-color: rgba(46, 117, 182, 0.55);
   }
 
   .bottom-nav-btn.is-active {
-    color: #d7b998;
+    color: #1f4e79;
   }
 
   .bottom-nav-btn.is-active svg {
-    stroke: #d7b998;
+    stroke: #1f4e79;
   }
 
   .typing-dot {
-    background-color: #d7b998;
+    background-color: #1f4e79;
   }
 }
 
@@ -6778,13 +6778,13 @@ p {
 }
 
 .sticker-tone-verde {
-  background-color: #967150;
+  background-color: #2e75b6;
   color: #ffffff;
 }
 
 .sticker-tone-claro {
-  background-color: #d7b998;
-  color: #3d2c1a;
+  background-color: #1f4e79;
+  color: #ffffff;
 }
 
 /* 1) Sello estrella 12 puntas (Panadería: Recién horneado) */
@@ -6970,7 +6970,7 @@ p {
   .templates-bento .tpl-bento-wide.tpl-bento-reverse {
     grid-row: 2;
     grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-    border-top: 3px solid #967150;
+    border-top: 3px solid #2e75b6;
   }
 
   .templates-bento .tpl-bento-wide.tpl-bento-reverse .tpl-real-preview {
@@ -6987,24 +6987,24 @@ p {
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .biz-sticker.sticker-diecut,
   .sticker-diecut {
     filter:
-      drop-shadow(2px 0 0 #1b1917)
-      drop-shadow(-2px 0 0 #1b1917)
-      drop-shadow(0 2px 0 #1b1917)
-      drop-shadow(0 -2px 0 #1b1917)
+      drop-shadow(2px 0 0 #e6eef7)
+      drop-shadow(-2px 0 0 #e6eef7)
+      drop-shadow(0 2px 0 #e6eef7)
+      drop-shadow(0 -2px 0 #e6eef7)
       drop-shadow(0 8px 16px rgba(0, 0, 0, 0.52));
   }
 
   .sticker-tone-claro {
-    background-color: #d7b998;
-    color: #3d2c1a;
+    background-color: #1f4e79;
+    color: #ffffff;
   }
 
   .sticker-shape-tag::before {
-    background-color: #1b1917;
+    background-color: #e6eef7;
   }
 }
 
@@ -7016,7 +7016,7 @@ p {
 
 /* ==========================================================================
    Sistemas visuales completos por giro (tipografía, ritmo, radios, sombras
-   y componentes con nombre, todos con único color principal #967150)
+   y componentes con nombre, todos con único color principal #2e75b6)
    ========================================================================== */
 
 /* 1) PANADERÍA: Carta editorial cálida (base 8 px, serif, renglones punteados) */
@@ -7139,7 +7139,7 @@ p {
   counter-increment: biz-cat-idx;
   border-radius: 4px;
   border: 1px solid var(--border);
-  border-top: 2px solid #967150;
+  border-top: 2px solid #2e75b6;
   background-color: var(--surface-subtle);
   padding: 12px;
   box-shadow: none;
@@ -7168,7 +7168,7 @@ p {
 .biz-giro-taller .biz-location-card {
   border-radius: 4px;
   border: 1px solid var(--border);
-  border-left: 4px solid #967150;
+  border-left: 4px solid #2e75b6;
   background-color: var(--surface-subtle);
 }
 
@@ -7233,7 +7233,7 @@ p {
 .biz-giro-comida .preview-service-item {
   border-radius: 8px;
   border: 1px solid var(--border);
-  border-left: 4px solid #967150;
+  border-left: 4px solid #2e75b6;
   padding: 12px 14px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
 }
@@ -7241,9 +7241,9 @@ p {
 .biz-giro-taqueria .biz-location-card,
 .biz-giro-comida .biz-location-card {
   border-radius: 10px;
-  border: 2px solid #967150;
+  border: 2px solid #2e75b6;
   background-color: var(--surface);
-  box-shadow: 0 4px 12px rgba(150, 113, 80, 0.1);
+  box-shadow: 0 4px 12px rgba(46, 117, 182, 0.1);
 }
 
 /* 4) CAFETERÍA: Galería minimalista de barra (base 8 px, mucho aire, sombra solo en foto) */
@@ -7330,7 +7330,7 @@ p {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #967150;
+  background-color: #2e75b6;
   margin-right: 8px;
   vertical-align: middle;
 }
@@ -7393,7 +7393,7 @@ p {
 .biz-giro-servicios .preview-service-item {
   border-radius: 8px;
   border: 1px solid var(--border);
-  border-left: 2px solid #967150;
+  border-left: 2px solid #2e75b6;
   padding: 16px;
   box-shadow: none;
 }
@@ -7403,12 +7403,12 @@ p {
   border-radius: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .biz-giro-ferreteria .biz-service-card,
   .biz-giro-taller .biz-service-card,
   .biz-giro-ferreteria .preview-service-item,
   .biz-giro-taller .preview-service-item {
-    border-top-color: #d7b998;
+    border-top-color: #1f4e79;
   }
 
   .biz-giro-taqueria .biz-service-card,
@@ -7417,12 +7417,12 @@ p {
   .biz-giro-comida .preview-service-item,
   .biz-giro-servicios .biz-service-card,
   .biz-giro-servicios .preview-service-item {
-    border-left-color: #d7b998;
+    border-left-color: #1f4e79;
   }
 
   .biz-giro-salud .biz-service-title::before,
   .biz-giro-salud .preview-service-title::before {
-    background-color: #d7b998;
+    background-color: #1f4e79;
   }
 }
 
@@ -7454,8 +7454,8 @@ p {
 }
 
 .sidebar-search-pill:focus-within {
-  border-color: #967150;
-  box-shadow: 0 0 0 3px rgba(150, 113, 80, 0.14);
+  border-color: #2e75b6;
+  box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.14);
 }
 
 .sidebar-search-icon {
@@ -7505,14 +7505,14 @@ p {
 }
 
 .sidebar-round-btn-primary {
-  background-color: #967150;
-  border-color: #967150;
+  background-color: #2e75b6;
+  border-color: #2e75b6;
   color: #ffffff;
 }
 
 .sidebar-round-btn-primary:hover {
-  background-color: #aa815d;
-  border-color: #aa815d;
+  background-color: #6aa9e9;
+  border-color: #6aa9e9;
   color: #ffffff;
 }
 
@@ -7738,19 +7738,19 @@ p {
   justify-content: center;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .sidebar-round-btn-primary {
-    background-color: #967150;
-    border-color: #967150;
+    background-color: #2e75b6;
+    border-color: #2e75b6;
     color: #ffffff;
   }
 
   .bottom-nav-btn.is-active {
-    color: #d7b998;
+    color: #1f4e79;
   }
 
   .bottom-nav-btn.is-active svg {
-    stroke: #d7b998;
+    stroke: #1f4e79;
   }
 }
 
@@ -7917,24 +7917,24 @@ p {
   border: 1.5px solid var(--border-strong);
   background-color: var(--surface);
   color: var(--ink);
-  caret-color: #967150;
+  caret-color: #2e75b6;
   transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .otp-block-input:focus {
   outline: none;
-  border-color: #967150;
-  box-shadow: 0 0 0 3px rgba(150, 113, 80, 0.18);
+  border-color: #2e75b6;
+  box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.18);
 }
 
 .otp-block-input.is-invalid {
   border-color: var(--error-ink);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .otp-block-input:focus {
-    border-color: #d7b998;
-    box-shadow: 0 0 0 3px rgba(215, 185, 152, 0.22);
+    border-color: #1f4e79;
+    box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.22);
   }
 }
 
@@ -7979,7 +7979,7 @@ p {
 .profile-avatar-initials {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #967150;
+  color: #2e75b6;
   letter-spacing: 0.02em;
   line-height: 1;
 }
@@ -8051,7 +8051,7 @@ p {
 .profile-prompt-btn {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #967150;
+  color: #2e75b6;
   min-height: 36px;
   padding: 2px 4px;
 }
@@ -8059,7 +8059,7 @@ p {
 .profile-website-link {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #967150;
+  color: #2e75b6;
   text-decoration: underline;
   text-underline-offset: 2px;
   overflow-wrap: anywhere;
@@ -8120,8 +8120,8 @@ p {
 }
 
 .profile-tab.is-active {
-  color: #967150;
-  border-bottom-color: #967150;
+  color: #2e75b6;
+  border-bottom-color: #2e75b6;
 }
 
 .profile-tab-panel {
@@ -8261,16 +8261,16 @@ p {
   padding-left: 28px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .profile-avatar-initials,
   .profile-prompt-btn,
   .profile-website-link {
-    color: #d7b998;
+    color: #1f4e79;
   }
 
   .profile-tab.is-active {
-    color: #d7b998;
-    border-bottom-color: #d7b998;
+    color: #1f4e79;
+    border-bottom-color: #1f4e79;
   }
 }
 
@@ -8336,10 +8336,10 @@ p {
 
 .msg-theme-bubble-usuario {
   border-radius: 18px 18px 4px 18px;
-  background-color: var(--chat-user-bg, #967150);
+  background-color: var(--chat-user-bg, #2e75b6);
   color: var(--chat-user-ink, #ffffff);
-  border: 1px solid var(--chat-user-border, #aa815d);
-  box-shadow: 0 3px 10px var(--chat-user-shadow, rgba(150, 113, 80, 0.16));
+  border: 1px solid var(--chat-user-border, #6aa9e9);
+  box-shadow: 0 3px 10px var(--chat-user-shadow, rgba(46, 117, 182, 0.16));
 }
 
 .msg-theme-text {
@@ -8380,7 +8380,7 @@ p {
 }
 
 .msg-theme-swatch:focus-visible {
-  outline: 2px solid #967150;
+  outline: 2px solid #2e75b6;
   outline-offset: 2px;
 }
 
@@ -8416,9 +8416,9 @@ p {
   gap: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .msg-theme-swatch:focus-visible {
-    outline-color: #d7b998;
+    outline-color: #1f4e79;
   }
 
   .msg-theme-dot {
